@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
 import com.mapcode.ui.theme.MapcodeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
