@@ -1,5 +1,6 @@
 package com.mapcode.ui.map
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -16,9 +17,12 @@ import com.google.maps.android.compose.GoogleMap
 
 @Composable
 fun Map(modifier: Modifier = Modifier) {
-    GoogleMap(
-        modifier = Modifier.fillMaxSize()
-    )
+    GoogleMap(modifier = modifier.fillMaxSize())
+}
+
+@Composable
+fun MapcodeInfo(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize())
 }
 
 @Composable
@@ -26,6 +30,7 @@ fun MapScreen(viewModel: MapViewModel) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Column {
             Map(Modifier.weight(0.7f))
+            MapcodeInfo(Modifier.weight(0.3f))
         }
     }
 }
