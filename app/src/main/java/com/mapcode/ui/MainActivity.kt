@@ -1,4 +1,4 @@
-package com.mapcode
+package com.mapcode.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
