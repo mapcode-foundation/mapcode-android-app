@@ -126,13 +126,14 @@ fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -
 @Composable
 fun MapcodeTextArea(
     modifier: Modifier = Modifier,
-    mapcode: String,
-    territory: String
+    code: String,
+    territory: String,
+    onClick: () -> Unit
 ) {
     Column(modifier.fillMaxSize()) {
         ClickableText(
             text = AnnotatedString(stringResource(R.string.mapcode_header_button)),
-            onClick = { /*TODO*/ },
+            onClick = { onClick() },
             style = MaterialTheme.typography.h6,
             modifier = Modifier.fillMaxWidth()
         )
@@ -143,7 +144,7 @@ fun MapcodeTextArea(
                 modifier = Modifier.align(Alignment.Bottom)
             )
             Text(
-                text = mapcode,
+                text = code,
                 style = MaterialTheme.typography.subtitle1,
                 modifier = modifier.fillMaxWidth()
             )
@@ -156,9 +157,13 @@ fun MapcodeTextArea(
  * address information.
  */
 @Composable
-fun MapcodeInfoBox(modifier: Modifier = Modifier, state: MapcodeInfoState) {
+fun MapcodeInfoBox(
+    modifier: Modifier = Modifier,
+    state: MapcodeInfoState,
+    onMapcodeClick: () -> Unit = {}
+) {
     Box(modifier = modifier.fillMaxSize()) {
-        MapcodeTextArea(mapcode = state.mapcode, territory = state.territory)
+        MapcodeTextArea(code = state.code, territory = state.territory, onClick = onMapcodeClick)
     }
 }
 
@@ -166,7 +171,7 @@ fun MapcodeInfoBox(modifier: Modifier = Modifier, state: MapcodeInfoState) {
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state = MapcodeInfoState(mapcode = "1AB.XY", territory = "NLD")
+        val state = MapcodeInfoState(code = "1AB.XY", territory = "NLD")
         MapcodeInfoBox(state = state)
     }
 }
@@ -178,7 +183,10 @@ fun MapScreen(viewModel: MapViewModel) {
             MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
 
             val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
-            MapcodeInfoBox(Modifier.weight(0.3f), mapcodeInfoState)
+            MapcodeInfoBox(
+                Modifier.weight(0.3f),
+                mapcodeInfoState,
+                onMapcodeClick = { viewModel.onMapcodeClick() })
         }
     }
 }

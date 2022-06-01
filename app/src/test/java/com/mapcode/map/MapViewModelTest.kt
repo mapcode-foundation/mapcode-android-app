@@ -1,36 +1,67 @@
 package com.mapcode.map
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 
 /**
  * Created by sds100 on 01/06/2022.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class MapViewModelTest {
 
-    private lateinit var mockShowMapcodeUseCase: ShowMapcodeUseCase
+    @get:Rule
+    var instantExecutorRule = InstantTaskExecutorRule()
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var mockUseCase: ShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setUp() {
-        mockShowMapcodeUseCase = mock()
-        viewModel = MapViewModel(mockShowMapcodeUseCase)
+        Dispatchers.setMain(testDispatcher)
+
+        mockUseCase = mock()
+        viewModel = MapViewModel(mockUseCase)
     }
 
     @Test
-    fun `update mapcode when camera moves`() {
+    fun `update mapcode when camera moves`() = runTest {
         val fakeMapcodes = listOf(Mapcode("1AB.XY", Territory.AAA), Mapcode("1CD.YZ", Territory.NLD))
-        whenever(mockShowMapcodeUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
+        whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
 
         viewModel.onCameraMoved(1.0, 1.0)
 
-        val expectedUiState = MapcodeInfoState(mapcode = "1AB.XY", territory = "AAA")
+        val expectedUiState = MapcodeInfoState(code = "1AB.XY", territory = "AAA")
+        advanceUntilIdle()
         assertThat(viewModel.mapcodeInfoState.value).isEqualTo(expectedUiState)
+    }
+
+    @Test
+    fun `copy mapcode and territory to clipboard when mapcode is clicked`() {
+        val fakeMapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
+        whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
+        viewModel.onCameraMoved(1.0, 1.0)
+
+        viewModel.onMapcodeClick()
+        verify(mockUseCase).copyToClipboard("AAA 1AB.XY")
+    }
+
+    @Test
+    fun `do not copy mapcode to clipboard when there is no mapcode`() {
+        viewModel.onMapcodeClick()
+        verify(mockUseCase, never()).copyToClipboard(any())
     }
 }

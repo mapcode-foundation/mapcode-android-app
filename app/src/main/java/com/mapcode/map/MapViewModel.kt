@@ -1,11 +1,10 @@
 package com.mapcode.map
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.mapcode.Mapcode
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 /**
@@ -13,25 +12,46 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val mapcodeUseCase: ShowMapcodeUseCase
+    private val useCase: ShowMapcodeUseCase
 ) : ViewModel() {
-    private val _mapcodeInfoState: MutableStateFlow<MapcodeInfoState> = MutableStateFlow(MapcodeInfoState.EMPTY)
-    val mapcodeInfoState: StateFlow<MapcodeInfoState> = _mapcodeInfoState.asStateFlow()
+    private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
+    private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
+
+    val mapcodeInfoState: StateFlow<MapcodeInfoState> = combine(mapcodes, mapcodeIndex) { mapcodes, mapcodeIndex ->
+        if (mapcodeIndex == -1) {
+            return@combine MapcodeInfoState.EMPTY
+        }
+        
+        val mapcode = mapcodes[mapcodeIndex]
+
+        MapcodeInfoState(
+            code = mapcode.code,
+            territory = mapcode.territory.name
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
 
     /**
      * When the camera has moved the mapcode information should be updated.
      */
     fun onCameraMoved(lat: Double, long: Double) {
-        val mapcodes = mapcodeUseCase.getMapcodes(lat, long)
-        val firstMapcode = mapcodes[0]
+        mapcodes.value = useCase.getMapcodes(lat, long)
+        mapcodeIndex.value = 0
+    }
 
-        _mapcodeInfoState.update { state ->
-            state.copy(mapcode = firstMapcode.code, territory = firstMapcode.territory.name)
+    /**
+     * When the mapcode text is clicked.
+     */
+    fun onMapcodeClick() {
+        if (mapcodes.value.isEmpty() || mapcodeIndex.value == -1) {
+            return
         }
+
+        val mapcode = mapcodes.value[mapcodeIndex.value]
+        useCase.copyToClipboard("${mapcode.territory.name} ${mapcode.code}")
     }
 }
 
-data class MapcodeInfoState(val mapcode: String, val territory: String) {
+data class MapcodeInfoState(val code: String, val territory: String) {
     companion object {
         val EMPTY: MapcodeInfoState = MapcodeInfoState("", "")
     }
