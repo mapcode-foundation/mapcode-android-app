@@ -16,13 +16,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
-import timber.log.Timber
+import kotlinx.coroutines.launch
 
 /**
  * Created by sds100 on 31/05/2022.
@@ -64,6 +65,8 @@ fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Uni
     }
 }
 
+private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
+
 /**
  * This handles the Google Map component.
  */
@@ -88,13 +91,20 @@ fun Map(
         )
     }
 
+    val scope = rememberCoroutineScope()
+
     GoogleMap(
         cameraPositionState = cameraPositionState,
         modifier = modifier.fillMaxSize(),
         uiSettings = uiSettings,
         properties = properties,
-        onMapClick = {
-            Timber.e(it.toString())
+        onMapClick = { position ->
+            scope.launch {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLng(position),
+                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                )
+            }
         },
         contentDescription = stringResource(R.string.google_maps_content_description)
     )
