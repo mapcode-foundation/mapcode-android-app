@@ -14,6 +14,9 @@ class ShowMapcodeUseCaseImpl @Inject constructor() : ShowMapcodeUseCase {
     }
 }
 
+/**
+ * This handles getting mapcode information for the UI layer.
+ */
 interface ShowMapcodeUseCase {
     fun getMapcodes(lat: Double, long: Double): List<Mapcode>
 }

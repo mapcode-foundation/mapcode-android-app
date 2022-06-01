@@ -18,6 +18,9 @@ class MapViewModel @Inject constructor(
     private val _mapcodeInfoState: MutableStateFlow<MapcodeInfoState> = MutableStateFlow(MapcodeInfoState(""))
     val mapcodeInfoState: StateFlow<MapcodeInfoState> = _mapcodeInfoState.asStateFlow()
 
+    /**
+     * When the camera has moved the mapcode information should be updated.
+     */
     fun onCameraMoved(lat: Double, long: Double) {
         val mapcodes = mapcodeUseCase.getMapcodes(lat, long)
 

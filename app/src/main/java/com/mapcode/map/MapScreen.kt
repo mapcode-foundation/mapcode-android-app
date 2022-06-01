@@ -28,6 +28,10 @@ import timber.log.Timber
  * Created by sds100 on 31/05/2022.
  */
 
+/**
+ * The top portion of the screen containing the map and
+ * the button to request location.
+ */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Unit) {
@@ -48,10 +52,11 @@ fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Uni
             }
         }
 
-        Map(isMyLocationEnabled = isMyLocationEnabled, onCameraMoved = onCameraMoved)
+        Map(isMyLocationEnabled = isMyLocationEnabled, onCameraFinishedMoving = onCameraMoved)
 
+        //overlay the button to request location permission if my location is disabled.
         if (!isMyLocationEnabled) {
-            MyLocationPlaceholderButton(
+            RequestLocationPermissionButton(
                 onClick = { locationPermissionsState.launchMultiplePermissionRequest() },
                 modifier = Modifier.align(Alignment.TopEnd)
             )
@@ -59,11 +64,14 @@ fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Uni
     }
 }
 
+/**
+ * This handles the Google Map component.
+ */
 @Composable
 fun Map(
     modifier: Modifier = Modifier,
     isMyLocationEnabled: Boolean,
-    onCameraMoved: (Double, Double) -> Unit
+    onCameraFinishedMoving: (Double, Double) -> Unit
 ) {
     var uiSettings by remember { mutableStateOf(MapUiSettings()) }
     var properties by remember { mutableStateOf(MapProperties()) }
@@ -72,7 +80,13 @@ fun Map(
     properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
 
     val cameraPositionState = rememberCameraPositionState()
-    onCameraMoved(cameraPositionState.position.target.latitude, cameraPositionState.position.target.longitude)
+
+    if (!cameraPositionState.isMoving) {
+        onCameraFinishedMoving(
+            cameraPositionState.position.target.latitude,
+            cameraPositionState.position.target.longitude
+        )
+    }
 
     GoogleMap(
         cameraPositionState = cameraPositionState,
@@ -86,20 +100,30 @@ fun Map(
     )
 }
 
+/**
+ * This is the button to request location permission.
+ */
 @Composable
-fun MyLocationPlaceholderButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Button(onClick = onClick, modifier) {
         Text("Request location permission")
     }
 }
 
+/**
+ * The part of the screen that shows the mapcode and territory.
+ */
 @Composable
 fun MapcodeTextArea(mapcode: String) {
     Text(text = mapcode, style = MaterialTheme.typography.subtitle1)
 }
 
+/**
+ * The bottom portion of the screen containing all the mapcode and
+ * address information.
+ */
 @Composable
-fun MapcodeInfo(modifier: Modifier = Modifier, state: MapcodeInfoState) {
+fun MapcodeInfoBox(modifier: Modifier = Modifier, state: MapcodeInfoState) {
     Box(modifier = modifier.fillMaxSize()) {
         MapcodeTextArea(mapcode = state.mapcode)
     }
@@ -110,7 +134,7 @@ fun MapcodeInfo(modifier: Modifier = Modifier, state: MapcodeInfoState) {
 fun MapcodeInfoPreview() {
     MapcodeTheme {
         val state = MapcodeInfoState(mapcode = "1AB.XY")
-        MapcodeInfo(state = state)
+        MapcodeInfoBox(state = state)
     }
 }
 
@@ -121,7 +145,7 @@ fun MapScreen(viewModel: MapViewModel) {
             MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
 
             val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
-            MapcodeInfo(Modifier.weight(0.3f), mapcodeInfoState)
+            MapcodeInfoBox(Modifier.weight(0.3f), mapcodeInfoState)
         }
     }
 }
