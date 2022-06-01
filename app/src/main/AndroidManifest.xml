@@ -17,7 +17,7 @@
         android:theme="@style/Theme.Mapcode"
         tools:targetApi="31">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Mapcode">
             <intent-filter>
