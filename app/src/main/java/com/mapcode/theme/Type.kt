@@ -1,4 +1,4 @@
-package com.mapcode.ui.theme
+package com.mapcode.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

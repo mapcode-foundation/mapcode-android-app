@@ -1,4 +1,4 @@
-package com.mapcode.ui.map
+package com.mapcode.map
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

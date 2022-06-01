@@ -1,4 +1,4 @@
-package com.mapcode.ui.map
+package com.mapcode.map
 
 import android.Manifest
 import androidx.compose.foundation.layout.Box
@@ -21,7 +21,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.mapcode.R
-import com.mapcode.ui.theme.MapcodeTheme
+import com.mapcode.theme.MapcodeTheme
 
 /**
  * Created by sds100 on 31/05/2022.
