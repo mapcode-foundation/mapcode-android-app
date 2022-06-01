@@ -5,6 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 /**
@@ -16,6 +17,14 @@ class MapViewModel @Inject constructor(
 ) : ViewModel() {
     private val _mapcodeInfoState: MutableStateFlow<MapcodeInfoState> = MutableStateFlow(MapcodeInfoState(""))
     val mapcodeInfoState: StateFlow<MapcodeInfoState> = _mapcodeInfoState.asStateFlow()
+
+    fun onCameraMoved(lat: Double, long: Double) {
+        val mapcodes = mapcodeUseCase.getMapcodes(lat, long)
+
+        _mapcodeInfoState.update { state ->
+            state.copy(mapcode = mapcodes[0].code)
+        }
+    }
 }
 
 data class MapcodeInfoState(val mapcode: String)

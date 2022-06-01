@@ -1,5 +1,7 @@
 package com.mapcode.map
 
+import com.mapcode.Mapcode
+import com.mapcode.MapcodeCodec
 import javax.inject.Inject
 
 /**
@@ -7,11 +9,11 @@ import javax.inject.Inject
  */
 
 class ShowMapcodeUseCaseImpl @Inject constructor() : ShowMapcodeUseCase {
-    override fun getMapcodes(): List<String> {
-        TODO("Not yet implemented")
+    override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
+        return MapcodeCodec.encode(lat, long)
     }
 }
 
 interface ShowMapcodeUseCase {
-    fun getMapcodes(): List<String>
+    fun getMapcodes(lat: Double, long: Double): List<Mapcode>
 }

@@ -19,8 +19,10 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
+import timber.log.Timber
 
 /**
  * Created by sds100 on 31/05/2022.
@@ -28,7 +30,7 @@ import com.mapcode.theme.MapcodeTheme
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapBox(modifier: Modifier = Modifier) {
+fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Unit) {
     Box(modifier) {
         val locationPermissionsState = rememberMultiplePermissionsState(
             listOf(
@@ -46,7 +48,7 @@ fun MapBox(modifier: Modifier = Modifier) {
             }
         }
 
-        Map(isMyLocationEnabled)
+        Map(isMyLocationEnabled = isMyLocationEnabled, onCameraMoved = onCameraMoved)
 
         if (!isMyLocationEnabled) {
             MyLocationPlaceholderButton(
@@ -58,17 +60,28 @@ fun MapBox(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Map(isMyLocationEnabled: Boolean, modifier: Modifier = Modifier) {
+fun Map(
+    modifier: Modifier = Modifier,
+    isMyLocationEnabled: Boolean,
+    onCameraMoved: (Double, Double) -> Unit
+) {
     var uiSettings by remember { mutableStateOf(MapUiSettings()) }
     var properties by remember { mutableStateOf(MapProperties()) }
 
     uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
     properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
 
+    val cameraPositionState = rememberCameraPositionState()
+    onCameraMoved(cameraPositionState.position.target.latitude, cameraPositionState.position.target.longitude)
+
     GoogleMap(
+        cameraPositionState = cameraPositionState,
         modifier = modifier.fillMaxSize(),
         uiSettings = uiSettings,
         properties = properties,
+        onMapClick = {
+            Timber.e(it.toString())
+        },
         contentDescription = stringResource(R.string.google_maps_content_description)
     )
 }
@@ -105,7 +118,7 @@ fun MapcodeInfoPreview() {
 fun MapScreen(viewModel: MapViewModel) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Column {
-            MapBox(Modifier.weight(0.7f))
+            MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
 
             val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
             MapcodeInfo(Modifier.weight(0.3f), mapcodeInfoState)
