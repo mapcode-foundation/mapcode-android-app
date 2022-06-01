@@ -24,12 +24,12 @@ class MapScreenTest {
 
     private lateinit var mockUseCase: ShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
-    
+
     @Before
     fun setUp() {
         mockUseCase = mock()
         viewModel = MapViewModel(mockUseCase)
-        
+
         whenever(mockUseCase.getMapcodes(any(), any())).thenReturn(listOf(Mapcode("AB.XY", Territory.AAA)))
 
         composeTestRule.setContent {
@@ -42,25 +42,36 @@ class MapScreenTest {
         composeTestRule
             .onNodeWithText("Mapcode (tap to copy)")
             .performClick()
-        
+
         verify(mockUseCase).copyToClipboard("AAA AB.XY")
     }
-    
+
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_code() {
         composeTestRule
             .onNodeWithText("AB.XY")
             .performClick()
-        
+
         verify(mockUseCase).copyToClipboard("AAA AB.XY")
     }
-    
+
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_territory() {
         composeTestRule
             .onNodeWithText("AAA")
             .performClick()
-        
+
         verify(mockUseCase).copyToClipboard("AAA AB.XY")
+    }
+
+    @Test
+    fun show_snack_bar_when_copying_mapcode() {
+        composeTestRule
+            .onNodeWithText("AAA")
+            .performClick()
+        
+        composeTestRule
+            .onNodeWithText("Copied to clipboard.")
+            .assertExists(errorMessageOnFail = "Can't find snackbar saying the mapcode is copied")
     }
 }

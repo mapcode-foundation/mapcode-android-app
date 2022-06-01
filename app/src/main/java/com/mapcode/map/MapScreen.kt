@@ -6,8 +6,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -170,15 +168,17 @@ fun MapcodeTextArea(
     Column(modifier.fillMaxWidth()) {
         Header(stringResource(R.string.mapcode_header_button), onClick)
         Row(Modifier.fillMaxWidth()) {
-            Text(
-                text = territory,
+            ClickableText(
+                text = AnnotatedString(territory),
                 style = MaterialTheme.typography.body2,
-                modifier = Modifier.align(Alignment.Bottom)
+                modifier = Modifier.align(Alignment.Bottom),
+                onClick = { onClick() }
             )
-            Text(
-                text = code,
+            ClickableText(
+                text = AnnotatedString(code),
                 style = MaterialTheme.typography.subtitle1,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onClick() }
             )
         }
     }
