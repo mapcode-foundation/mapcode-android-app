@@ -21,7 +21,7 @@ class MapViewModel @Inject constructor(
         if (mapcodeIndex == -1) {
             return@combine MapcodeInfoState.EMPTY
         }
-        
+
         val mapcode = mapcodes[mapcodeIndex]
 
         MapcodeInfoState(
@@ -40,14 +40,17 @@ class MapViewModel @Inject constructor(
 
     /**
      * When the mapcode text is clicked.
+     *
+     * @return whether it copied successfully.
      */
-    fun onMapcodeClick() {
+    fun copyMapcode(): Boolean {
         if (mapcodes.value.isEmpty() || mapcodeIndex.value == -1) {
-            return
+            return false
         }
 
         val mapcode = mapcodes.value[mapcodeIndex.value]
         useCase.copyToClipboard("${mapcode.territory.name} ${mapcode.code}")
+        return true
     }
 }
 

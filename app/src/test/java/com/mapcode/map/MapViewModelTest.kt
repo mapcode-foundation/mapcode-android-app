@@ -55,13 +55,13 @@ internal class MapViewModelTest {
         whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
         viewModel.onCameraMoved(1.0, 1.0)
 
-        viewModel.onMapcodeClick()
+        viewModel.copyMapcode()
         verify(mockUseCase).copyToClipboard("AAA 1AB.XY")
     }
 
     @Test
     fun `do not copy mapcode to clipboard when there is no mapcode`() {
-        viewModel.onMapcodeClick()
+        viewModel.copyMapcode()
         verify(mockUseCase, never()).copyToClipboard(any())
     }
 }

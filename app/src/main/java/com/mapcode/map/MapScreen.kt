@@ -3,10 +3,7 @@ package com.mapcode.map
 import android.Manifest
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -178,15 +175,32 @@ fun MapcodeInfoBoxPreview() {
 
 @Composable
 fun MapScreen(viewModel: MapViewModel) {
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-        Column {
-            MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
 
-            val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
-            MapcodeInfoBox(
-                Modifier.weight(0.3f),
-                mapcodeInfoState,
-                onMapcodeClick = { viewModel.onMapcodeClick() })
+
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+        Scaffold(
+            scaffoldState = scaffoldState,
+        ) {
+            Column {
+                MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
+
+                val copiedMessage = stringResource(R.string.copied_to_clipboard_snackbar_text)
+                val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
+
+                MapcodeInfoBox(
+                    Modifier.weight(0.3f),
+                    mapcodeInfoState,
+                    onMapcodeClick = {
+                        val copied = viewModel.copyMapcode()
+                        if (copied) {
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar(copiedMessage)
+                            }
+                        }
+                    })
+            }
         }
     }
 }
