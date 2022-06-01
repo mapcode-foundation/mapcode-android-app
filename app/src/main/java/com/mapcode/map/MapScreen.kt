@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -81,19 +80,25 @@ fun MyLocationPlaceholderButton(modifier: Modifier = Modifier, onClick: () -> Un
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun MyLocationPlaceholderButtonPreview() {
-    MapcodeTheme {
-        MyLocationPlaceholderButton()
-        MyLocationPlaceholderButton()
-        Text(text = "test")
-    }
+fun MapcodeTextArea(mapcode: String) {
+    Text(text = mapcode, style = MaterialTheme.typography.subtitle1)
 }
 
 @Composable
-fun MapcodeInfo(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize())
+fun MapcodeInfo(modifier: Modifier = Modifier, state: MapcodeInfoState) {
+    Box(modifier = modifier.fillMaxSize()) {
+        MapcodeTextArea(mapcode = state.mapcode)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MapcodeInfoPreview() {
+    MapcodeTheme {
+        val state = MapcodeInfoState(mapcode = "1AB.XY")
+        MapcodeInfo(state = state)
+    }
 }
 
 @Composable
@@ -101,13 +106,9 @@ fun MapScreen(viewModel: MapViewModel) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Column {
             MapBox(Modifier.weight(0.7f))
-            MapcodeInfo(Modifier.weight(0.3f))
+
+            val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
+            MapcodeInfo(Modifier.weight(0.3f), mapcodeInfoState)
         }
     }
-}
-
-@Preview
-@Composable
-fun MapScreenPreview() {
-    MapScreen(viewModel = hiltViewModel())
 }

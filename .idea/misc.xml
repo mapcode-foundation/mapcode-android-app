@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/java/com/mapcode/MainActivity.kt" value="1.5090252707581226" />
+        <entry key="app/src/main/java/com/mapcode/map/MapScreen.kt" value="0.3471283783783784" />
         <entry key="app/src/main/java/com/mapcode/ui/map/MapScreen.kt" value="0.2814814814814815" />
       </map>
     </option>
