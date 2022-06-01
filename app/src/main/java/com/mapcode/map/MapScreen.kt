@@ -6,6 +6,8 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -214,7 +216,13 @@ fun MapcodeInfoBox(
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state = MapcodeInfoState(code = "1AB.XY", territory = "NLD", address = "Street, City")
+        val state =
+            MapcodeInfoState(
+                code = "1AB.XY",
+                territory = "NLD",
+                address = "Street, City",
+                AddressError.NoInternet
+            )
         MapcodeInfoBox(state = state)
     }
 }

@@ -14,6 +14,7 @@ import javax.inject.Inject
 class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase
 ) : ViewModel() {
+
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
     private val address: MutableStateFlow<String> = MutableStateFlow("")
@@ -29,7 +30,8 @@ class MapViewModel @Inject constructor(
             MapcodeInfoState(
                 code = mapcode.code,
                 territory = mapcode.territory.name,
-                address = address
+                address = address,
+                addressError = AddressError.None
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
 
@@ -37,8 +39,12 @@ class MapViewModel @Inject constructor(
      * When the camera has moved the mapcode information should be updated.
      */
     fun onCameraMoved(lat: Double, long: Double) {
-        mapcodes.value = useCase.getMapcodes(lat, long)
-        mapcodeIndex.value = 0
+        val newMapcodes = useCase.getMapcodes(lat, long)
+        mapcodes.value = newMapcodes
+
+        if (newMapcodes.isNotEmpty()) {
+            mapcodeIndex.value = 0
+        }
     }
 
     /**
@@ -67,9 +73,10 @@ class MapViewModel @Inject constructor(
 data class MapcodeInfoState(
     val code: String,
     val territory: String,
-    val address: String
+    val address: String,
+    val addressError: AddressError
 ) {
     companion object {
-        val EMPTY: MapcodeInfoState = MapcodeInfoState("", "", "")
+        val EMPTY: MapcodeInfoState = MapcodeInfoState("", "", "", AddressError.None)
     }
 }
