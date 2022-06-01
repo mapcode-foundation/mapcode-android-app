@@ -5,5 +5,6 @@
     <string name="google_maps_content_description">Google map</string>
     <string name="mapcode_header_button">Mapcode (tap to copy)</string>
     <string name="copied_to_clipboard_snackbar_text">Copied to clipboard.</string>
+    <string name="address_bar_label">Enter address or mapcode</string>
     <!--  Map screen  -->
 </resources>

@@ -16,19 +16,22 @@ class MapViewModel @Inject constructor(
 ) : ViewModel() {
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
+    private val address: MutableStateFlow<String> = MutableStateFlow("")
 
-    val mapcodeInfoState: StateFlow<MapcodeInfoState> = combine(mapcodes, mapcodeIndex) { mapcodes, mapcodeIndex ->
-        if (mapcodeIndex == -1) {
-            return@combine MapcodeInfoState.EMPTY
-        }
+    val mapcodeInfoState: StateFlow<MapcodeInfoState> =
+        combine(mapcodes, mapcodeIndex, address) { mapcodes, mapcodeIndex, address ->
+            if (mapcodeIndex == -1) {
+                return@combine MapcodeInfoState.EMPTY
+            }
 
-        val mapcode = mapcodes[mapcodeIndex]
+            val mapcode = mapcodes[mapcodeIndex]
 
-        MapcodeInfoState(
-            code = mapcode.code,
-            territory = mapcode.territory.name
-        )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
+            MapcodeInfoState(
+                code = mapcode.code,
+                territory = mapcode.territory.name,
+                address = address
+            )
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
 
     /**
      * When the camera has moved the mapcode information should be updated.
@@ -52,10 +55,21 @@ class MapViewModel @Inject constructor(
         useCase.copyToClipboard("${mapcode.territory.name} ${mapcode.code}")
         return true
     }
+
+    /**
+     * Find the address or mapcode and move to that location on the map.
+     */
+    fun findAddress(newAddress: String) {
+        address.value = newAddress
+    }
 }
 
-data class MapcodeInfoState(val code: String, val territory: String) {
+data class MapcodeInfoState(
+    val code: String,
+    val territory: String,
+    val address: String
+) {
     companion object {
-        val EMPTY: MapcodeInfoState = MapcodeInfoState("", "")
+        val EMPTY: MapcodeInfoState = MapcodeInfoState("", "", "")
     }
 }

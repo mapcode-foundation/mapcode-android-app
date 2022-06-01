@@ -3,13 +3,18 @@ package com.mapcode.map
 import android.Manifest
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -117,6 +122,39 @@ fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -
     }
 }
 
+@Composable
+fun AddressTextField(modifier: Modifier = Modifier, address: String, onChange: (String) -> Unit) {
+    var inputtedText by remember { mutableStateOf(address) }
+    val focusManager = LocalFocusManager.current
+
+    OutlinedTextField(
+        modifier = modifier.fillMaxWidth(),
+        value = inputtedText,
+        singleLine = true,
+        label = { Text(stringResource(R.string.address_bar_label)) },
+        onValueChange = { inputtedText = it },
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Go
+        ),
+        keyboardActions = KeyboardActions(
+            onGo = {
+                focusManager.clearFocus()
+                onChange(inputtedText)
+            }
+        )
+    )
+}
+
+@Composable
+fun Header(text: String, onClick: () -> Unit = {}) {
+    ClickableText(
+        text = AnnotatedString(text),
+        onClick = { onClick() },
+        style = MaterialTheme.typography.h6,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 /**
  * The part of the screen that shows the mapcode and territory.
  */
@@ -127,13 +165,8 @@ fun MapcodeTextArea(
     territory: String,
     onClick: () -> Unit
 ) {
-    Column(modifier.fillMaxSize()) {
-        ClickableText(
-            text = AnnotatedString(stringResource(R.string.mapcode_header_button)),
-            onClick = { onClick() },
-            style = MaterialTheme.typography.h6,
-            modifier = Modifier.fillMaxWidth()
-        )
+    Column(modifier.fillMaxWidth()) {
+        Header(stringResource(R.string.mapcode_header_button), onClick)
         Row(Modifier.fillMaxWidth()) {
             Text(
                 text = territory,
@@ -143,7 +176,7 @@ fun MapcodeTextArea(
             Text(
                 text = code,
                 style = MaterialTheme.typography.subtitle1,
-                modifier = modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -157,10 +190,23 @@ fun MapcodeTextArea(
 fun MapcodeInfoBox(
     modifier: Modifier = Modifier,
     state: MapcodeInfoState,
-    onMapcodeClick: () -> Unit = {}
+    onMapcodeClick: () -> Unit = {},
+    onAddressChange: (String) -> Unit = {}
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        MapcodeTextArea(code = state.code, territory = state.territory, onClick = onMapcodeClick)
+        Column {
+            AddressTextField(
+                modifier = Modifier.fillMaxWidth(),
+                address = state.address,
+                onChange = onAddressChange
+            )
+            MapcodeTextArea(
+                modifier = Modifier.padding(top = 8.dp),
+                code = state.code,
+                territory = state.territory,
+                onClick = onMapcodeClick
+            )
+        }
     }
 }
 
@@ -168,7 +214,7 @@ fun MapcodeInfoBox(
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state = MapcodeInfoState(code = "1AB.XY", territory = "NLD")
+        val state = MapcodeInfoState(code = "1AB.XY", territory = "NLD", address = "Street, City")
         MapcodeInfoBox(state = state)
     }
 }
@@ -178,7 +224,6 @@ fun MapScreen(viewModel: MapViewModel) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
-
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Scaffold(
             scaffoldState = scaffoldState,
@@ -186,20 +231,23 @@ fun MapScreen(viewModel: MapViewModel) {
             Column {
                 MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
 
-                val copiedMessage = stringResource(R.string.copied_to_clipboard_snackbar_text)
+                val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
                 val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
 
                 MapcodeInfoBox(
-                    Modifier.weight(0.3f),
+                    Modifier
+                        .weight(0.3f)
+                        .padding(8.dp),
                     mapcodeInfoState,
                     onMapcodeClick = {
                         val copied = viewModel.copyMapcode()
                         if (copied) {
                             scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(copiedMessage)
+                                scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
                             }
                         }
-                    })
+                    },
+                    onAddressChange = { viewModel.findAddress(it) })
             }
         }
     }
