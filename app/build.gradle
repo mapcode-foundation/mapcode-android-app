@@ -71,6 +71,7 @@ dependencies {
 
     //other
     implementation "com.jakewharton.timber:timber:4.7.1"
+    implementation "com.mapcode:mapcode:2.4.14"
 
     //testing
     testImplementation 'junit:junit:4.13.2'
