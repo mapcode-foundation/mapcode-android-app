@@ -1,9 +1,8 @@
 package com.mapcode.map
 
 import android.Manifest
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -12,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
@@ -124,8 +124,31 @@ fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -
  * The part of the screen that shows the mapcode and territory.
  */
 @Composable
-fun MapcodeTextArea(mapcode: String) {
-    Text(text = mapcode, style = MaterialTheme.typography.subtitle1)
+fun MapcodeTextArea(
+    modifier: Modifier = Modifier,
+    mapcode: String,
+    territory: String
+) {
+    Column(modifier.fillMaxSize()) {
+        ClickableText(
+            text = AnnotatedString(stringResource(R.string.mapcode_header_button)),
+            onClick = { /*TODO*/ },
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(Modifier.fillMaxWidth()) {
+            Text(
+                text = territory,
+                style = MaterialTheme.typography.body2,
+                modifier = Modifier.align(Alignment.Bottom)
+            )
+            Text(
+                text = mapcode,
+                style = MaterialTheme.typography.subtitle1,
+                modifier = modifier.fillMaxWidth()
+            )
+        }
+    }
 }
 
 /**
@@ -135,15 +158,15 @@ fun MapcodeTextArea(mapcode: String) {
 @Composable
 fun MapcodeInfoBox(modifier: Modifier = Modifier, state: MapcodeInfoState) {
     Box(modifier = modifier.fillMaxSize()) {
-        MapcodeTextArea(mapcode = state.mapcode)
+        MapcodeTextArea(mapcode = state.mapcode, territory = state.territory)
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 600, heightDp = 300)
 @Composable
-fun MapcodeInfoPreview() {
+fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state = MapcodeInfoState(mapcode = "1AB.XY")
+        val state = MapcodeInfoState(mapcode = "1AB.XY", territory = "NLD")
         MapcodeInfoBox(state = state)
     }
 }

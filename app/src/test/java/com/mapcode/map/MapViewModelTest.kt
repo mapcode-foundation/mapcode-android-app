@@ -29,6 +29,8 @@ internal class MapViewModelTest {
         whenever(mockShowMapcodeUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
 
         viewModel.onCameraMoved(1.0, 1.0)
-        assertThat(viewModel.mapcodeInfoState.value.mapcode).isEqualTo("1AB.XY")
+
+        val expectedUiState = MapcodeInfoState(mapcode = "1AB.XY", territory = "AAA")
+        assertThat(viewModel.mapcodeInfoState.value).isEqualTo(expectedUiState)
     }
 }
