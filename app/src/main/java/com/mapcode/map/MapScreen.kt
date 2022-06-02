@@ -152,7 +152,7 @@ fun AddressTextField(
 
         val errorMessage = when (error) {
             AddressError.NoInternet -> stringResource(R.string.no_internet_error)
-            AddressError.CantFindAddress -> "TODO"
+            is AddressError.UnknownAddress -> "TODO"
             AddressError.NoAddress -> "TODO"
             AddressError.None -> null
         }

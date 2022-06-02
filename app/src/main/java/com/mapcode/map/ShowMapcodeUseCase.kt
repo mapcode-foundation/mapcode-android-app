@@ -8,6 +8,7 @@ import androidx.core.content.getSystemService
 import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
 import com.mapcode.util.Location
+import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import java.io.IOException
 import javax.inject.Inject
@@ -36,7 +37,6 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
     override fun geocode(address: String): Result<Location> {
         val addressList = geocoder.getFromLocationName(address, 1).single()!!
 
-        throw UnknownAddressException()
         return success(Location(addressList.latitude, addressList.longitude))
     }
 
@@ -45,7 +45,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
             val addressList = geocoder.getFromLocation(lat, long, 1)
 
             if (addressList.isEmpty()) {
-                return failure(UnknownAddressException())
+                return failure(NoAddressException())
             }
 
             return success(addressList.single().toString())
@@ -54,7 +54,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
         }
     }
 
-    override fun getMapcodeLocation(mapcode: String): Result<Location> {
+    override fun decodeMapcode(mapcode: String): Result<Location> {
 
         TODO()
     }
@@ -74,7 +74,7 @@ interface ShowMapcodeUseCase {
      * @return success if the mapcode is known and could be converted.
      * @return failure with [UnknownMapcodeException] if the mapcode can't be converted into a location.
      */
-    fun getMapcodeLocation(mapcode: String): Result<Location>
+    fun decodeMapcode(mapcode: String): Result<Location>
 
     /**
      * Copy text to a clipboard.
@@ -93,7 +93,7 @@ interface ShowMapcodeUseCase {
     /**
      * Converts a latitude and longitude to an address.
      * @return [IOException] failure if the address can't be found due to a network failure.
-     * @return [UnknownAddressException] failure if no address exists for this location.
+     * @return [NoAddressException] failure if no address exists for this location.
      */
     fun reverseGeocode(lat: Double, long: Double): Result<String>
 }

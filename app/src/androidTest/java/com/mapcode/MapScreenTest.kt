@@ -97,6 +97,11 @@ class MapScreenTest {
 
     }
 
+    @Test
+    fun show_error_if_unknown_address_query() {
+
+    }
+
     private fun mockGetMapcodes(vararg mapcode: Mapcode) {
         whenever(mockUseCase.getMapcodes(any(), any())).thenReturn(mapcode.toList())
     }

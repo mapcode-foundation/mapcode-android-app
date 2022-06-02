@@ -3,8 +3,9 @@ package com.mapcode.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapcode.Mapcode
-import com.mapcode.util.UnknownAddressException
 import com.mapcode.util.Location
+import com.mapcode.util.NoAddressException
+import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import java.io.IOException
@@ -59,29 +60,20 @@ class MapViewModel @Inject constructor(
      */
     fun onCameraMoved(lat: Double, long: Double) {
         location.value = Location(lat, long)
-        
+
         //update the mapcode when the map moves
         val newMapcodes = useCase.getMapcodes(lat, long)
         mapcodes.value = newMapcodes
 
-        if (newMapcodes.isNotEmpty()) {
+        if (newMapcodes.isEmpty()) {
+            mapcodeIndex.value = -1
+        } else {
             mapcodeIndex.value = 0
         }
 
         //update the address when the map moves
         val addressResult = useCase.reverseGeocode(lat, long)
-
-        addressResult
-            .onSuccess { newAddress ->
-                address.value = newAddress
-                addressError.value = AddressError.None
-            }
-            .onFailure { error ->
-                when (error) {
-                    is IOException -> addressError.value = AddressError.NoInternet
-                    is UnknownAddressException -> addressError.value = AddressError.CantFindAddress
-                }
-            }
+        updateAddress(addressResult)
     }
 
     /**
@@ -103,7 +95,59 @@ class MapViewModel @Inject constructor(
      * Find the address or mapcode and move to that location on the map.
      */
     fun queryAddress(newAddress: String) {
-        address.value = newAddress
+        //first try to decode it as a mapcode, if that fails then try to geocode it as an address
+        val newLocationResult: Result<Location>
+
+        val decodeMapcodeResult = useCase.decodeMapcode(newAddress)
+
+        if (decodeMapcodeResult.isSuccess) {
+            newLocationResult = decodeMapcodeResult
+        } else {
+            newLocationResult = useCase.geocode(newAddress)
+        }
+
+        newLocationResult
+            .onSuccess { newLocation ->
+                location.value = newLocation
+
+                val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
+                mapcodes.value = newMapcodes
+
+                if (newMapcodes.isEmpty()) {
+                    mapcodeIndex.value = -1
+                } else {
+                    mapcodeIndex.value = 0
+                }
+
+                val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
+                updateAddress(newAddressResult)
+            }
+            .onFailure { error ->
+                when (error) {
+                    is IOException -> {
+                        addressError.value = AddressError.NoInternet
+                    }
+                    is UnknownAddressException -> {
+                        addressError.value = AddressError.UnknownAddress(newAddress)
+                    }
+                }
+
+                address.value = "" //clear address if error
+            }
+    }
+
+    private fun updateAddress(addressResult: Result<String>) {
+        addressResult
+            .onSuccess { newAddress ->
+                address.value = newAddress
+                addressError.value = AddressError.None
+            }
+            .onFailure { error ->
+                when (error) {
+                    is IOException -> addressError.value = AddressError.NoInternet
+                    is NoAddressException -> addressError.value = AddressError.NoAddress
+                }
+            }
     }
 }
 
