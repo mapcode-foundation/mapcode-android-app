@@ -123,26 +123,49 @@ fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -
 }
 
 @Composable
-fun AddressTextField(modifier: Modifier = Modifier, address: String, onChange: (String) -> Unit) {
+fun AddressTextField(
+    modifier: Modifier = Modifier,
+    address: String,
+    onChange: (String) -> Unit,
+    error: AddressError
+) {
     var inputtedText by remember { mutableStateOf(address) }
     val focusManager = LocalFocusManager.current
 
-    OutlinedTextField(
-        modifier = modifier.fillMaxWidth(),
-        value = inputtedText,
-        singleLine = true,
-        label = { Text(stringResource(R.string.address_bar_label)) },
-        onValueChange = { inputtedText = it },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Go
-        ),
-        keyboardActions = KeyboardActions(
-            onGo = {
-                focusManager.clearFocus()
-                onChange(inputtedText)
-            }
+    Column {
+        OutlinedTextField(
+            modifier = modifier.fillMaxWidth(),
+            value = inputtedText,
+            singleLine = true,
+            label = { Text(stringResource(R.string.address_bar_label)) },
+            onValueChange = { inputtedText = it },
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Go
+            ),
+            keyboardActions = KeyboardActions(
+                onGo = {
+                    focusManager.clearFocus()
+                    onChange(inputtedText)
+                }
+            )
         )
-    )
+
+        val errorMessage = when (error) {
+            AddressError.NoInternet -> stringResource(R.string.no_internet_error)
+            AddressError.CantFindAddress -> "TODO"
+            AddressError.NoAddress -> "TODO"
+            AddressError.None -> null
+        }
+
+        if (errorMessage != null) {
+            TextFieldErrorText(message = errorMessage)
+        }
+    }
+}
+
+@Composable
+fun TextFieldErrorText(message: String) {
+    Text(message)
 }
 
 @Composable
@@ -200,7 +223,8 @@ fun MapcodeInfoBox(
             AddressTextField(
                 modifier = Modifier.fillMaxWidth(),
                 address = state.address,
-                onChange = onAddressChange
+                onChange = onAddressChange,
+                error = state.addressError
             )
             MapcodeTextArea(
                 modifier = Modifier.padding(top = 8.dp),
@@ -221,7 +245,9 @@ fun MapcodeInfoBoxPreview() {
                 code = "1AB.XY",
                 territory = "NLD",
                 address = "Street, City",
-                AddressError.NoInternet
+                AddressError.NoInternet,
+                "1.0",
+                "2.0"
             )
         MapcodeInfoBox(state = state)
     }
@@ -255,7 +281,7 @@ fun MapScreen(viewModel: MapViewModel) {
                             }
                         }
                     },
-                    onAddressChange = { viewModel.findAddress(it) })
+                    onAddressChange = { viewModel.queryAddress(it) })
             }
         }
     }

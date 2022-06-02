@@ -1,5 +1,6 @@
 package com.mapcode
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -13,6 +14,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import java.io.IOException
+import kotlin.Result.Companion.failure
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -29,16 +32,12 @@ class MapScreenTest {
     fun setUp() {
         mockUseCase = mock()
         viewModel = MapViewModel(mockUseCase)
-
-        whenever(mockUseCase.getMapcodes(any(), any())).thenReturn(listOf(Mapcode("AB.XY", Territory.AAA)))
-
-        composeTestRule.setContent {
-            MapScreen(viewModel = viewModel)
-        }
     }
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_header() {
+        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+
         composeTestRule
             .onNodeWithText("Mapcode (tap to copy)")
             .performClick()
@@ -48,6 +47,8 @@ class MapScreenTest {
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_code() {
+        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+
         composeTestRule
             .onNodeWithText("AB.XY")
             .performClick()
@@ -57,6 +58,8 @@ class MapScreenTest {
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_territory() {
+        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+
         composeTestRule
             .onNodeWithText("AAA")
             .performClick()
@@ -66,12 +69,41 @@ class MapScreenTest {
 
     @Test
     fun show_snack_bar_when_copying_mapcode() {
+        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+
         composeTestRule
             .onNodeWithText("AAA")
             .performClick()
-        
+
         composeTestRule
             .onNodeWithText("Copied to clipboard.")
-            .assertExists(errorMessageOnFail = "Can't find snackbar saying the mapcode is copied")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun show_error_if_no_internet() {
+        whenever(mockUseCase.reverseGeocode(any(), any())).thenReturn(failure(IOException()))
+        setMapScreenContent()
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("No internet?")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun show_error_if_no_address_exists_for_location() {
+
+    }
+
+    private fun mockGetMapcodes(vararg mapcode: Mapcode) {
+        whenever(mockUseCase.getMapcodes(any(), any())).thenReturn(mapcode.toList())
+    }
+
+    private fun setMapScreenContent() {
+        composeTestRule.setContent {
+            MapScreen(viewModel = viewModel)
+        }
     }
 }
