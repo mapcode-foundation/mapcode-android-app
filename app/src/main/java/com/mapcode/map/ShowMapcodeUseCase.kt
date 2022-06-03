@@ -64,7 +64,15 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
                 return failure(NoAddressException())
             }
 
-            return success(addressList.single().toString())
+            val address = addressList.single()
+
+            val addressString = buildString {
+                for (i in 0..address.maxAddressLineIndex) {
+                    append(address.getAddressLine(i))
+                }
+            }
+
+            return success(addressString)
         } catch (e: IOException) {
             return failure(e)
         }
