@@ -40,7 +40,7 @@ internal class MapViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         mockUseCase = mock()
-        viewModel = MapViewModel(mockUseCase)
+        viewModel = MapViewModel(mockUseCase, dispatchers = TestDispatcherProvider(testDispatcher))
     }
 
     @After
