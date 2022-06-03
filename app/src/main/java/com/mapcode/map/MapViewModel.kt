@@ -21,26 +21,34 @@ class MapViewModel @Inject constructor(
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
+    private val mapcode: Flow<Mapcode?> = combine(mapcodes, mapcodeIndex) { mapcodes, index ->
+        if (index == -1) {
+            null
+        } else {
+            mapcodes[index]
+        }
+    }
+
     private val address: MutableStateFlow<String> = MutableStateFlow("")
     private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
+    private val addressHelper: MutableStateFlow<AddressHelper> = MutableStateFlow(AddressHelper.None)
     private val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
 
     val mapcodeInfoState: StateFlow<MapcodeInfoState> =
         combine(
-            mapcodes,
-            mapcodeIndex,
+            mapcode,
             address,
             addressError,
+            addressHelper,
             location
-        ) { mapcodes, mapcodeIndex, address, addressError, location ->
+        ) { mapcode, address, addressError, addressHelper, location ->
             val code: String
             val territory: String
 
-            if (mapcodeIndex == -1) {
+            if (mapcode == null) {
                 code = ""
                 territory = ""
             } else {
-                val mapcode = mapcodes[mapcodeIndex]
                 code = mapcode.code
                 territory = mapcode.territory.name
             }
@@ -50,6 +58,7 @@ class MapViewModel @Inject constructor(
                 territory = territory,
                 address = address,
                 addressError = addressError,
+                addressHelper = addressHelper,
                 latitude = location.latitude.toString(),
                 longitude = location.longitude.toString()
             )
@@ -125,7 +134,7 @@ class MapViewModel @Inject constructor(
             .onFailure { error ->
                 when (error) {
                     is IOException -> {
-                        addressError.value = AddressError.NoInternet
+                        addressHelper.value = AddressHelper.NoInternet
                     }
                     is UnknownAddressException -> {
                         addressError.value = AddressError.UnknownAddress(newAddress)
@@ -140,12 +149,12 @@ class MapViewModel @Inject constructor(
         addressResult
             .onSuccess { newAddress ->
                 address.value = newAddress
-                addressError.value = AddressError.None
+                addressHelper.value = AddressHelper.None
             }
             .onFailure { error ->
                 when (error) {
-                    is IOException -> addressError.value = AddressError.NoInternet
-                    is NoAddressException -> addressError.value = AddressError.NoAddress
+                    is IOException -> addressHelper.value = AddressHelper.NoInternet
+                    is NoAddressException -> addressHelper.value = AddressHelper.NoAddress
                 }
             }
     }
@@ -155,11 +164,20 @@ data class MapcodeInfoState(
     val code: String,
     val territory: String,
     val address: String,
+    val addressHelper: AddressHelper,
     val addressError: AddressError,
     val latitude: String,
     val longitude: String
 ) {
     companion object {
-        val EMPTY: MapcodeInfoState = MapcodeInfoState("", "", "", AddressError.None, "", "")
+        val EMPTY: MapcodeInfoState = MapcodeInfoState(
+            code = "",
+            territory = "",
+            address = "",
+            addressHelper = AddressHelper.None,
+            addressError = AddressError.None,
+            latitude = "",
+            longitude = ""
+        )
     }
 }

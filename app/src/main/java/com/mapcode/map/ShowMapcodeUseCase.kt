@@ -7,6 +7,8 @@ import android.location.Geocoder
 import androidx.core.content.getSystemService
 import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
+import com.mapcode.UnknownMapcodeException
+import com.mapcode.UnknownPrecisionFormatException
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
@@ -35,9 +37,14 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
     }
 
     override fun geocode(address: String): Result<Location> {
-        val addressList = geocoder.getFromLocationName(address, 1).single()!!
+        //TODO crash if empty string
+        val matchingAddress = geocoder.getFromLocationName(address, 1).firstOrNull()
 
-        return success(Location(addressList.latitude, addressList.longitude))
+        if (matchingAddress == null) {
+            return failure(UnknownAddressException())
+        } else {
+            return success(Location(matchingAddress.latitude, matchingAddress.longitude))
+        }
     }
 
     override fun reverseGeocode(lat: Double, long: Double): Result<String> {
@@ -55,8 +62,15 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
     }
 
     override fun decodeMapcode(mapcode: String): Result<Location> {
+        try {
+            val point = MapcodeCodec.decode(mapcode)
 
-        TODO()
+            return success(Location(point.latDeg, point.lonDeg))
+        } catch (e: UnknownMapcodeException) {
+            return failure(e)
+        } catch (e: UnknownPrecisionFormatException) {
+            return failure(UnknownMapcodeException("Unknown mapcode $mapcode"))
+        }
     }
 }
 

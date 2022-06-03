@@ -19,10 +19,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.*
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
 import kotlinx.coroutines.launch
@@ -37,7 +34,11 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Unit) {
+fun MapBox(
+    modifier: Modifier = Modifier,
+    onCameraMoved: (Double, Double) -> Unit,
+    cameraPositionState: CameraPositionState
+) {
     Box(modifier) {
         val locationPermissionsState = rememberMultiplePermissionsState(
             listOf(
@@ -55,7 +56,11 @@ fun MapBox(modifier: Modifier = Modifier, onCameraMoved: (Double, Double) -> Uni
             }
         }
 
-        Map(isMyLocationEnabled = isMyLocationEnabled, onCameraFinishedMoving = onCameraMoved)
+        Map(
+            isMyLocationEnabled = isMyLocationEnabled,
+            onCameraFinishedMoving = onCameraMoved,
+            cameraPositionState = cameraPositionState
+        )
 
         //overlay the button to request location permission if my location is disabled.
         if (!isMyLocationEnabled) {
@@ -76,15 +81,14 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
 fun Map(
     modifier: Modifier = Modifier,
     isMyLocationEnabled: Boolean,
-    onCameraFinishedMoving: (Double, Double) -> Unit
+    onCameraFinishedMoving: (Double, Double) -> Unit,
+    cameraPositionState: CameraPositionState
 ) {
     var uiSettings by remember { mutableStateOf(MapUiSettings()) }
     var properties by remember { mutableStateOf(MapProperties()) }
 
     uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
     properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
-
-    val cameraPositionState = rememberCameraPositionState()
 
     if (!cameraPositionState.isMoving) {
         onCameraFinishedMoving(
@@ -127,8 +131,11 @@ fun AddressTextField(
     modifier: Modifier = Modifier,
     address: String,
     onChange: (String) -> Unit,
+    helper: AddressHelper,
     error: AddressError
 ) {
+    //TODO split this up some more
+
     var inputtedText by remember { mutableStateOf(address) }
     val focusManager = LocalFocusManager.current
 
@@ -150,21 +157,34 @@ fun AddressTextField(
             )
         )
 
+        val helperMessage = when (helper) {
+            AddressHelper.NoInternet -> stringResource(R.string.no_internet_error)
+            AddressHelper.NoAddress -> stringResource(R.string.no_address_error)
+            AddressHelper.None -> null
+        }
+
+        if (helperMessage != null) {
+            HelperText(message = helperMessage)
+        }
+
         val errorMessage = when (error) {
-            AddressError.NoInternet -> stringResource(R.string.no_internet_error)
-            is AddressError.UnknownAddress -> "TODO"
-            AddressError.NoAddress -> "TODO"
+            is AddressError.UnknownAddress -> stringResource(R.string.cant_find_address_error, error.addressQuery)
             AddressError.None -> null
         }
 
         if (errorMessage != null) {
-            TextFieldErrorText(message = errorMessage)
+            ErrorText(message = errorMessage)
         }
     }
 }
 
 @Composable
-fun TextFieldErrorText(message: String) {
+fun ErrorText(modifier: Modifier = Modifier, message: String) {
+    Text(message, color = MaterialTheme.colors.error)
+}
+
+@Composable
+fun HelperText(modifier: Modifier = Modifier, message: String) {
     Text(message)
 }
 
@@ -224,6 +244,7 @@ fun MapcodeInfoBox(
                 modifier = Modifier.fillMaxWidth(),
                 address = state.address,
                 onChange = onAddressChange,
+                helper = state.addressHelper,
                 error = state.addressError
             )
             MapcodeTextArea(
@@ -245,7 +266,8 @@ fun MapcodeInfoBoxPreview() {
                 code = "1AB.XY",
                 territory = "NLD",
                 address = "Street, City",
-                AddressError.NoInternet,
+                AddressHelper.NoInternet,
+                AddressError.UnknownAddress("Street, City"),
                 "1.0",
                 "2.0"
             )
@@ -254,19 +276,26 @@ fun MapcodeInfoBoxPreview() {
 }
 
 @Composable
-fun MapScreen(viewModel: MapViewModel) {
+fun MapScreen(
+    viewModel: MapViewModel,
+    cameraPositionState: CameraPositionState = rememberCameraPositionState()
+) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
+    val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Scaffold(
             scaffoldState = scaffoldState,
         ) {
             Column {
-                MapBox(Modifier.weight(0.7f), onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) })
+                MapBox(
+                    Modifier.weight(0.7f),
+                    onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) },
+                    cameraPositionState = cameraPositionState
+                )
 
                 val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
-                val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
 
                 MapcodeInfoBox(
                     Modifier

@@ -8,5 +8,6 @@
     <string name="address_bar_label">Enter address or mapcode</string>
     <string name="no_internet_error">No internet?</string>
     <string name="cant_find_address_error">Cannot find: %s</string>
+    <string name="no_address_error">No address found</string>
     <!--  Map screen  -->
 </resources>

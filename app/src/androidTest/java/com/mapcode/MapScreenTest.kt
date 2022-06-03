@@ -1,21 +1,14 @@
 package com.mapcode
 
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
-import com.mapcode.map.ShowMapcodeUseCase
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
-import java.io.IOException
-import kotlin.Result.Companion.failure
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -25,51 +18,87 @@ class MapScreenTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    private lateinit var mockUseCase: ShowMapcodeUseCase
+    private lateinit var useCase: FakeShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setUp() {
-        mockUseCase = mock()
-        viewModel = MapViewModel(mockUseCase)
+        useCase = FakeShowMapcodeUseCase()
+        viewModel = MapViewModel(useCase)
     }
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_header() {
-        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("Mapcode (tap to copy)")
             .performClick()
 
-        verify(mockUseCase).copyToClipboard("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
     }
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_code() {
-        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("AB.XY")
             .performClick()
 
-        verify(mockUseCase).copyToClipboard("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
     }
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_mapcode_territory() {
-        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("AAA")
             .performClick()
 
-        verify(mockUseCase).copyToClipboard("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
     }
 
     @Test
     fun show_snack_bar_when_copying_mapcode() {
-        mockGetMapcodes(Mapcode("AB.XY", Territory.AAA))
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("AAA")
@@ -82,10 +111,9 @@ class MapScreenTest {
 
     @Test
     fun show_error_if_no_internet() {
-        whenever(mockUseCase.reverseGeocode(any(), any())).thenReturn(failure(IOException()))
-        setMapScreenContent()
+        useCase.hasInternetConnection = false
 
-        composeTestRule.waitForIdle()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("No internet?")
@@ -94,19 +122,51 @@ class MapScreenTest {
 
     @Test
     fun show_error_if_no_address_exists_for_location() {
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
 
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("No address found")
+            .assertIsDisplayed()
     }
 
     @Test
     fun show_error_if_unknown_address_query() {
+        useCase.locations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
 
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("Enter address or mapcode").apply {
+                performTextClearance()
+                performTextInput("ff")
+            }
+
+        composeTestRule
+            .onNodeWithText("ff")
+            .performImeAction()
+
+        composeTestRule
+            .onNodeWithText("Cannot find: ff")
+            .assertIsDisplayed()
     }
 
-    private fun mockGetMapcodes(vararg mapcode: Mapcode) {
-        whenever(mockUseCase.getMapcodes(any(), any())).thenReturn(mapcode.toList())
-    }
-
-    private fun setMapScreenContent() {
+    private fun setMapScreenAsContent() {
         composeTestRule.setContent {
             MapScreen(viewModel = viewModel)
         }
