@@ -37,13 +37,22 @@ class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : Sho
     }
 
     override fun geocode(address: String): Result<Location> {
-        //TODO crash if empty string
-        val matchingAddress = geocoder.getFromLocationName(address, 1).firstOrNull()
+        try {
+            //sending an empty string to Geocoder API results in IOException even if you have internet access
+            //so return the correct exception here.
+            if (address.isEmpty()) {
+                return failure(UnknownAddressException())
+            }
 
-        if (matchingAddress == null) {
-            return failure(UnknownAddressException())
-        } else {
-            return success(Location(matchingAddress.latitude, matchingAddress.longitude))
+            val matchingAddress = geocoder.getFromLocationName(address, 1).firstOrNull()
+
+            if (matchingAddress == null) {
+                return failure(UnknownAddressException())
+            } else {
+                return success(Location(matchingAddress.latitude, matchingAddress.longitude))
+            }
+        } catch (e: IOException) {
+            return failure(e)
         }
     }
 
