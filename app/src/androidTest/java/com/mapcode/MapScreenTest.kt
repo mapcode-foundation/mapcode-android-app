@@ -110,7 +110,7 @@ class MapScreenTest {
     }
 
     @Test
-    fun show_error_if_no_internet() {
+    fun show_warning_if_no_internet() {
         useCase.hasInternetConnection = false
 
         setMapScreenAsContent()
@@ -121,7 +121,7 @@ class MapScreenTest {
     }
 
     @Test
-    fun show_error_if_no_address_exists_for_location() {
+    fun show_warning_if_no_address_exists_for_location() {
         useCase.locations.add(
             FakeLocation(
                 0.0,
