@@ -182,7 +182,9 @@ internal class MapViewModelTest {
     @Test
     fun `show no address found error and empty address if current location has no known address`() = runTest {
         whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(failure(NoAddressException()))
+        whenever(mockUseCase.reverseGeocode(0.0, 0.0)).thenReturn(success("Street, City"))
 
+        viewModel.onCameraMoved(0.0, 0.0) //first get the address set to something non empty
         viewModel.onCameraMoved(2.0, 3.0)
         advanceUntilIdle()
 

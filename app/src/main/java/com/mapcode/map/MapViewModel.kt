@@ -124,21 +124,22 @@ class MapViewModel @Inject constructor(
      * After querying the address information update the UI state.
      */
     private fun onResolveAddressQuery(query: String, result: Result<Location>) {
-        result.onSuccess { newLocation ->
-            location.value = newLocation
+        result
+            .onSuccess { newLocation ->
+                location.value = newLocation
 
-            val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
-            mapcodes.value = newMapcodes
+                val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
+                mapcodes.value = newMapcodes
 
-            if (newMapcodes.isEmpty()) {
-                mapcodeIndex.value = -1
-            } else {
-                mapcodeIndex.value = 0
+                if (newMapcodes.isEmpty()) {
+                    mapcodeIndex.value = -1
+                } else {
+                    mapcodeIndex.value = 0
+                }
+
+                val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
+                updateAddress(newAddressResult)
             }
-
-            val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
-            updateAddress(newAddressResult)
-        }
             .onFailure { error ->
                 when (error) {
                     is IOException -> {
@@ -164,6 +165,8 @@ class MapViewModel @Inject constructor(
                     is IOException -> addressHelper.value = AddressHelper.NoInternet
                     is NoAddressException -> addressHelper.value = AddressHelper.NoAddress
                 }
+
+                address.value = ""
             }
     }
 }
