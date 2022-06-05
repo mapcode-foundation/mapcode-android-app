@@ -15,16 +15,16 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
     var hasInternetConnection: Boolean = true
 
-    val locations: MutableList<FakeLocation> = mutableListOf()
+    val knownLocations: MutableList<FakeLocation> = mutableListOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
-        return locations
+        return knownLocations
             .find { it.latitude == lat && it.longitude == long }
             ?.mapcodes ?: emptyList()
     }
 
     override fun decodeMapcode(mapcode: String): Result<Location> {
-        val matchingLocation = locations.find { location ->
+        val matchingLocation = knownLocations.find { location ->
             location.mapcodes.any { it.codeWithTerritory == mapcode }
         }
 
@@ -44,7 +44,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
             return failure(IOException())
         }
 
-        val fakeLocation = locations.find { it.addresses.contains(address) }
+        val fakeLocation = knownLocations.find { it.addresses.contains(address) }
 
         if (fakeLocation == null) {
             return failure(UnknownAddressException())
@@ -58,7 +58,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
             return failure(IOException())
         }
 
-        val fakeLocation = locations.find { it.latitude == lat && it.longitude == long }
+        val fakeLocation = knownLocations.find { it.latitude == lat && it.longitude == long }
 
         if (fakeLocation == null || fakeLocation.addresses.isEmpty()) {
             return failure(NoAddressException())

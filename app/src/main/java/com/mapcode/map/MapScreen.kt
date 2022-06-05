@@ -293,6 +293,26 @@ fun MapcodeInfoBox(
     }
 }
 
+@Composable
+fun MapcodeInfoBox(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    onCopiedMapcode: () -> Unit = {}
+) {
+    val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
+
+    MapcodeInfoBox(
+        modifier,
+        mapcodeInfoState,
+        onMapcodeClick = {
+            val copied = viewModel.copyMapcode()
+            if (copied) {
+                onCopiedMapcode()
+            }
+        },
+        onAddressChange = { viewModel.queryAddress(it) })
+}
+
 @Preview(showBackground = true, widthDp = 400, heightDp = 300)
 @Composable
 fun MapcodeInfoBoxPreview() {
@@ -314,13 +334,13 @@ fun MapcodeInfoBoxPreview() {
 @Composable
 fun MapScreen(viewModel: MapViewModel) {
     val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
-    val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
     val cameraPosition by combine(viewModel.location, viewModel.zoom) { location, zoom ->
         val latLng = LatLng(location.latitude, location.longitude)
 
         CameraPositionState(CameraPosition.fromLatLngZoom(latLng, zoom))
     }.collectAsState(initial = CameraPositionState())
+    val scope = rememberCoroutineScope()
+    val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
         Scaffold(
@@ -333,22 +353,17 @@ fun MapScreen(viewModel: MapViewModel) {
                     cameraPositionState = cameraPosition
                 )
 
-                val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
-
                 MapcodeInfoBox(
-                    Modifier
+                    modifier = Modifier
                         .weight(0.3f)
                         .padding(8.dp),
-                    mapcodeInfoState,
-                    onMapcodeClick = {
-                        val copied = viewModel.copyMapcode()
-                        if (copied) {
-                            scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
-                            }
+                    viewModel = viewModel,
+                    onCopiedMapcode = {
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
                         }
-                    },
-                    onAddressChange = { viewModel.queryAddress(it) })
+                    }
+                )
             }
         }
     }

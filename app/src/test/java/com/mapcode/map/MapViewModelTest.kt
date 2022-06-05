@@ -230,6 +230,20 @@ internal class MapViewModelTest {
         assertThat(viewModel.location.value).isEqualTo(Location(3.0, 3.0))
     }
 
+    @Test
+    fun `clear unknown address error after searching for known address`() = runTest {
+        whenever(mockUseCase.geocode("Street, City")).thenReturn(success(Location(2.0, 3.0)))
+        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City"))
+        whenever(mockUseCase.getMapcodes(2.0, 3.0)).thenReturn(emptyList())
+        whenever(mockUseCase.decodeMapcode("Street, City")).thenReturn(failure(UnknownMapcodeException("")))
+
+        viewModel.queryAddress("Street, City")
+
+        advanceUntilIdle()
+
+        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
+    }
+
     private fun returnUnknownWhenDecodeMapcode() {
         whenever(mockUseCase.decodeMapcode(any())).thenReturn(failure(UnknownMapcodeException("")))
     }
