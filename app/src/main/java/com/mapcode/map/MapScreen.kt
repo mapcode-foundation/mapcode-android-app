@@ -6,9 +6,13 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -145,6 +149,7 @@ fun AddressTextField(
     val focusManager = LocalFocusManager.current
     var isFocussed by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
 
     val textFieldValue: String
 
@@ -155,11 +160,13 @@ fun AddressTextField(
         query = address
     }
 
-    OutlinedTextField(modifier = modifier
-        .fillMaxWidth()
-        .onFocusChanged {
-            isFocussed = it.isFocused
-        },
+    OutlinedTextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged {
+                isFocussed = it.isFocused
+            }
+            .focusRequester(focusRequester),
         value = textFieldValue,
         singleLine = true,
         label = { Text(stringResource(R.string.address_bar_label)) },
@@ -171,7 +178,21 @@ fun AddressTextField(
             focusManager.clearFocus()
             onChange(query)
         }),
-        placeholder = { Text(address) })
+        placeholder = { Text(address) },
+        trailingIcon = {
+            if (address.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        focusRequester.requestFocus()
+                        query = ""
+                    }) {
+                    Icon(
+                        Icons.Outlined.Clear,
+                        contentDescription = stringResource(R.string.clear_address_content_description)
+                    )
+                }
+            }
+        })
 
     AddressHelper(helper = helper)
     AddressError(error = error)

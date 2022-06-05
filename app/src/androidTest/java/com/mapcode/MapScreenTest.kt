@@ -1,5 +1,6 @@
 package com.mapcode
 
+import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import assertk.assertThat
@@ -213,6 +214,55 @@ class MapScreenTest {
         composeTestRule.waitForIdle()
 
         assertThat(viewModel.mapcodeInfoState.value.address).isEqualTo("Street, City")
+    }
+
+    @Test
+    fun clear_address_if_press_clear_button_in_text_field() {
+        setMapcodeInfoBoxAsContent()
+
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill address field with something
+
+        composeTestRule
+            .onNodeWithContentDescription("Clear address")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Enter address or mapcode")
+            .assert(SemanticsMatcher.expectValue(SemanticsPropertyKey("EditableText"), null))
+    }
+
+    @Test
+    fun hide_clear_button_if_empty_address() {
+        setMapcodeInfoBoxAsContent()
+
+        composeTestRule
+            .onNodeWithText("Enter address or mapcode")
+            .performTextClearance()
+
+        composeTestRule
+            .onNodeWithContentDescription("Clear address")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun focus_address_text_field_when_click_clear_button() {
+        setMapcodeInfoBoxAsContent()
+
+        composeTestRule
+            .onNodeWithContentDescription("Clear address")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Enter address or mapcode")
+            .assertIsFocused()
     }
 
     private fun setMapcodeInfoBoxAsContent() {
