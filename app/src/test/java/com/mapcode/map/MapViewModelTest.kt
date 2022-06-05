@@ -320,4 +320,13 @@ internal class MapViewModelTest {
         runCurrent()
         assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address 2"))
     }
+
+    @Test
+    fun `show error if doing an address search and no internet`() = runTest {
+        useCase.hasInternetConnection = false
+        viewModel.queryAddress("Street, City")
+
+        runCurrent()
+        assertThat(viewModel.mapcodeInfoState.value.addressHelper).isEqualTo(AddressHelper.NoInternet)
+    }
 }
