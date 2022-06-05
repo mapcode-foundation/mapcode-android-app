@@ -4,12 +4,10 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNullOrEmpty
 import com.mapcode.Mapcode
 import com.mapcode.Territory
-import com.mapcode.UnknownMapcodeException
 import com.mapcode.util.Location
-import com.mapcode.util.NoAddressException
-import com.mapcode.util.UnknownAddressException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -17,10 +15,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.*
-import java.io.IOException
-import kotlin.Result.Companion.failure
-import kotlin.Result.Companion.success
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -32,15 +26,15 @@ internal class MapViewModelTest {
     var instantExecutorRule = InstantTaskExecutorRule()
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var mockUseCase: ShowMapcodeUseCase
+    private lateinit var useCase: FakeShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
-        mockUseCase = mock()
-        viewModel = MapViewModel(mockUseCase, dispatchers = TestDispatcherProvider(testDispatcher))
+        useCase = FakeShowMapcodeUseCase()
+        viewModel = MapViewModel(useCase, dispatchers = TestDispatcherProvider(testDispatcher))
     }
 
     @After
@@ -50,10 +44,14 @@ internal class MapViewModelTest {
 
     @Test
     fun `update mapcode when camera moves`() = runTest {
-        val fakeMapcodes = listOf(Mapcode("1AB.XY", Territory.NLD), Mapcode("1CD.YZ", Territory.AAA))
-        whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
-        whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(success(""))
-
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD), Mapcode("1CD.YZ", Territory.AAA))
+            )
+        )
         viewModel.onCameraMoved(1.0, 1.0, 1f)
 
         advanceUntilIdle()
@@ -65,25 +63,31 @@ internal class MapViewModelTest {
 
     @Test
     fun `copy mapcode and territory to clipboard when mapcode is clicked`() {
-        val fakeMapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
-        whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
+            )
+        )
 
         viewModel.onCameraMoved(1.0, 1.0, 2f)
         viewModel.copyMapcode()
 
-        verify(mockUseCase).copyToClipboard("AAA 1AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AAA 1AB.XY")
     }
 
     @Test
     fun `do not copy mapcode to clipboard when there is no mapcode`() {
         viewModel.copyMapcode()
-        verify(mockUseCase, never()).copyToClipboard(any())
+        assertThat(useCase.clipboard).isNullOrEmpty()
     }
 
     @Test
     fun `show no internet message and empty address if geocoding fails`() = runTest {
-        returnUnknownWhenDecodeMapcode()
-        whenever(mockUseCase.geocode(any())).thenReturn(failure(IOException()))
+        useCase.hasInternetConnection = false
+        useCase.knownLocations.clear()
 
         viewModel.queryAddress("address")
         advanceUntilIdle()
@@ -95,8 +99,15 @@ internal class MapViewModelTest {
 
     @Test
     fun `clear address and show error if moving map and no internet connection`() = runTest {
-        whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(failure(IOException()))
-        whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(listOf(Mapcode("AB.CD", Territory.NLD)))
+        useCase.hasInternetConnection = false
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
 
         viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
@@ -108,8 +119,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `show address not found message and clear address if unable to geocode address`() = runTest {
-        returnUnknownWhenDecodeMapcode()
-        whenever(mockUseCase.geocode(any())).thenReturn(failure(UnknownAddressException()))
+        useCase.knownLocations.clear()
 
         viewModel.queryAddress("bad address")
         advanceUntilIdle()
@@ -121,9 +131,14 @@ internal class MapViewModelTest {
 
     @Test
     fun `update info correctly if queried mapcode successfully`() = runTest {
-        whenever(mockUseCase.decodeMapcode("NLD AB.CD")).thenReturn(success(Location(2.0, 3.0)))
-        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City, 1234AB"))
-        whenever(mockUseCase.getMapcodes(2.0, 3.0)).thenReturn(listOf(Mapcode("AB.CD", Territory.NLD)))
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("Street, City, 1234AB"),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
 
         viewModel.queryAddress("NLD AB.CD")
         advanceUntilIdle()
@@ -144,10 +159,14 @@ internal class MapViewModelTest {
 
     @Test
     fun `update info correctly if geocoded address successfully`() = runTest {
-        returnUnknownWhenDecodeMapcode()
-        whenever(mockUseCase.geocode("street, city")).thenReturn(success(Location(2.0, 3.0)))
-        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City, 1234AB"))
-        whenever(mockUseCase.getMapcodes(2.0, 3.0)).thenReturn(listOf(Mapcode("AB.CD", Territory.NLD)))
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("Street, City, 1234AB", "street, city"),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
 
         viewModel.queryAddress("street, city")
         advanceUntilIdle()
@@ -168,8 +187,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `clear mapcode query if can't decode mapcode`() = runTest {
-        returnUnknownWhenDecodeMapcode()
-        whenever(mockUseCase.geocode("bad mapcode")).thenReturn(failure(UnknownAddressException()))
+        useCase.knownLocations.clear()
 
         viewModel.queryAddress("bad mapcode")
         advanceUntilIdle()
@@ -181,8 +199,14 @@ internal class MapViewModelTest {
 
     @Test
     fun `show no address found error and empty address if current location has no known address`() = runTest {
-        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(failure(NoAddressException()))
-        whenever(mockUseCase.reverseGeocode(0.0, 0.0)).thenReturn(success("Street, City"))
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = emptyList()
+            )
+        )
 
         viewModel.onCameraMoved(0.0, 0.0, 1f) //first get the address set to something non empty
         viewModel.onCameraMoved(2.0, 3.0, 1f)
@@ -195,7 +219,14 @@ internal class MapViewModelTest {
 
     @Test
     fun `show no error message and address if the current location has a known address`() = runTest {
-        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City"))
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("Street, City"),
+                mapcodes = emptyList()
+            )
+        )
 
         viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
@@ -207,7 +238,15 @@ internal class MapViewModelTest {
 
     @Test
     fun `update address after moving map`() = runTest {
-        whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(success("10 street, city"))
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("10 street, city"),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
+
         viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
 
@@ -232,19 +271,19 @@ internal class MapViewModelTest {
 
     @Test
     fun `clear unknown address error after searching for known address`() = runTest {
-        whenever(mockUseCase.geocode("Street, City")).thenReturn(success(Location(2.0, 3.0)))
-        whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City"))
-        whenever(mockUseCase.getMapcodes(2.0, 3.0)).thenReturn(emptyList())
-        whenever(mockUseCase.decodeMapcode("Street, City")).thenReturn(failure(UnknownMapcodeException("")))
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
 
         viewModel.queryAddress("Street, City")
 
         advanceUntilIdle()
 
         assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
-    }
-
-    private fun returnUnknownWhenDecodeMapcode() {
-        whenever(mockUseCase.decodeMapcode(any())).thenReturn(failure(UnknownMapcodeException("")))
     }
 }
