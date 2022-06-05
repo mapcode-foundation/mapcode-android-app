@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.mapcode.Mapcode
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -18,6 +20,10 @@ class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
+
+    companion object {
+        private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
+    }
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
@@ -64,6 +70,8 @@ class MapViewModel @Inject constructor(
                 longitude = location.longitude.toString()
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
+
+    private var clearUnknownAddressErrorJob: Job? = null
 
     /**
      * When the camera has moved the mapcode information should be updated.
@@ -149,6 +157,12 @@ class MapViewModel @Inject constructor(
                     }
                     is UnknownAddressException -> {
                         addressError.value = AddressError.UnknownAddress(query)
+
+                        clearUnknownAddressErrorJob?.cancel()
+                        clearUnknownAddressErrorJob = viewModelScope.launch {
+                            delay(UNKNOWN_ADDRESS_ERROR_TIMEOUT)
+                            addressError.value = AddressError.None
+                        }
                     }
                 }
 

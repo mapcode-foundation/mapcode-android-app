@@ -122,7 +122,7 @@ internal class MapViewModelTest {
         useCase.knownLocations.clear()
 
         viewModel.queryAddress("bad address")
-        advanceUntilIdle()
+        runCurrent()
 
         val uiState = viewModel.mapcodeInfoState.value
         assertThat(uiState.addressError).isEqualTo(AddressError.UnknownAddress("bad address"))
@@ -190,7 +190,7 @@ internal class MapViewModelTest {
         useCase.knownLocations.clear()
 
         viewModel.queryAddress("bad mapcode")
-        advanceUntilIdle()
+        runCurrent()
 
         val uiState = viewModel.mapcodeInfoState.value
         assertThat(uiState.address).isEmpty()
@@ -285,5 +285,39 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
+    }
+
+    @Test
+    fun `show unknown address error temporarily`() = runTest {
+        useCase.knownLocations.clear()
+        viewModel.queryAddress("bad address")
+
+        runCurrent() //let the coroutine to update the address run
+        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address"))
+
+        advanceTimeBy(3000) //the error should clear after 3 seconds
+        testScheduler.runCurrent()
+        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
+    }
+
+    /**
+     * Test that inputting a bad address and then another resets the timer
+     * to clear the "unknown address" error.
+     */
+    @Test
+    fun `unknown address error should always clear after same amount of time`() = runTest {
+        useCase.knownLocations.clear()
+        viewModel.queryAddress("bad address")
+
+        advanceTimeBy(500) //wait 500ms before doing another query
+        viewModel.queryAddress("bad address 2")
+
+        runCurrent() //let the coroutine to update the address run
+        //the 2nd query should be showing
+        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address 2"))
+
+        advanceTimeBy(2500) //the 2nd query should still be running even though it has been 3 secs since the first query
+        runCurrent()
+        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address 2"))
     }
 }
