@@ -114,6 +114,10 @@ class MapViewModel @Inject constructor(
      * Find the address or mapcode and move to that location on the map.
      */
     fun queryAddress(query: String) {
+        if (query.isEmpty()) {
+            return
+        }
+
         //first try to decode it as a mapcode, if that fails then try to geocode it as an address
         viewModelScope.launch(dispatchers.io) {
             val resolveAddressResult: Result<Location>

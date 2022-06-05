@@ -329,4 +329,25 @@ internal class MapViewModelTest {
         runCurrent()
         assertThat(viewModel.mapcodeInfoState.value.addressHelper).isEqualTo(AddressHelper.NoInternet)
     }
+
+    @Test
+    fun `searching an empty address should should dismiss the query and put the old address back`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+            )
+        )
+
+        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill the address with something
+        viewModel.queryAddress("")
+
+        runCurrent()
+
+        val uiState = viewModel.mapcodeInfoState.value
+        assertThat(uiState.address).isEqualTo("Street, City")
+        assertThat(uiState.addressError).isEqualTo(AddressError.None)
+    }
 }
