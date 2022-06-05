@@ -32,7 +32,8 @@ class MapViewModel @Inject constructor(
     private val address: MutableStateFlow<String> = MutableStateFlow("")
     private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
     private val addressHelper: MutableStateFlow<AddressHelper> = MutableStateFlow(AddressHelper.None)
-    private val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
+    val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
+    val zoom: MutableStateFlow<Float> = MutableStateFlow(1f)
 
     val mapcodeInfoState: StateFlow<MapcodeInfoState> =
         combine(
@@ -67,8 +68,9 @@ class MapViewModel @Inject constructor(
     /**
      * When the camera has moved the mapcode information should be updated.
      */
-    fun onCameraMoved(lat: Double, long: Double) {
-        location.value = Location(lat, long)
+    fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
+        this.location.value = Location(lat, long)
+        this.zoom.value = zoom
 
         //update the mapcode when the map moves
         val newMapcodes = useCase.getMapcodes(lat, long)

@@ -54,7 +54,7 @@ internal class MapViewModelTest {
         whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
         whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(success(""))
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 1f)
 
         advanceUntilIdle()
 
@@ -68,7 +68,7 @@ internal class MapViewModelTest {
         val fakeMapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
         whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(fakeMapcodes)
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 2f)
         viewModel.copyMapcode()
 
         verify(mockUseCase).copyToClipboard("AAA 1AB.XY")
@@ -98,7 +98,7 @@ internal class MapViewModelTest {
         whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(failure(IOException()))
         whenever(mockUseCase.getMapcodes(1.0, 1.0)).thenReturn(listOf(Mapcode("AB.CD", Territory.NLD)))
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
@@ -184,8 +184,8 @@ internal class MapViewModelTest {
         whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(failure(NoAddressException()))
         whenever(mockUseCase.reverseGeocode(0.0, 0.0)).thenReturn(success("Street, City"))
 
-        viewModel.onCameraMoved(0.0, 0.0) //first get the address set to something non empty
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(0.0, 0.0, 1f) //first get the address set to something non empty
+        viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
@@ -197,7 +197,7 @@ internal class MapViewModelTest {
     fun `show no error message and address if the current location has a known address`() = runTest {
         whenever(mockUseCase.reverseGeocode(2.0, 3.0)).thenReturn(success("Street, City"))
 
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
@@ -208,12 +208,26 @@ internal class MapViewModelTest {
     @Test
     fun `update address after moving map`() = runTest {
         whenever(mockUseCase.reverseGeocode(1.0, 1.0)).thenReturn(success("10 street, city"))
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
         assertThat(uiState.address).isEqualTo("10 street, city")
         assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
+    }
+
+    @Test
+    fun `update zoom state when moving camera`() = runTest {
+        viewModel.onCameraMoved(1.0, 1.0, 2f)
+
+        assertThat(viewModel.zoom.value).isEqualTo(2f)
+    }
+
+    @Test
+    fun `update location state when moving camera`() = runTest {
+        viewModel.onCameraMoved(3.0, 3.0, 2f)
+
+        assertThat(viewModel.location.value).isEqualTo(Location(3.0, 3.0))
     }
 
     private fun returnUnknownWhenDecodeMapcode() {
