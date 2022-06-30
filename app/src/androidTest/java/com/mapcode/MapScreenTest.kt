@@ -254,6 +254,16 @@ class MapScreenTest {
 
     @Test
     fun focus_address_text_field_when_click_clear_button() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill address field with something
+
         setMapcodeInfoBoxAsContent()
 
         composeTestRule
