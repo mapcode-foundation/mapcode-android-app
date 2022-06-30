@@ -38,42 +38,43 @@ class MapViewModel @Inject constructor(
     private val address: MutableStateFlow<String> = MutableStateFlow("")
     private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
     private val addressHelper: MutableStateFlow<AddressHelper> = MutableStateFlow(AddressHelper.None)
+    private val addressUi: Flow<AddressUi> =
+        combine(address, addressError, addressHelper) { address, addressError, addressHelper ->
+            AddressUi(address, addressError, addressHelper)
+        }
+
+    private val territoryUi: Flow<TerritoryUi> =
+        combine(mapcodeIndex, mapcodes, mapcode) { mapcodeIndex, mapcodes, mapcode ->
+            if (mapcode == null) {
+                TerritoryUi("", "", 0, 0)
+            } else {
+                TerritoryUi(
+                    mapcode.territory.name,
+                    mapcode.territory.fullName,
+                    mapcodeIndex + 1,
+                    mapcodes.size
+                )
+            }
+        }
+
     val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
     val zoom: MutableStateFlow<Float> = MutableStateFlow(1f)
 
-    val mapcodeInfoState: StateFlow<MapcodeInfoState> =
+    val uiState: StateFlow<UiState> =
         combine(
             mapcode,
-            address,
-            addressError,
-            addressHelper,
+            addressUi,
+            territoryUi,
             location
-        ) { mapcode, address, addressError, addressHelper, location ->
-            val code: String
-            val territoryShort: String
-            val territoryLong: String
-
-            if (mapcode == null) {
-                code = ""
-                territoryShort = ""
-                territoryLong = ""
-            } else {
-                code = mapcode.code
-                territoryShort = mapcode.territory.name
-                territoryLong = mapcode.territory.fullName
-            }
-
-            MapcodeInfoState(
-                code = code,
-                territoryShort = territoryShort,
-                territoryLong = territoryLong,
-                address = address,
-                addressError = addressError,
-                addressHelper = addressHelper,
+        ) { mapcode, addressUi, territoryUi, location ->
+            UiState(
+                code = mapcode?.code ?: "",
+                addressUi = addressUi,
+                territoryUi = territoryUi,
                 latitude = location.latitude.toString(),
                 longitude = location.longitude.toString()
             )
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
     private var clearUnknownAddressErrorJob: Job? = null
 
@@ -207,24 +208,18 @@ class MapViewModel @Inject constructor(
     }
 }
 
-data class MapcodeInfoState(
+data class UiState(
     val code: String,
-    val territoryShort: String,
-    val territoryLong: String,
-    val address: String,
-    val addressHelper: AddressHelper,
-    val addressError: AddressError,
+    val territoryUi: TerritoryUi,
+    val addressUi: AddressUi,
     val latitude: String,
     val longitude: String
 ) {
     companion object {
-        val EMPTY: MapcodeInfoState = MapcodeInfoState(
+        val EMPTY: UiState = UiState(
             code = "",
-            territoryShort = "",
-            territoryLong = "",
-            address = "",
-            addressHelper = AddressHelper.None,
-            addressError = AddressError.None,
+            territoryUi = TerritoryUi("", "", 0, 0),
+            addressUi = AddressUi("", AddressError.None, AddressHelper.None),
             latitude = "",
             longitude = ""
         )

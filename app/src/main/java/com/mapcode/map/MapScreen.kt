@@ -326,17 +326,17 @@ fun TerritoryBox(
 @Composable
 fun MapcodeInfoBox(
     modifier: Modifier = Modifier,
-    state: MapcodeInfoState,
+    state: UiState,
     onMapcodeClick: () -> Unit = {},
     onAddressChange: (String) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         AddressTextField(
             modifier = Modifier.fillMaxWidth(),
-            address = state.address,
+            address = state.addressUi.address,
             onChange = onAddressChange,
-            helper = state.addressHelper,
-            error = state.addressError
+            helper = state.addressUi.helper,
+            error = state.addressUi.error
         )
         Row(Modifier.padding(top = 8.dp)) {
             MapcodeBox(
@@ -345,7 +345,7 @@ fun MapcodeInfoBox(
                     .padding(end = 8.dp)
                     .clip(RoundedCornerShape(4.dp)),
                 code = state.code,
-                territory = state.territoryShort,
+                territory = state.territoryUi.shortName,
                 onClick = onMapcodeClick
             )
 
@@ -353,9 +353,9 @@ fun MapcodeInfoBox(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(start = 8.dp),
-                index = 0,
-                count = 1,
-                territoryName = state.territoryLong,
+                index = state.territoryUi.number,
+                count = state.territoryUi.count,
+                territoryName = state.territoryUi.fullName,
                 onClick = {}
             )
         }
@@ -368,7 +368,7 @@ fun MapcodeInfoBox(
     viewModel: MapViewModel,
     onCopiedMapcode: () -> Unit = {}
 ) {
-    val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
+    val mapcodeInfoState by viewModel.uiState.collectAsState()
 
     MapcodeInfoBox(
         modifier,
@@ -387,13 +387,14 @@ fun MapcodeInfoBox(
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state = MapcodeInfoState(
+        val state = UiState(
             code = "1AB.XY",
-            territoryShort = "NLD",
-            territoryLong = "Netherlands",
-            address = "I am a very very very very very very extremely long address",
-            AddressHelper.NoInternet,
-            AddressError.UnknownAddress("Street, City"),
+            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
+            addressUi = AddressUi(
+                "I am a very very very very very very extremely long address",
+                AddressError.UnknownAddress("Street, City"),
+                AddressHelper.NoInternet,
+            ),
             "1.0",
             "2.0"
         )

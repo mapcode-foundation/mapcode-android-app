@@ -56,9 +56,9 @@ internal class MapViewModelTest {
 
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
+        val uiState = viewModel.uiState.value
         assertThat(uiState.code).isEqualTo("1AB.XY")
-        assertThat(uiState.territoryShort).isEqualTo("NLD")
+        assertThat(uiState.territoryUi.shortName).isEqualTo("NLD")
     }
 
     @Test
@@ -92,9 +92,9 @@ internal class MapViewModelTest {
         viewModel.queryAddress("address")
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.NoInternet)
-        assertThat(uiState.address).isEmpty()
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.NoInternet)
+        assertThat(uiState.addressUi.address).isEmpty()
     }
 
     @Test
@@ -112,9 +112,9 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.address).isEmpty()
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.NoInternet)
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.address).isEmpty()
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.NoInternet)
     }
 
     @Test
@@ -124,9 +124,9 @@ internal class MapViewModelTest {
         viewModel.queryAddress("bad address")
         runCurrent()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressError).isEqualTo(AddressError.UnknownAddress("bad address"))
-        assertThat(uiState.address).isEmpty()
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address"))
+        assertThat(uiState.addressUi.address).isEmpty()
     }
 
     @Test
@@ -143,16 +143,17 @@ internal class MapViewModelTest {
         viewModel.queryAddress("NLD AB.CD")
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        val expectedUiState = MapcodeInfoState(
+        val uiState = viewModel.uiState.value
+        val expectedUiState = UiState(
             code = "AB.CD",
-            territoryShort = "NLD",
-            territoryLong = "Netherlands",
+            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
             latitude = "2.0",
             longitude = "3.0",
-            addressHelper = AddressHelper.Location("City, 1234AB"),
-            addressError = AddressError.None,
-            address = "Street, City, 1234AB"
+            addressUi = AddressUi(
+                "Street, City, 1234AB",
+                helper = AddressHelper.Location("City, 1234AB"),
+                error = AddressError.None,
+            )
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)
@@ -172,16 +173,17 @@ internal class MapViewModelTest {
         viewModel.queryAddress("street, city")
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        val expectedUiState = MapcodeInfoState(
+        val uiState = viewModel.uiState.value
+        val expectedUiState = UiState(
             code = "AB.CD",
-            territoryShort = "NLD",
-            territoryLong = "Netherlands",
+            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
             latitude = "2.0",
             longitude = "3.0",
-            addressHelper = AddressHelper.Location("City, 1234AB"),
-            addressError = AddressError.None,
-            address = "Street, City, 1234AB"
+            addressUi = AddressUi(
+                "Street, City, 1234AB",
+                helper = AddressHelper.Location("City, 1234AB"),
+                error = AddressError.None,
+            )
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)
@@ -194,9 +196,9 @@ internal class MapViewModelTest {
         viewModel.queryAddress("bad mapcode")
         runCurrent()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.address).isEmpty()
-        assertThat(uiState.addressError).isEqualTo(AddressError.UnknownAddress("bad mapcode"))
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.address).isEmpty()
+        assertThat(uiState.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad mapcode"))
     }
 
     @Test
@@ -214,9 +216,9 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.NoAddress)
-        assertThat(uiState.address).isEmpty()
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.NoAddress)
+        assertThat(uiState.addressUi.address).isEmpty()
     }
 
     @Test
@@ -233,9 +235,9 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.Location("City, Country"))
-        assertThat(uiState.address).isEqualTo("Street, City, Country")
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.Location("City, Country"))
+        assertThat(uiState.addressUi.address).isEqualTo("Street, City, Country")
     }
 
     @Test
@@ -252,9 +254,9 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(1.0, 1.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.address).isEqualTo("10 street, city, country")
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.Location("city, country"))
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.address).isEqualTo("10 street, city, country")
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.Location("city, country"))
     }
 
     @Test
@@ -286,7 +288,7 @@ internal class MapViewModelTest {
 
         advanceUntilIdle()
 
-        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
+        assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.None)
     }
 
     @Test
@@ -295,11 +297,11 @@ internal class MapViewModelTest {
         viewModel.queryAddress("bad address")
 
         runCurrent() //let the coroutine to update the address run
-        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address"))
+        assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address"))
 
         advanceTimeBy(3000) //the error should clear after 3 seconds
         testScheduler.runCurrent()
-        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.None)
+        assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.None)
     }
 
     /**
@@ -316,11 +318,11 @@ internal class MapViewModelTest {
 
         runCurrent() //let the coroutine to update the address run
         //the 2nd query should be showing
-        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address 2"))
+        assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address 2"))
 
         advanceTimeBy(2500) //the 2nd query should still be running even though it has been 3 secs since the first query
         runCurrent()
-        assertThat(viewModel.mapcodeInfoState.value.addressError).isEqualTo(AddressError.UnknownAddress("bad address 2"))
+        assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address 2"))
     }
 
     @Test
@@ -329,7 +331,7 @@ internal class MapViewModelTest {
         viewModel.queryAddress("Street, City")
 
         runCurrent()
-        assertThat(viewModel.mapcodeInfoState.value.addressHelper).isEqualTo(AddressHelper.NoInternet)
+        assertThat(viewModel.uiState.value.addressUi.helper).isEqualTo(AddressHelper.NoInternet)
     }
 
     @Test
@@ -348,9 +350,9 @@ internal class MapViewModelTest {
 
         runCurrent()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.address).isEqualTo("Street, City")
-        assertThat(uiState.addressError).isEqualTo(AddressError.None)
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.address).isEqualTo("Street, City")
+        assertThat(uiState.addressUi.error).isEqualTo(AddressError.None)
     }
 
     @Test
@@ -367,10 +369,10 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.None)
     }
-    
+
     @Test
     fun `do not show last 2 parts of address if only has 1 part`() = runTest {
         useCase.knownLocations.add(
@@ -385,7 +387,7 @@ internal class MapViewModelTest {
         viewModel.onCameraMoved(2.0, 3.0, 1f)
         advanceUntilIdle()
 
-        val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.None)
     }
 }
