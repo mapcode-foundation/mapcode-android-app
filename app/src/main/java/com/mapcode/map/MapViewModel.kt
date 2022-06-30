@@ -138,40 +138,38 @@ class MapViewModel @Inject constructor(
      * After querying the address information update the UI state.
      */
     private fun onResolveAddressQuery(query: String, result: Result<Location>) {
-        result
-            .onSuccess { newLocation ->
-                location.value = newLocation
+        result.onSuccess { newLocation ->
+            location.value = newLocation
 
-                val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
-                mapcodes.value = newMapcodes
+            val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
+            mapcodes.value = newMapcodes
 
-                if (newMapcodes.isEmpty()) {
-                    mapcodeIndex.value = -1
-                } else {
-                    mapcodeIndex.value = 0
-                }
-
-                val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
-                updateAddress(newAddressResult)
+            if (newMapcodes.isEmpty()) {
+                mapcodeIndex.value = -1
+            } else {
+                mapcodeIndex.value = 0
             }
-            .onFailure { error ->
-                when (error) {
-                    is IOException -> {
-                        addressHelper.value = AddressHelper.NoInternet
-                    }
-                    is UnknownAddressException -> {
-                        addressError.value = AddressError.UnknownAddress(query)
 
-                        clearUnknownAddressErrorJob?.cancel()
-                        clearUnknownAddressErrorJob = viewModelScope.launch {
-                            delay(UNKNOWN_ADDRESS_ERROR_TIMEOUT)
-                            addressError.value = AddressError.None
-                        }
+            val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
+            updateAddress(newAddressResult)
+        }.onFailure { error ->
+            when (error) {
+                is IOException -> {
+                    addressHelper.value = AddressHelper.NoInternet
+                }
+                is UnknownAddressException -> {
+                    addressError.value = AddressError.UnknownAddress(query)
+
+                    clearUnknownAddressErrorJob?.cancel()
+                    clearUnknownAddressErrorJob = viewModelScope.launch {
+                        delay(UNKNOWN_ADDRESS_ERROR_TIMEOUT)
+                        addressError.value = AddressError.None
                     }
                 }
-
-                address.value = "" //clear address if error
             }
+
+            address.value = "" //clear address if error
+        }
     }
 
     private fun updateAddress(addressResult: Result<String>) {

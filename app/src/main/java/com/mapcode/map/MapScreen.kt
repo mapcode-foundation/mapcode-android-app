@@ -364,9 +364,7 @@ fun MapScreen(viewModel: MapViewModel) {
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-        Scaffold(
-            scaffoldState = scaffoldState,
-        ) {
+        Scaffold(scaffoldState = scaffoldState) {
             Column {
                 MapBox(
                     Modifier.weight(0.7f),
