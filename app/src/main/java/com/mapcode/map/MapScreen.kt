@@ -2,9 +2,9 @@ package com.mapcode.map
 
 import android.Manifest
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -19,8 +19,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -251,12 +249,11 @@ fun HelperText(modifier: Modifier = Modifier, message: String) {
 }
 
 @Composable
-fun Header(text: String, onClick: () -> Unit = {}) {
-    ClickableText(
-        text = AnnotatedString(text, SpanStyle(color = MaterialTheme.colors.onSurface)),
-        onClick = { onClick() },
+fun Header(modifier: Modifier = Modifier, text: String) {
+    Text(
+        text = text,
         style = MaterialTheme.typography.subtitle2,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
     )
 }
 
@@ -267,27 +264,24 @@ fun Header(text: String, onClick: () -> Unit = {}) {
 fun MapcodeBox(
     modifier: Modifier = Modifier,
     code: String,
-    territory: String,
-    onClick: () -> Unit
+    territory: String
 ) {
     Column(
         modifier
             .background(MaterialTheme.colors.primaryVariant)
             .padding(4.dp)
     ) {
-        Header(stringResource(R.string.mapcode_header_button), onClick)
+        Header(Modifier.fillMaxWidth(), stringResource(R.string.mapcode_header_button))
         Row {
-            ClickableText(
-                text = AnnotatedString(territory, SpanStyle(color = MaterialTheme.colors.onSurface)),
+            Text(
+                text = territory,
                 style = MaterialTheme.typography.body2,
-                modifier = Modifier.align(Alignment.Bottom),
-                onClick = { onClick() }
+                modifier = Modifier.align(Alignment.Bottom)
             )
-            ClickableText(
-                text = AnnotatedString(code, SpanStyle(color = MaterialTheme.colors.onSurface)),
+            Text(
+                text = code,
                 style = MaterialTheme.typography.subtitle1,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onClick() }
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -301,20 +295,18 @@ fun TerritoryBox(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
-    territoryName: String,
-    onClick: () -> Unit
+    territoryName: String
 ) {
     Column(modifier.padding(4.dp)) {
         Row {
             val headerText = stringResource(R.string.territory_header_button, index, count)
-            Header(headerText, onClick)
+            Header(modifier = Modifier.fillMaxWidth(), headerText)
         }
 
-        ClickableText(
-            text = AnnotatedString(territoryName, SpanStyle(color = MaterialTheme.colors.onSurface)),
+        Text(
+            text = territoryName,
             style = MaterialTheme.typography.subtitle1,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onClick() }
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -343,20 +335,21 @@ fun MapcodeInfoBox(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(end = 8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onMapcodeClick() },
                 code = state.code,
-                territory = state.territoryUi.shortName,
-                onClick = onMapcodeClick
+                territory = state.territoryUi.shortName
             )
 
             TerritoryBox(
                 modifier = Modifier
                     .weight(0.5f)
-                    .padding(start = 8.dp),
+                    .padding(start = 8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { },
                 index = state.territoryUi.number,
                 count = state.territoryUi.count,
-                territoryName = state.territoryUi.fullName,
-                onClick = {}
+                territoryName = state.territoryUi.fullName
             )
         }
     }
