@@ -1,6 +1,8 @@
 package com.mapcode.map
 
 import android.content.Context
+import com.mapcode.util.DefaultDispatcherProvider
+import com.mapcode.util.DispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,5 +19,10 @@ object MapModule {
     @Provides
     fun provideShowMapcodeUseCase(@ApplicationContext ctx: Context): ShowMapcodeUseCase {
         return ShowMapcodeUseCaseImpl(ctx)
+    }
+
+    @Provides
+    fun provideDispatchers(): DispatcherProvider {
+        return DefaultDispatcherProvider()
     }
 }
