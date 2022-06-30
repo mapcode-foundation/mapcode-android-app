@@ -50,19 +50,23 @@ class MapViewModel @Inject constructor(
             location
         ) { mapcode, address, addressError, addressHelper, location ->
             val code: String
-            val territory: String
+            val territoryShort: String
+            val territoryLong: String
 
             if (mapcode == null) {
                 code = ""
-                territory = ""
+                territoryShort = ""
+                territoryLong = ""
             } else {
                 code = mapcode.code
-                territory = mapcode.territory.name
+                territoryShort = mapcode.territory.name
+                territoryLong = mapcode.territory.fullName
             }
 
             MapcodeInfoState(
                 code = code,
-                territory = territory,
+                territoryShort = territoryShort,
+                territoryLong = territoryLong,
                 address = address,
                 addressError = addressError,
                 addressHelper = addressHelper,
@@ -205,7 +209,8 @@ class MapViewModel @Inject constructor(
 
 data class MapcodeInfoState(
     val code: String,
-    val territory: String,
+    val territoryShort: String,
+    val territoryLong: String,
     val address: String,
     val addressHelper: AddressHelper,
     val addressError: AddressError,
@@ -215,7 +220,8 @@ data class MapcodeInfoState(
     companion object {
         val EMPTY: MapcodeInfoState = MapcodeInfoState(
             code = "",
-            territory = "",
+            territoryShort = "",
+            territoryLong = "",
             address = "",
             addressHelper = AddressHelper.None,
             addressError = AddressError.None,

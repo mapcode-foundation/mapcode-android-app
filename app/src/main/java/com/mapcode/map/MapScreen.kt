@@ -3,6 +3,7 @@ package com.mapcode.map
 import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -253,16 +255,16 @@ fun Header(text: String, onClick: () -> Unit = {}) {
     ClickableText(
         text = AnnotatedString(text, SpanStyle(color = MaterialTheme.colors.onSurface)),
         onClick = { onClick() },
-        style = MaterialTheme.typography.h6,
+        style = MaterialTheme.typography.subtitle2,
         modifier = Modifier.fillMaxWidth()
     )
 }
 
 /**
- * The part of the screen that shows the mapcode and territory.
+ * The box that shows the mapcode.
  */
 @Composable
-fun MapcodeTextArea(
+fun MapcodeBox(
     modifier: Modifier = Modifier,
     code: String,
     territory: String,
@@ -270,11 +272,11 @@ fun MapcodeTextArea(
 ) {
     Column(
         modifier
-            .fillMaxWidth()
             .background(MaterialTheme.colors.primaryVariant)
+            .padding(4.dp)
     ) {
         Header(stringResource(R.string.mapcode_header_button), onClick)
-        Row(Modifier.fillMaxWidth()) {
+        Row {
             ClickableText(
                 text = AnnotatedString(territory, SpanStyle(color = MaterialTheme.colors.onSurface)),
                 style = MaterialTheme.typography.body2,
@@ -288,6 +290,32 @@ fun MapcodeTextArea(
                 onClick = { onClick() }
             )
         }
+    }
+}
+
+/**
+ * The box that shows the territory.
+ */
+@Composable
+fun TerritoryBox(
+    modifier: Modifier = Modifier,
+    index: Int,
+    count: Int,
+    territoryName: String,
+    onClick: () -> Unit
+) {
+    Column(modifier.padding(4.dp)) {
+        Row {
+            val headerText = stringResource(R.string.territory_header_button, index, count)
+            Header(headerText, onClick)
+        }
+
+        ClickableText(
+            text = AnnotatedString(territoryName, SpanStyle(color = MaterialTheme.colors.onSurface)),
+            style = MaterialTheme.typography.subtitle1,
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onClick() }
+        )
     }
 }
 
@@ -310,12 +338,27 @@ fun MapcodeInfoBox(
             helper = state.addressHelper,
             error = state.addressError
         )
-        MapcodeTextArea(
-            modifier = Modifier.padding(top = 8.dp),
-            code = state.code,
-            territory = state.territory,
-            onClick = onMapcodeClick
-        )
+        Row(Modifier.padding(top = 8.dp)) {
+            MapcodeBox(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(end = 8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                code = state.code,
+                territory = state.territoryShort,
+                onClick = onMapcodeClick
+            )
+
+            TerritoryBox(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(start = 8.dp),
+                index = 0,
+                count = 1,
+                territoryName = state.territoryLong,
+                onClick = {}
+            )
+        }
     }
 }
 
@@ -344,17 +387,17 @@ fun MapcodeInfoBox(
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state =
-            MapcodeInfoState(
-                code = "1AB.XY",
-                territory = "NLD",
-                address = "I am a very very very very very very extremely long address",
-                AddressHelper.NoInternet,
-                AddressError.UnknownAddress("Street, City"),
-                "1.0",
-                "2.0"
-            )
-        MapcodeInfoBox(state = state)
+        val state = MapcodeInfoState(
+            code = "1AB.XY",
+            territoryShort = "NLD",
+            territoryLong = "Netherlands",
+            address = "I am a very very very very very very extremely long address",
+            AddressHelper.NoInternet,
+            AddressError.UnknownAddress("Street, City"),
+            "1.0",
+            "2.0"
+        )
+        MapcodeInfoBox(modifier = Modifier.padding(8.dp), state = state)
     }
 }
 

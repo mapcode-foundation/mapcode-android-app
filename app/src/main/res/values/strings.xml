@@ -10,5 +10,6 @@
     <string name="cant_find_address_error">Cannot find: %s</string>
     <string name="no_address_error">No address found</string>
     <string name="clear_address_content_description">Clear address</string>
+    <string name="territory_header_button">Territory %d of %d</string>
     <!--  Map screen  -->
 </resources>

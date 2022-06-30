@@ -58,7 +58,7 @@ internal class MapViewModelTest {
 
         val uiState = viewModel.mapcodeInfoState.value
         assertThat(uiState.code).isEqualTo("1AB.XY")
-        assertThat(uiState.territory).isEqualTo("NLD")
+        assertThat(uiState.territoryShort).isEqualTo("NLD")
     }
 
     @Test
@@ -146,7 +146,8 @@ internal class MapViewModelTest {
         val uiState = viewModel.mapcodeInfoState.value
         val expectedUiState = MapcodeInfoState(
             code = "AB.CD",
-            territory = "NLD",
+            territoryShort = "NLD",
+            territoryLong = "Netherlands",
             latitude = "2.0",
             longitude = "3.0",
             addressHelper = AddressHelper.Location("City, 1234AB"),
@@ -174,7 +175,8 @@ internal class MapViewModelTest {
         val uiState = viewModel.mapcodeInfoState.value
         val expectedUiState = MapcodeInfoState(
             code = "AB.CD",
-            territory = "NLD",
+            territoryShort = "NLD",
+            territoryLong = "Netherlands",
             latitude = "2.0",
             longitude = "3.0",
             addressHelper = AddressHelper.Location("City, 1234AB"),
