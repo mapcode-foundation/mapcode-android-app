@@ -1,6 +1,7 @@
 package com.mapcode.map
 
 import android.Manifest
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
@@ -267,7 +268,11 @@ fun MapcodeTextArea(
     territory: String,
     onClick: () -> Unit
 ) {
-    Column(modifier.fillMaxWidth()) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colors.primaryVariant)
+    ) {
         Header(stringResource(R.string.mapcode_header_button), onClick)
         Row(Modifier.fillMaxWidth()) {
             ClickableText(
