@@ -17,6 +17,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -249,7 +250,7 @@ fun HelperText(modifier: Modifier = Modifier, message: String) {
 @Composable
 fun Header(text: String, onClick: () -> Unit = {}) {
     ClickableText(
-        text = AnnotatedString(text),
+        text = AnnotatedString(text, SpanStyle(color = MaterialTheme.colors.onSurface)),
         onClick = { onClick() },
         style = MaterialTheme.typography.h6,
         modifier = Modifier.fillMaxWidth()
@@ -270,13 +271,13 @@ fun MapcodeTextArea(
         Header(stringResource(R.string.mapcode_header_button), onClick)
         Row(Modifier.fillMaxWidth()) {
             ClickableText(
-                text = AnnotatedString(territory),
+                text = AnnotatedString(territory, SpanStyle(color = MaterialTheme.colors.onSurface)),
                 style = MaterialTheme.typography.body2,
                 modifier = Modifier.align(Alignment.Bottom),
                 onClick = { onClick() }
             )
             ClickableText(
-                text = AnnotatedString(code),
+                text = AnnotatedString(code, SpanStyle(color = MaterialTheme.colors.onSurface)),
                 style = MaterialTheme.typography.subtitle1,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { onClick() }
@@ -296,22 +297,20 @@ fun MapcodeInfoBox(
     onMapcodeClick: () -> Unit = {},
     onAddressChange: (String) -> Unit = {}
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Column {
-            AddressTextField(
-                modifier = Modifier.fillMaxWidth(),
-                address = state.address,
-                onChange = onAddressChange,
-                helper = state.addressHelper,
-                error = state.addressError
-            )
-            MapcodeTextArea(
-                modifier = Modifier.padding(top = 8.dp),
-                code = state.code,
-                territory = state.territory,
-                onClick = onMapcodeClick
-            )
-        }
+    Column(modifier = modifier.fillMaxSize()) {
+        AddressTextField(
+            modifier = Modifier.fillMaxWidth(),
+            address = state.address,
+            onChange = onAddressChange,
+            helper = state.addressHelper,
+            error = state.addressError
+        )
+        MapcodeTextArea(
+            modifier = Modifier.padding(top = 8.dp),
+            code = state.code,
+            territory = state.territory,
+            onClick = onMapcodeClick
+        )
     }
 }
 
@@ -332,7 +331,8 @@ fun MapcodeInfoBox(
                 onCopiedMapcode()
             }
         },
-        onAddressChange = { viewModel.queryAddress(it) })
+        onAddressChange = { viewModel.queryAddress(it) }
+    )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 300)
@@ -364,27 +364,25 @@ fun MapScreen(viewModel: MapViewModel) {
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-        Scaffold(scaffoldState = scaffoldState) {
-            Column {
-                MapBox(
-                    Modifier.weight(0.7f),
-                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                    cameraPositionState = cameraPosition
-                )
+    Scaffold(scaffoldState = scaffoldState) {
+        Column {
+            MapBox(
+                Modifier.weight(0.7f),
+                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                cameraPositionState = cameraPosition
+            )
 
-                MapcodeInfoBox(
-                    modifier = Modifier
-                        .weight(0.3f)
-                        .padding(8.dp),
-                    viewModel = viewModel,
-                    onCopiedMapcode = {
-                        scope.launch {
-                            scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
-                        }
+            MapcodeInfoBox(
+                modifier = Modifier
+                    .weight(0.3f)
+                    .padding(8.dp),
+                viewModel = viewModel,
+                onCopiedMapcode = {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
                     }
-                )
-            }
+                }
+            )
         }
     }
 }
