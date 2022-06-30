@@ -176,7 +176,14 @@ class MapViewModel @Inject constructor(
         addressResult
             .onSuccess { newAddress ->
                 address.value = newAddress
-                addressHelper.value = AddressHelper.None
+
+                // only show the last 2 parts of the address if the address is longer than 2 parts
+                if (newAddress.split(',').size <= 2) {
+                    addressHelper.value = AddressHelper.None
+                } else {
+                    val lastTwoParts = getLastTwoPartsOfAddress(newAddress)
+                    addressHelper.value = AddressHelper.Location(lastTwoParts)
+                }
             }
             .onFailure { error ->
                 when (error) {
@@ -186,6 +193,13 @@ class MapViewModel @Inject constructor(
 
                 address.value = ""
             }
+    }
+
+    private fun getLastTwoPartsOfAddress(address: String): String {
+        return address.split(',')
+            .map { it.trim() }
+            .takeLast(2)
+            .joinToString()
     }
 }
 

@@ -275,6 +275,26 @@ class MapScreenTest {
             .assertIsFocused()
     }
 
+    @Test
+    fun show_last_2_parts_of_address_if_address_exists() {
+        setMapcodeInfoBoxAsContent()
+
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("Street, City, Country"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+
+        composeTestRule
+            .onNodeWithText("City, Country")
+            .assertIsDisplayed()
+    }
+
     private fun setMapcodeInfoBoxAsContent() {
         composeTestRule.setContent {
             MapcodeInfoBox(viewModel = viewModel)

@@ -22,4 +22,9 @@ sealed class AddressHelper {
      * This location has no address.
      */
     object NoAddress : AddressHelper()
+
+    /**
+     * The last 2 parts of the address.
+     */
+    data class Location(val location: String) : AddressHelper()
 }

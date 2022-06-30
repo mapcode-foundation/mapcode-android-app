@@ -206,6 +206,7 @@ fun AddressHelper(helper: AddressHelper) {
     val helperMessage = when (helper) {
         AddressHelper.NoInternet -> stringResource(R.string.no_internet_error)
         AddressHelper.NoAddress -> stringResource(R.string.no_address_error)
+        is AddressHelper.Location -> helper.location
         AddressHelper.None -> null
     }
 

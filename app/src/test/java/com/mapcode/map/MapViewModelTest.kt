@@ -149,7 +149,7 @@ internal class MapViewModelTest {
             territory = "NLD",
             latitude = "2.0",
             longitude = "3.0",
-            addressHelper = AddressHelper.None,
+            addressHelper = AddressHelper.Location("City, 1234AB"),
             addressError = AddressError.None,
             address = "Street, City, 1234AB"
         )
@@ -177,7 +177,7 @@ internal class MapViewModelTest {
             territory = "NLD",
             latitude = "2.0",
             longitude = "3.0",
-            addressHelper = AddressHelper.None,
+            addressHelper = AddressHelper.Location("City, 1234AB"),
             addressError = AddressError.None,
             address = "Street, City, 1234AB"
         )
@@ -223,7 +223,7 @@ internal class MapViewModelTest {
             FakeLocation(
                 2.0,
                 3.0,
-                addresses = listOf("Street, City"),
+                addresses = listOf("Street, City, Country"),
                 mapcodes = emptyList()
             )
         )
@@ -232,8 +232,8 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
-        assertThat(uiState.address).isEqualTo("Street, City")
+        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.Location("City, Country"))
+        assertThat(uiState.address).isEqualTo("Street, City, Country")
     }
 
     @Test
@@ -242,7 +242,7 @@ internal class MapViewModelTest {
             FakeLocation(
                 1.0,
                 1.0,
-                addresses = listOf("10 street, city"),
+                addresses = listOf("10 street, city, country"),
                 mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
             )
         )
@@ -251,8 +251,8 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         val uiState = viewModel.mapcodeInfoState.value
-        assertThat(uiState.address).isEqualTo("10 street, city")
-        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
+        assertThat(uiState.address).isEqualTo("10 street, city, country")
+        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.Location("city, country"))
     }
 
     @Test
@@ -349,5 +349,41 @@ internal class MapViewModelTest {
         val uiState = viewModel.mapcodeInfoState.value
         assertThat(uiState.address).isEqualTo("Street, City")
         assertThat(uiState.addressError).isEqualTo(AddressError.None)
+    }
+
+    @Test
+    fun `do not show last 2 parts of address if only has 2 parts`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("City, Country"),
+                mapcodes = emptyList()
+            )
+        )
+
+        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        advanceUntilIdle()
+
+        val uiState = viewModel.mapcodeInfoState.value
+        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
+    }
+    
+    @Test
+    fun `do not show last 2 parts of address if only has 1 part`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                2.0,
+                3.0,
+                addresses = listOf("Country"),
+                mapcodes = emptyList()
+            )
+        )
+
+        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        advanceUntilIdle()
+
+        val uiState = viewModel.mapcodeInfoState.value
+        assertThat(uiState.addressHelper).isEqualTo(AddressHelper.None)
     }
 }
