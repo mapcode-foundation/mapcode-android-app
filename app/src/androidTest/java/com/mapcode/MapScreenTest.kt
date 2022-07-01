@@ -213,7 +213,7 @@ class MapScreenTest {
 
         composeTestRule.waitForIdle()
 
-        assertThat(viewModel.mapcodeInfoState.value.address).isEqualTo("Street, City")
+        assertThat(viewModel.uiState.value.addressUi).isEqualTo("Street, City")
     }
 
     @Test
@@ -289,6 +289,46 @@ class MapScreenTest {
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+
+        composeTestRule
+            .onNodeWithText("City, Country")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun update_information_when_map_moves() {
+        setMapcodeInfoBoxAsContent()
+
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("Street, City, Country"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+
+        composeTestRule
+            .onNodeWithText("AB.XY")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("NLD")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Netherlands")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Territory 1 of 1")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Street, City, Country")
+            .assertIsDisplayed()
 
         composeTestRule
             .onNodeWithText("City, Country")

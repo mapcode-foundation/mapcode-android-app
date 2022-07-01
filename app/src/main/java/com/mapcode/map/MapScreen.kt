@@ -1,9 +1,11 @@
 package com.mapcode.map
 
 import android.Manifest
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -12,13 +14,13 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -249,45 +251,75 @@ fun HelperText(modifier: Modifier = Modifier, message: String) {
 }
 
 @Composable
-fun Header(text: String, onClick: () -> Unit = {}) {
-    ClickableText(
-        text = AnnotatedString(text, SpanStyle(color = MaterialTheme.colors.onSurface)),
-        onClick = { onClick() },
-        style = MaterialTheme.typography.h6,
-        modifier = Modifier.fillMaxWidth()
-    )
+fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @DrawableRes icon: Int) {
+    Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            modifier = Modifier.fillMaxHeight(),
+            text = text,
+            style = MaterialTheme.typography.subtitle2
+        )
+
+        Icon(
+            modifier = Modifier.height(20.dp),
+            painter = painterResource(icon),
+            contentDescription = ""
+        )
+    }
 }
 
 /**
- * The part of the screen that shows the mapcode and territory.
+ * The box that shows the mapcode.
  */
 @Composable
-fun MapcodeTextArea(
+fun MapcodeBox(
     modifier: Modifier = Modifier,
     code: String,
-    territory: String,
-    onClick: () -> Unit
+    territory: String
 ) {
     Column(
         modifier
-            .fillMaxWidth()
             .background(MaterialTheme.colors.primaryVariant)
+            .padding(8.dp)
     ) {
-        Header(stringResource(R.string.mapcode_header_button), onClick)
-        Row(Modifier.fillMaxWidth()) {
-            ClickableText(
-                text = AnnotatedString(territory, SpanStyle(color = MaterialTheme.colors.onSurface)),
+        HeaderWithIcon(
+            Modifier.fillMaxWidth(),
+            stringResource(R.string.mapcode_header_button),
+            R.drawable.ic_outline_content_copy_24
+        )
+        Row {
+            Text(
+                text = territory,
                 style = MaterialTheme.typography.body2,
-                modifier = Modifier.align(Alignment.Bottom),
-                onClick = { onClick() }
+                modifier = Modifier.align(Alignment.Bottom)
             )
-            ClickableText(
-                text = AnnotatedString(code, SpanStyle(color = MaterialTheme.colors.onSurface)),
-                style = MaterialTheme.typography.subtitle1,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onClick() }
+            Text(
+                text = code,
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+/**
+ * The box that shows the territory.
+ */
+@Composable
+fun TerritoryBox(
+    modifier: Modifier = Modifier,
+    index: Int,
+    count: Int,
+    territoryName: String
+) {
+    Column(modifier.padding(8.dp)) {
+        val headerText = stringResource(R.string.territory_header_button, index, count)
+        HeaderWithIcon(modifier = Modifier.fillMaxWidth(), headerText, R.drawable.ic_outline_fast_forward_24)
+
+        Text(
+            text = territoryName,
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -298,24 +330,41 @@ fun MapcodeTextArea(
 @Composable
 fun MapcodeInfoBox(
     modifier: Modifier = Modifier,
-    state: MapcodeInfoState,
+    state: UiState,
     onMapcodeClick: () -> Unit = {},
-    onAddressChange: (String) -> Unit = {}
+    onAddressChange: (String) -> Unit = {},
+    onTerritoryClick: () -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         AddressTextField(
             modifier = Modifier.fillMaxWidth(),
-            address = state.address,
+            address = state.addressUi.address,
             onChange = onAddressChange,
-            helper = state.addressHelper,
-            error = state.addressError
+            helper = state.addressUi.helper,
+            error = state.addressUi.error
         )
-        MapcodeTextArea(
-            modifier = Modifier.padding(top = 8.dp),
-            code = state.code,
-            territory = state.territory,
-            onClick = onMapcodeClick
-        )
+        Row(Modifier.padding(top = 8.dp)) {
+            MapcodeBox(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(end = 8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onMapcodeClick() },
+                code = state.code,
+                territory = state.territoryUi.shortName
+            )
+
+            TerritoryBox(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(start = 8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable { onTerritoryClick() },
+                index = state.territoryUi.number,
+                count = state.territoryUi.count,
+                territoryName = state.territoryUi.fullName
+            )
+        }
     }
 }
 
@@ -325,7 +374,7 @@ fun MapcodeInfoBox(
     viewModel: MapViewModel,
     onCopiedMapcode: () -> Unit = {}
 ) {
-    val mapcodeInfoState by viewModel.mapcodeInfoState.collectAsState()
+    val mapcodeInfoState by viewModel.uiState.collectAsState()
 
     MapcodeInfoBox(
         modifier,
@@ -336,7 +385,8 @@ fun MapcodeInfoBox(
                 onCopiedMapcode()
             }
         },
-        onAddressChange = { viewModel.queryAddress(it) }
+        onAddressChange = { viewModel.queryAddress(it) },
+        onTerritoryClick = { viewModel.onTerritoryClick() }
     )
 }
 
@@ -344,17 +394,18 @@ fun MapcodeInfoBox(
 @Composable
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
-        val state =
-            MapcodeInfoState(
-                code = "1AB.XY",
-                territory = "NLD",
-                address = "I am a very very very very very very extremely long address",
-                AddressHelper.NoInternet,
+        val state = UiState(
+            code = "1AB.XY",
+            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
+            addressUi = AddressUi(
+                "I am a very very very very very very extremely long address",
                 AddressError.UnknownAddress("Street, City"),
-                "1.0",
-                "2.0"
-            )
-        MapcodeInfoBox(state = state)
+                AddressHelper.NoInternet,
+            ),
+            "1.0",
+            "2.0"
+        )
+        MapcodeInfoBox(modifier = Modifier.padding(8.dp), state = state)
     }
 }
 

@@ -38,38 +38,43 @@ class MapViewModel @Inject constructor(
     private val address: MutableStateFlow<String> = MutableStateFlow("")
     private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
     private val addressHelper: MutableStateFlow<AddressHelper> = MutableStateFlow(AddressHelper.None)
+    private val addressUi: Flow<AddressUi> =
+        combine(address, addressError, addressHelper) { address, addressError, addressHelper ->
+            AddressUi(address, addressError, addressHelper)
+        }
+
+    private val territoryUi: Flow<TerritoryUi> =
+        combine(mapcodeIndex, mapcodes, mapcode) { mapcodeIndex, mapcodes, mapcode ->
+            if (mapcode == null) {
+                TerritoryUi("", "", 0, 0)
+            } else {
+                TerritoryUi(
+                    mapcode.territory.name,
+                    mapcode.territory.fullName,
+                    mapcodeIndex + 1,
+                    mapcodes.size
+                )
+            }
+        }
+
     val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
     val zoom: MutableStateFlow<Float> = MutableStateFlow(1f)
 
-    val mapcodeInfoState: StateFlow<MapcodeInfoState> =
+    val uiState: StateFlow<UiState> =
         combine(
             mapcode,
-            address,
-            addressError,
-            addressHelper,
+            addressUi,
+            territoryUi,
             location
-        ) { mapcode, address, addressError, addressHelper, location ->
-            val code: String
-            val territory: String
-
-            if (mapcode == null) {
-                code = ""
-                territory = ""
-            } else {
-                code = mapcode.code
-                territory = mapcode.territory.name
-            }
-
-            MapcodeInfoState(
-                code = code,
-                territory = territory,
-                address = address,
-                addressError = addressError,
-                addressHelper = addressHelper,
+        ) { mapcode, addressUi, territoryUi, location ->
+            UiState(
+                code = mapcode?.code ?: "",
+                addressUi = addressUi,
+                territoryUi = territoryUi,
                 latitude = location.latitude.toString(),
                 longitude = location.longitude.toString()
             )
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, MapcodeInfoState.EMPTY)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
     private var clearUnknownAddressErrorJob: Job? = null
 
@@ -81,14 +86,7 @@ class MapViewModel @Inject constructor(
         this.zoom.value = zoom
 
         //update the mapcode when the map moves
-        val newMapcodes = useCase.getMapcodes(lat, long)
-        mapcodes.value = newMapcodes
-
-        if (newMapcodes.isEmpty()) {
-            mapcodeIndex.value = -1
-        } else {
-            mapcodeIndex.value = 0
-        }
+        updateMapcodes(lat, long)
 
         //update the address when the map moves
         val addressResult = useCase.reverseGeocode(lat, long)
@@ -134,6 +132,18 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun onTerritoryClick() {
+        if (mapcodeIndex.value == -1) {
+            return
+        }
+
+        if (mapcodeIndex.value == mapcodes.value.size - 1) {
+            mapcodeIndex.value = 0
+        } else {
+            mapcodeIndex.value++
+        }
+    }
+
     /**
      * After querying the address information update the UI state.
      */
@@ -141,14 +151,7 @@ class MapViewModel @Inject constructor(
         result.onSuccess { newLocation ->
             location.value = newLocation
 
-            val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
-            mapcodes.value = newMapcodes
-
-            if (newMapcodes.isEmpty()) {
-                mapcodeIndex.value = -1
-            } else {
-                mapcodeIndex.value = 0
-            }
+            updateMapcodes(newLocation.latitude, newLocation.longitude)
 
             val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
             updateAddress(newAddressResult)
@@ -201,24 +204,32 @@ class MapViewModel @Inject constructor(
             .takeLast(2)
             .joinToString()
     }
+
+    private fun updateMapcodes(lat: Double, long: Double) {
+        //remove duplicate mapcodes for a territory because only the highest priority one should be shown.
+        val newMapcodes = useCase.getMapcodes(lat, long).distinctBy { it.territory }
+        mapcodes.value = newMapcodes
+
+        if (newMapcodes.isEmpty()) {
+            mapcodeIndex.value = -1
+        } else {
+            mapcodeIndex.value = 0
+        }
+    }
 }
 
-data class MapcodeInfoState(
+data class UiState(
     val code: String,
-    val territory: String,
-    val address: String,
-    val addressHelper: AddressHelper,
-    val addressError: AddressError,
+    val territoryUi: TerritoryUi,
+    val addressUi: AddressUi,
     val latitude: String,
     val longitude: String
 ) {
     companion object {
-        val EMPTY: MapcodeInfoState = MapcodeInfoState(
+        val EMPTY: UiState = UiState(
             code = "",
-            territory = "",
-            address = "",
-            addressHelper = AddressHelper.None,
-            addressError = AddressError.None,
+            territoryUi = TerritoryUi("", "", 0, 0),
+            addressUi = AddressUi("", AddressError.None, AddressHelper.None),
             latitude = "",
             longitude = ""
         )
