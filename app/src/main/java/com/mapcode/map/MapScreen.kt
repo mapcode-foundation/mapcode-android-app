@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -140,12 +141,36 @@ fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -
 }
 
 @Composable
-fun AddressTextField(
+fun AddressArea(
     modifier: Modifier = Modifier,
     address: String,
     onChange: (String) -> Unit,
     helper: AddressHelper,
     error: AddressError
+) {
+    Column(modifier) {
+        ClearableTextField(
+            text = address,
+            onChange = onChange,
+            label = stringResource(R.string.address_bar_label),
+            clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
+        )
+        AddressHelper(helper = helper)
+        AddressError(error = error)
+    }
+}
+
+/**
+ * A text field that has a clear button and handles refilling the text if it is cleared.
+ */
+@Composable
+fun ClearableTextField(
+    modifier: Modifier = Modifier,
+    text: String,
+    label: String,
+    clearButtonContentDescription: String,
+    onChange: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
     val focusManager = LocalFocusManager.current
     var isFocussed by remember { mutableStateOf(false) }
@@ -157,8 +182,8 @@ fun AddressTextField(
     if (isFocussed) {
         textFieldValue = query
     } else {
-        textFieldValue = address
-        query = address
+        textFieldValue = text
+        query = text
     }
 
     OutlinedTextField(
@@ -170,18 +195,19 @@ fun AddressTextField(
             .focusRequester(focusRequester),
         value = textFieldValue,
         singleLine = true,
-        label = { Text(stringResource(R.string.address_bar_label)) },
+        label = { Text(label) },
         onValueChange = { query = it },
         keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Go
+            imeAction = ImeAction.Go,
+            keyboardType = keyboardType
         ),
         keyboardActions = KeyboardActions(onGo = {
             focusManager.clearFocus()
             onChange(query)
         }),
-        placeholder = { Text(address) },
+        placeholder = { Text(text) },
         trailingIcon = {
-            if (address.isNotEmpty()) {
+            if (text.isNotEmpty()) {
                 IconButton(
                     onClick = {
                         focusRequester.requestFocus()
@@ -189,14 +215,11 @@ fun AddressTextField(
                     }) {
                     Icon(
                         Icons.Outlined.Clear,
-                        contentDescription = stringResource(R.string.clear_address_content_description)
+                        contentDescription = clearButtonContentDescription
                     )
                 }
             }
         })
-
-    AddressHelper(helper = helper)
-    AddressError(error = error)
 }
 
 /**
@@ -324,6 +347,44 @@ fun TerritoryBox(
 }
 
 /**
+ * The box that shows the latitude.
+ */
+@Composable
+fun LatitudeTextBox(
+    modifier: Modifier = Modifier,
+    latitude: String,
+    onChange: (String) -> Unit
+) {
+    ClearableTextField(
+        modifier = modifier,
+        text = latitude,
+        onChange = onChange,
+        label = stringResource(R.string.latitude_text_field_label),
+        clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
+        keyboardType = KeyboardType.Decimal
+    )
+}
+
+/**
+ * The box that shows the longitude.
+ */
+@Composable
+fun LongitudeTextBox(
+    modifier: Modifier = Modifier,
+    longitude: String,
+    onChange: (String) -> Unit
+) {
+    ClearableTextField(
+        modifier = modifier,
+        text = longitude,
+        onChange = onChange,
+        label = stringResource(R.string.longitude_text_field_label),
+        clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
+        keyboardType = KeyboardType.Decimal
+    )
+}
+
+/**
  * The bottom portion of the screen containing all the mapcode and
  * address information.
  */
@@ -336,7 +397,7 @@ fun InfoArea(
     onTerritoryClick: () -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        AddressTextField(
+        AddressArea(
             modifier = Modifier.fillMaxWidth(),
             address = state.addressUi.address,
             onChange = onAddressChange,
@@ -362,6 +423,22 @@ fun InfoArea(
                 count = state.territoryUi.count,
                 territoryName = state.territoryUi.fullName
             )
+        }
+
+        Row(Modifier.padding(top = 8.dp)) {
+            LatitudeTextBox(
+                Modifier
+                    .weight(0.5f)
+                    .padding(end = 8.dp),
+                latitude = state.latitude,
+                onChange = {})
+
+            LongitudeTextBox(
+                Modifier
+                    .weight(0.5f)
+                    .padding(start = 8.dp),
+                longitude = state.longitude,
+                onChange = {})
         }
     }
 }
@@ -408,7 +485,7 @@ fun MapScreen(
         Column {
             if (showMap) {
                 MapBox(
-                    Modifier.weight(0.7f),
+                    Modifier.weight(0.65f),
                     onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
                     cameraPositionState = cameraPosition
                 )
@@ -416,7 +493,7 @@ fun MapScreen(
 
             InfoArea(
                 Modifier
-                    .weight(0.3f)
+                    .weight(0.35f)
                     .padding(8.dp),
                 mapcodeInfoState,
                 onMapcodeClick = {
