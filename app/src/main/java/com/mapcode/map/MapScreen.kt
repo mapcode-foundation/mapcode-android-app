@@ -1,6 +1,7 @@
 package com.mapcode.map
 
 import android.Manifest
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -249,12 +251,20 @@ fun HelperText(modifier: Modifier = Modifier, message: String) {
 }
 
 @Composable
-fun Header(modifier: Modifier = Modifier, text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.subtitle2,
-        modifier = modifier
-    )
+fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @DrawableRes icon: Int) {
+    Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            modifier = Modifier.fillMaxHeight(),
+            text = text,
+            style = MaterialTheme.typography.subtitle2
+        )
+
+        Icon(
+            modifier = Modifier.height(20.dp),
+            painter = painterResource(icon),
+            contentDescription = ""
+        )
+    }
 }
 
 /**
@@ -269,9 +279,13 @@ fun MapcodeBox(
     Column(
         modifier
             .background(MaterialTheme.colors.primaryVariant)
-            .padding(4.dp)
+            .padding(8.dp)
     ) {
-        Header(Modifier.fillMaxWidth(), stringResource(R.string.mapcode_header_button))
+        HeaderWithIcon(
+            Modifier.fillMaxWidth(),
+            stringResource(R.string.mapcode_header_button),
+            R.drawable.ic_outline_content_copy_24
+        )
         Row {
             Text(
                 text = territory,
@@ -280,7 +294,7 @@ fun MapcodeBox(
             )
             Text(
                 text = code,
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.body1,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -297,15 +311,13 @@ fun TerritoryBox(
     count: Int,
     territoryName: String
 ) {
-    Column(modifier.padding(4.dp)) {
-        Row {
-            val headerText = stringResource(R.string.territory_header_button, index, count)
-            Header(modifier = Modifier.fillMaxWidth(), headerText)
-        }
+    Column(modifier.padding(8.dp)) {
+        val headerText = stringResource(R.string.territory_header_button, index, count)
+        HeaderWithIcon(modifier = Modifier.fillMaxWidth(), headerText, R.drawable.ic_outline_fast_forward_24)
 
         Text(
             text = territoryName,
-            style = MaterialTheme.typography.subtitle1,
+            style = MaterialTheme.typography.body1,
             modifier = Modifier.fillMaxWidth()
         )
     }
