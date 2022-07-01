@@ -86,14 +86,7 @@ class MapViewModel @Inject constructor(
         this.zoom.value = zoom
 
         //update the mapcode when the map moves
-        val newMapcodes = useCase.getMapcodes(lat, long)
-        mapcodes.value = newMapcodes
-
-        if (newMapcodes.isEmpty()) {
-            mapcodeIndex.value = -1
-        } else {
-            mapcodeIndex.value = 0
-        }
+        updateMapcodes(lat, long)
 
         //update the address when the map moves
         val addressResult = useCase.reverseGeocode(lat, long)
@@ -158,14 +151,7 @@ class MapViewModel @Inject constructor(
         result.onSuccess { newLocation ->
             location.value = newLocation
 
-            val newMapcodes = useCase.getMapcodes(newLocation.latitude, newLocation.longitude)
-            mapcodes.value = newMapcodes
-
-            if (newMapcodes.isEmpty()) {
-                mapcodeIndex.value = -1
-            } else {
-                mapcodeIndex.value = 0
-            }
+            updateMapcodes(newLocation.latitude, newLocation.longitude)
 
             val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
             updateAddress(newAddressResult)
@@ -217,6 +203,18 @@ class MapViewModel @Inject constructor(
             .map { it.trim() }
             .takeLast(2)
             .joinToString()
+    }
+
+    private fun updateMapcodes(lat: Double, long: Double) {
+        //remove duplicate mapcodes for a territory because only the highest priority one should be shown.
+        val newMapcodes = useCase.getMapcodes(lat, long).distinctBy { it.territory }
+        mapcodes.value = newMapcodes
+
+        if (newMapcodes.isEmpty()) {
+            mapcodeIndex.value = -1
+        } else {
+            mapcodeIndex.value = 0
+        }
     }
 }
 

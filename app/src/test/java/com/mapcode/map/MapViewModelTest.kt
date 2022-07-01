@@ -440,4 +440,26 @@ internal class MapViewModelTest {
         viewModel.onTerritoryClick()
         assertThat(viewModel.uiState.value.territoryUi).isEqualTo(TerritoryUi("", "", 0, 0))
     }
+
+    @Test
+    fun `only show the first mapcode for a territory`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("10 street, city, country"),
+                mapcodes = listOf(
+                    Mapcode("AB.CD", Territory.NLD),
+                    Mapcode("VX.YZ", Territory.NLD)
+                )
+            )
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.code).isEqualTo("AB.CD")
+        assertThat(uiState.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 1))
+    }
 }
