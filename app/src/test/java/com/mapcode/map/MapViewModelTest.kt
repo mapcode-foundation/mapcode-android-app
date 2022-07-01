@@ -390,4 +390,54 @@ internal class MapViewModelTest {
         val uiState = viewModel.uiState.value
         assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.None)
     }
+
+    @Test
+    fun `clicking territory should cycle through mapcodes`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("10 street, city, country"),
+                mapcodes = listOf(
+                    Mapcode("AB.CD", Territory.NLD),
+                    Mapcode("HHH.HHH", Territory.AAA),
+                    Mapcode("GGG.GGG", Territory.DEU)
+                )
+            )
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        advanceUntilIdle()
+
+        val uiState1 = viewModel.uiState.value
+        assertThat(uiState1.code).isEqualTo("AB.CD")
+        assertThat(uiState1.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 3))
+
+        viewModel.onTerritoryClick()
+        runCurrent()
+
+        val uiState2 = viewModel.uiState.value
+        assertThat(uiState2.code).isEqualTo("HHH.HHH")
+        assertThat(uiState2.territoryUi).isEqualTo(TerritoryUi("AAA", "International", 2, 3))
+
+        viewModel.onTerritoryClick()
+        runCurrent()
+
+        val uiState3 = viewModel.uiState.value
+        assertThat(uiState3.code).isEqualTo("GGG.GGG")
+        assertThat(uiState3.territoryUi).isEqualTo(TerritoryUi("DEU", "Germany", 3, 3))
+
+        viewModel.onTerritoryClick()
+        runCurrent()
+
+        val uiState4 = viewModel.uiState.value
+        assertThat(uiState4.code).isEqualTo("AB.CD")
+        assertThat(uiState4.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 3))
+    }
+
+    @Test
+    fun `clicking territory should do nothing if no mapcodes`() = runTest {
+        viewModel.onTerritoryClick()
+        assertThat(viewModel.uiState.value.territoryUi).isEqualTo(TerritoryUi("", "", 0, 0))
+    }
 }

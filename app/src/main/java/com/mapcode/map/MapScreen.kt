@@ -332,7 +332,8 @@ fun MapcodeInfoBox(
     modifier: Modifier = Modifier,
     state: UiState,
     onMapcodeClick: () -> Unit = {},
-    onAddressChange: (String) -> Unit = {}
+    onAddressChange: (String) -> Unit = {},
+    onTerritoryClick: () -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         AddressTextField(
@@ -358,7 +359,7 @@ fun MapcodeInfoBox(
                     .weight(0.5f)
                     .padding(start = 8.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .clickable { },
+                    .clickable { onTerritoryClick() },
                 index = state.territoryUi.number,
                 count = state.territoryUi.count,
                 territoryName = state.territoryUi.fullName
@@ -384,7 +385,8 @@ fun MapcodeInfoBox(
                 onCopiedMapcode()
             }
         },
-        onAddressChange = { viewModel.queryAddress(it) }
+        onAddressChange = { viewModel.queryAddress(it) },
+        onTerritoryClick = { viewModel.onTerritoryClick() }
     )
 }
 

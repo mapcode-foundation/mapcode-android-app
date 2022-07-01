@@ -139,6 +139,18 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun onTerritoryClick() {
+        if (mapcodeIndex.value == -1) {
+            return
+        }
+
+        if (mapcodeIndex.value == mapcodes.value.size - 1) {
+            mapcodeIndex.value = 0
+        } else {
+            mapcodeIndex.value++
+        }
+    }
+
     /**
      * After querying the address information update the UI state.
      */
