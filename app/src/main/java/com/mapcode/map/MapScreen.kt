@@ -195,7 +195,7 @@ fun ClearableTextField(
             .focusRequester(focusRequester),
         value = textFieldValue,
         singleLine = true,
-        label = { Text(label) },
+        label = { Text(label, maxLines = 1) },
         onValueChange = { query = it },
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Go,
