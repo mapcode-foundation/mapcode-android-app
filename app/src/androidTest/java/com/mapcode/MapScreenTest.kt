@@ -7,7 +7,6 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
-import com.mapcode.map.MapcodeInfoBox
 import com.mapcode.util.Location
 import org.junit.Before
 import org.junit.Rule
@@ -41,11 +40,11 @@ class MapScreenTest {
             )
         )
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
         composeTestRule
-            .onNodeWithText("Mapcode (tap to copy)")
+            .onNodeWithText("Mapcode")
             .performClick()
 
         assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
@@ -62,7 +61,7 @@ class MapScreenTest {
             )
         )
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
         composeTestRule
@@ -83,7 +82,7 @@ class MapScreenTest {
             )
         )
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
         composeTestRule
@@ -104,11 +103,15 @@ class MapScreenTest {
             )
         )
 
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
         setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("AAA")
             .performClick()
+
+        composeTestRule.waitForIdle()
 
         composeTestRule
             .onNodeWithText("Copied to clipboard.")
@@ -119,7 +122,7 @@ class MapScreenTest {
     fun show_warning_if_no_internet() {
         useCase.hasInternetConnection = false
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
         composeTestRule
@@ -129,7 +132,7 @@ class MapScreenTest {
 
     @Test
     fun show_warning_if_no_address_exists_for_location() {
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         useCase.knownLocations.clear()
         viewModel.onCameraMoved(0.0, 0.0, 1f)
@@ -143,7 +146,7 @@ class MapScreenTest {
     fun show_error_if_unknown_address_query() {
         useCase.knownLocations.clear()
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("Enter address or mapcode").apply {
@@ -171,7 +174,7 @@ class MapScreenTest {
             )
         )
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("Enter address or mapcode").apply {
@@ -194,31 +197,34 @@ class MapScreenTest {
             FakeLocation(
                 3.0,
                 2.0,
-                addresses = listOf("Street, City"),
+                addresses = listOf("Street, City, Country"),
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("Enter address or mapcode").apply {
                 performTextClearance()
-                performTextInput("Street, City")
+                performTextInput("Street, City, Country")
+                performImeAction()
             }
-
-        composeTestRule
-            .onNodeWithText("Street, City")
-            .performImeAction()
 
         composeTestRule.waitForIdle()
 
-        assertThat(viewModel.uiState.value.addressUi).isEqualTo("Street, City")
+        composeTestRule
+            .onNodeWithText("Street, City, Country")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("City, Country")
+            .assertIsDisplayed()
     }
 
     @Test
     fun clear_address_if_press_clear_button_in_text_field() {
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         useCase.knownLocations.add(
             FakeLocation(
@@ -241,7 +247,7 @@ class MapScreenTest {
 
     @Test
     fun hide_clear_button_if_empty_address() {
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithText("Enter address or mapcode")
@@ -264,7 +270,7 @@ class MapScreenTest {
         )
         viewModel.onCameraMoved(0.0, 0.0, 1f) //fill address field with something
 
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         composeTestRule
             .onNodeWithContentDescription("Clear address")
@@ -277,7 +283,7 @@ class MapScreenTest {
 
     @Test
     fun show_last_2_parts_of_address_if_address_exists() {
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         useCase.knownLocations.add(
             FakeLocation(
@@ -297,7 +303,7 @@ class MapScreenTest {
 
     @Test
     fun update_information_when_map_moves() {
-        setMapcodeInfoBoxAsContent()
+        setMapScreenAsContent()
 
         useCase.knownLocations.add(
             FakeLocation(
@@ -309,6 +315,7 @@ class MapScreenTest {
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        composeTestRule.waitForIdle()
 
         composeTestRule
             .onNodeWithText("AB.XY")
@@ -335,15 +342,9 @@ class MapScreenTest {
             .assertIsDisplayed()
     }
 
-    private fun setMapcodeInfoBoxAsContent() {
-        composeTestRule.setContent {
-            MapcodeInfoBox(viewModel = viewModel)
-        }
-    }
-
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
-            MapScreen(viewModel = viewModel)
+            MapScreen(viewModel = viewModel, showMap = false)
         }
     }
 }

@@ -10,15 +10,17 @@ import androidx.compose.ui.graphics.Color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 private val DarkColorPalette = darkColors(
-    primary = Blue200,
-    primaryVariant = Blue700,
-    secondary = Blue200
+    primary = LightBlue200,
+    primaryVariant = LightBlue700,
+    secondary = LightBlue500,
+    onPrimary = Color.Black,
+    onSecondary = Color.White
 )
 
 private val LightColorPalette = lightColors(
-    primary = Blue500,
-    primaryVariant = Blue700,
-    secondary = Blue200
+    primary = LightBlue500,
+    primaryVariant = LightBlue700,
+    secondary = LightBlue200
 
     /* Other default colors to override
     background = Color.White,

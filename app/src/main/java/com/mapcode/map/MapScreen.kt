@@ -2,10 +2,8 @@ package com.mapcode.map
 
 import android.Manifest
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -14,7 +12,6 @@ import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -276,27 +273,28 @@ fun MapcodeBox(
     code: String,
     territory: String
 ) {
-    Column(
-        modifier
-            .background(MaterialTheme.colors.primaryVariant)
-            .padding(8.dp)
+    Card(
+        modifier = modifier,
+        backgroundColor = MaterialTheme.colors.primary
     ) {
-        HeaderWithIcon(
-            Modifier.fillMaxWidth(),
-            stringResource(R.string.mapcode_header_button),
-            R.drawable.ic_outline_content_copy_24
-        )
-        Row {
-            Text(
-                text = territory,
-                style = MaterialTheme.typography.body2,
-                modifier = Modifier.align(Alignment.Bottom)
+        Column(Modifier.padding(8.dp)) {
+            HeaderWithIcon(
+                Modifier.fillMaxWidth(),
+                stringResource(R.string.mapcode_header_button),
+                R.drawable.ic_outline_content_copy_24
             )
-            Text(
-                text = code,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row {
+                Text(
+                    text = territory,
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier.align(Alignment.Bottom)
+                )
+                Text(
+                    text = code,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -311,15 +309,17 @@ fun TerritoryBox(
     count: Int,
     territoryName: String
 ) {
-    Column(modifier.padding(8.dp)) {
-        val headerText = stringResource(R.string.territory_header_button, index, count)
-        HeaderWithIcon(modifier = Modifier.fillMaxWidth(), headerText, R.drawable.ic_outline_fast_forward_24)
+    Card(modifier = modifier) {
+        Column(Modifier.padding(8.dp)) {
+            val headerText = stringResource(R.string.territory_header_button, index, count)
+            HeaderWithIcon(modifier = Modifier.fillMaxWidth(), headerText, R.drawable.ic_outline_fast_forward_24)
 
-        Text(
-            text = territoryName,
-            style = MaterialTheme.typography.body1,
-            modifier = Modifier.fillMaxWidth()
-        )
+            Text(
+                text = territoryName,
+                style = MaterialTheme.typography.body1,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -328,7 +328,7 @@ fun TerritoryBox(
  * address information.
  */
 @Composable
-fun MapcodeInfoBox(
+fun InfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onMapcodeClick: () -> Unit = {},
@@ -348,7 +348,6 @@ fun MapcodeInfoBox(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(end = 8.dp)
-                    .clip(RoundedCornerShape(4.dp))
                     .clickable { onMapcodeClick() },
                 code = state.code,
                 territory = state.territoryUi.shortName
@@ -358,7 +357,6 @@ fun MapcodeInfoBox(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(start = 8.dp)
-                    .clip(RoundedCornerShape(4.dp))
                     .clickable { onTerritoryClick() },
                 index = state.territoryUi.number,
                 count = state.territoryUi.count,
@@ -366,28 +364,6 @@ fun MapcodeInfoBox(
             )
         }
     }
-}
-
-@Composable
-fun MapcodeInfoBox(
-    modifier: Modifier = Modifier,
-    viewModel: MapViewModel,
-    onCopiedMapcode: () -> Unit = {}
-) {
-    val mapcodeInfoState by viewModel.uiState.collectAsState()
-
-    MapcodeInfoBox(
-        modifier,
-        mapcodeInfoState,
-        onMapcodeClick = {
-            val copied = viewModel.copyMapcode()
-            if (copied) {
-                onCopiedMapcode()
-            }
-        },
-        onAddressChange = { viewModel.queryAddress(it) },
-        onTerritoryClick = { viewModel.onTerritoryClick() }
-    )
 }
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 300)
@@ -405,39 +381,54 @@ fun MapcodeInfoBoxPreview() {
             "1.0",
             "2.0"
         )
-        MapcodeInfoBox(modifier = Modifier.padding(8.dp), state = state)
+        InfoArea(modifier = Modifier.padding(8.dp), state = state)
     }
 }
 
 @Composable
-fun MapScreen(viewModel: MapViewModel) {
+fun MapScreen(
+    viewModel: MapViewModel,
+    /**
+     * This option makes instrumentation tests much quicker and easier to implement.
+     */
+    showMap: Boolean = true
+) {
     val scaffoldState = rememberScaffoldState()
     val cameraPosition by combine(viewModel.location, viewModel.zoom) { location, zoom ->
         val latLng = LatLng(location.latitude, location.longitude)
 
         CameraPositionState(CameraPosition.fromLatLngZoom(latLng, zoom))
     }.collectAsState(initial = CameraPositionState())
+    val mapcodeInfoState by viewModel.uiState.collectAsState()
+
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
     Scaffold(scaffoldState = scaffoldState) {
         Column {
-            MapBox(
-                Modifier.weight(0.7f),
-                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                cameraPositionState = cameraPosition
-            )
+            if (showMap) {
+                MapBox(
+                    Modifier.weight(0.7f),
+                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                    cameraPositionState = cameraPosition
+                )
+            }
 
-            MapcodeInfoBox(
-                modifier = Modifier
+            InfoArea(
+                Modifier
                     .weight(0.3f)
                     .padding(8.dp),
-                viewModel = viewModel,
-                onCopiedMapcode = {
-                    scope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
+                mapcodeInfoState,
+                onMapcodeClick = {
+                    val copied = viewModel.copyMapcode()
+                    if (copied) {
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
+                        }
                     }
-                }
+                },
+                onAddressChange = { viewModel.queryAddress(it) },
+                onTerritoryClick = { viewModel.onTerritoryClick() }
             )
         }
     }

@@ -28,7 +28,7 @@ class MapViewModel @Inject constructor(
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
     private val mapcode: Flow<Mapcode?> = combine(mapcodes, mapcodeIndex) { mapcodes, index ->
-        if (index == -1) {
+        if (index == -1 || index >= mapcodes.size) {
             null
         } else {
             mapcodes[index]
