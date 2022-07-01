@@ -338,14 +338,14 @@ internal class MapViewModelTest {
     fun `searching an empty address should should dismiss the query and put the old address back`() = runTest {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0,
-                0.0,
+                1.0,
+                1.0,
                 addresses = listOf("Street, City"),
                 mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
             )
         )
 
-        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill the address with something
+        viewModel.onCameraMoved(1.0, 1.0, 1f) //fill the address with something
         viewModel.queryAddress("")
 
         runCurrent()

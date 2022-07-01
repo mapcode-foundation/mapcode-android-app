@@ -9,6 +9,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 
@@ -82,6 +83,11 @@ class MapViewModel @Inject constructor(
      * When the camera has moved the mapcode information should be updated.
      */
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
+        //if nothing changes
+        if (location.value.latitude == lat && location.value.longitude == long && this.zoom.value == zoom) {
+            return
+        }
+
         this.location.value = Location(lat, long)
         this.zoom.value = zoom
 
@@ -206,6 +212,7 @@ class MapViewModel @Inject constructor(
     }
 
     private fun updateMapcodes(lat: Double, long: Double) {
+        Timber.e("update mapcodes $lat $long")
         //remove duplicate mapcodes for a territory because only the highest priority one should be shown.
         val newMapcodes = useCase.getMapcodes(lat, long).distinctBy { it.territory }
         mapcodes.value = newMapcodes
