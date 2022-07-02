@@ -33,6 +33,12 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(ctx)
 
+    /**
+     * Save the last location because on Google Maps it can still show the blue my location dot
+     * if you disable GPS while the app is running.
+     */
+    private var cachedLastLocation: Location? = null
+
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return MapcodeCodec.encode(lat, long)
     }
@@ -102,9 +108,11 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
     override suspend fun getLastLocation(): Location? = suspendCoroutine { continuation ->
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location == null) {
-                continuation.resume(null)
+                continuation.resume(cachedLastLocation)
             } else {
-                continuation.resume(Location(location.latitude, location.longitude))
+                val newLocation = Location(location.latitude, location.longitude)
+                cachedLastLocation = newLocation
+                continuation.resume(newLocation)
             }
         }
     }
