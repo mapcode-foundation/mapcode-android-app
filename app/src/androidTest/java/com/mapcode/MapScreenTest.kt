@@ -353,7 +353,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("Latitude").apply {
+            .onNodeWithText("Latitude (Y)").apply {
                 performTextClearance()
                 performTextInput("3")
                 performImeAction()
@@ -384,7 +384,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("Longitude").apply {
+            .onNodeWithText("Longitude (X)").apply {
                 performTextClearance()
                 performTextInput("2.0")
                 performImeAction()
@@ -415,7 +415,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("Latitude").apply {
+            .onNodeWithText("Latitude (Y)").apply {
                 performTextClearance()
                 performTextInput("3.0")
                 performImeAction()
@@ -440,7 +440,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("Longitude").apply {
+            .onNodeWithText("Longitude (X)").apply {
                 performTextClearance()
                 performTextInput("2.0")
                 performImeAction()
