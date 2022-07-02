@@ -127,6 +127,7 @@ class MapViewModel @Inject constructor(
             if (myLocation == null) {
                 showCantFindLocationSnackBar = true
             } else {
+                showCantFindLocationSnackBar = false
                 moveCamera(myLocation.latitude, myLocation.longitude, 16f)
             }
         }
@@ -209,7 +210,6 @@ class MapViewModel @Inject constructor(
 
     fun restoreLastLocation() {
         viewModelScope.launch {
-
             val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@launch
             val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@launch
             val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@launch

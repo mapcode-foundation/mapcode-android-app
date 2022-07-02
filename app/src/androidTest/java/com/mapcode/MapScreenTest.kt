@@ -452,9 +452,23 @@ class MapScreenTest {
         assertThat(viewModel.location.value).isEqualTo(Location(0.0, 2.0))
     }
 
+    @Test
+    fun show_snack_bar_if_fail_to_get_current_location() {
+        useCase.currentLocation = null
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithContentDescription("Go to my location")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("Can't find location. Is your GPS turned on?")
+            .assertIsDisplayed()
+    }
+    
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
-            MapScreen(viewModel = viewModel, showMap = false)
+            MapScreen(viewModel = viewModel, renderGoogleMaps = false)
         }
     }
 }

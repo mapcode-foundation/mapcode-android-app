@@ -2,11 +2,10 @@ package com.mapcode.map
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import assertk.assertThat
-import assertk.assertions.isEmpty
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNullOrEmpty
+import assertk.assertions.*
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.mapcode.util.Location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -551,5 +550,42 @@ internal class MapViewModelTest {
         val uiState = viewModel.uiState.value
         assertThat(uiState.latitude).isEqualTo("1.1234568")
         assertThat(uiState.longitude).isEqualTo("0.1234568")
+    }
+
+    @Test
+    fun `show snack bar if fail to get current location`() = runTest {
+        useCase.currentLocation = null
+
+        viewModel.onMyLocationClick()
+        runCurrent()
+
+        assertThat(viewModel.showCantFindLocationSnackBar).isTrue()
+    }
+
+    @Test
+    fun `update location when clicking my location button`() = runTest {
+        useCase.currentLocation = Location(1.0, 2.0)
+
+        viewModel.onMyLocationClick()
+        runCurrent()
+
+        assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
+        
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("1.0000000")
+        assertThat(uiState.longitude).isEqualTo("2.0000000")
+    }
+
+    @Test
+    fun `clicking my location should dismiss snack bar if location is found`() = runTest {
+        useCase.currentLocation = null
+        viewModel.onMyLocationClick()
+        runCurrent()
+
+        useCase.currentLocation = Location(1.0, 2.0)
+        viewModel.onMyLocationClick()
+        runCurrent()
+
+        assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
     }
 }

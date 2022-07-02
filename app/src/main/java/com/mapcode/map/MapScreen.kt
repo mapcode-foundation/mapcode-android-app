@@ -53,7 +53,8 @@ fun MapBox(
     onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
     onMapLoaded: () -> Unit,
-    onMyLocationClick: () -> Unit
+    onMyLocationClick: () -> Unit,
+    renderGoogleMaps: Boolean = true
 ) {
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -81,13 +82,15 @@ fun MapBox(
     properties = properties.copy(isMyLocationEnabled = isLocationPermissionGranted)
 
     Box(modifier) {
-        Map(
-            uiSettings = uiSettings,
-            properties = properties,
-            onCameraFinishedMoving = onCameraMoved,
-            cameraPositionState = cameraPositionState,
-            onMapLoaded = onMapLoaded
-        )
+        if (renderGoogleMaps) {
+            Map(
+                uiSettings = uiSettings,
+                properties = properties,
+                onCameraFinishedMoving = onCameraMoved,
+                cameraPositionState = cameraPositionState,
+                onMapLoaded = onMapLoaded
+            )
+        }
 
         Icon(
             modifier = Modifier
@@ -622,7 +625,7 @@ fun MapScreen(
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
-    showMap: Boolean = true
+    renderGoogleMaps: Boolean = true
 ) {
     val scaffoldState = rememberScaffoldState()
     val uiState by viewModel.uiState.collectAsState()
@@ -643,18 +646,17 @@ fun MapScreen(
 
     Scaffold(scaffoldState = scaffoldState) {
         Column {
-            if (showMap) {
-                MapBox(
-                    Modifier.weight(0.65f),
-                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                    cameraPositionState = viewModel.cameraPositionState,
-                    onMapLoaded = {
-                        viewModel.isGoogleMapsSdkLoaded = true
-                        viewModel.restoreLastLocation()
-                    },
-                    onMyLocationClick = { viewModel.onMyLocationClick() }
-                )
-            }
+            MapBox(
+                Modifier.weight(0.65f),
+                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                cameraPositionState = viewModel.cameraPositionState,
+                onMapLoaded = {
+                    viewModel.isGoogleMapsSdkLoaded = true
+                    viewModel.restoreLastLocation()
+                },
+                onMyLocationClick = { viewModel.onMyLocationClick() },
+                renderGoogleMaps = renderGoogleMaps
+            )
 
             InfoArea(
                 Modifier
