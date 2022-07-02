@@ -17,7 +17,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 
@@ -99,7 +98,6 @@ class MapViewModel @Inject constructor(
      * When the camera has moved the mapcode information should be updated.
      */
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
-        Timber.e("on camera moved $lat $long $zoom")
         location.value = Location(lat, long)
         this.zoom.value = zoom
 
@@ -210,14 +208,12 @@ class MapViewModel @Inject constructor(
     }
 
     fun restoreLastLocation() {
-        Timber.e("call restore")
         viewModelScope.launch {
 
             val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@launch
             val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@launch
             val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@launch
 
-            Timber.e("restore $lastLatitude")
             moveCamera(lastLatitude, lastLongitude, lastZoom)
         }
     }
