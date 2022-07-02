@@ -1,14 +1,23 @@
 package com.mapcode.map
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.mapcode.Mapcode
+import com.mapcode.data.Keys
+import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 
@@ -18,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase,
+    private val preferences: PreferenceRepository,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
 
@@ -57,6 +67,7 @@ class MapViewModel @Inject constructor(
             }
         }
 
+    val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
     val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
     private val locationStringFormat = "%.7f"
 
@@ -78,11 +89,17 @@ class MapViewModel @Inject constructor(
 
     private var clearUnknownAddressErrorJob: Job? = null
 
+    var isGoogleMapsSdkLoaded = false
+    var cameraPositionState by mutableStateOf(CameraPositionState())
+        private set
+
     /**
      * When the camera has moved the mapcode information should be updated.
      */
-    fun onCameraMoved(lat: Double, long: Double) {
+    fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
+        Timber.e("on camera moved $lat $long $zoom")
         location.value = Location(lat, long)
+        this.zoom.value = zoom
 
         //update the mapcode when the map moves
         updateMapcodes(lat, long)
@@ -90,6 +107,17 @@ class MapViewModel @Inject constructor(
         //update the address when the map moves
         val addressResult = useCase.reverseGeocode(lat, long)
         updateAddress(addressResult)
+    }
+
+    private fun moveCamera(lat: Double, long: Double, zoom: Float) {
+        viewModelScope.launch(dispatchers.main) {
+            if (isGoogleMapsSdkLoaded) {
+                val cameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(lat, long), zoom)
+                cameraPositionState.move(cameraUpdate)
+            }
+
+            onCameraMoved(lat, long, zoom)
+        }
     }
 
     /**
@@ -137,7 +165,7 @@ class MapViewModel @Inject constructor(
         }
 
         val cleansedLatitude = LocationUtils.cleanseLatitude(query.toDouble())
-        onCameraMoved(cleansedLatitude, location.value.longitude)
+        moveCamera(cleansedLatitude, location.value.longitude, 0f)
     }
 
     fun queryLongitude(query: String) {
@@ -146,7 +174,7 @@ class MapViewModel @Inject constructor(
         }
 
         val cleansedLongitude = LocationUtils.cleanseLongitude(query.toDouble())
-        onCameraMoved(location.value.latitude, cleansedLongitude)
+        moveCamera(location.value.latitude, cleansedLongitude, 0f)
     }
 
     fun onTerritoryClick() {
@@ -161,16 +189,31 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun saveLocation() {
+        preferences.set(Keys.lastLocationLatitude, location.value.latitude)
+        preferences.set(Keys.lastLocationLongitude, location.value.longitude)
+        preferences.set(Keys.lastLocationZoom, zoom.value)
+    }
+
+    fun restoreLastLocation() {
+        Timber.e("call restore")
+        viewModelScope.launch {
+
+            val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@launch
+            val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@launch
+            val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@launch
+
+            Timber.e("restore $lastLatitude")
+            moveCamera(lastLatitude, lastLongitude, lastZoom)
+        }
+    }
+
     /**
      * After querying the address information update the UI state.
      */
     private fun onResolveAddressQuery(query: String, result: Result<Location>) {
         result.onSuccess { newLocation ->
-            location.value = newLocation
-            updateMapcodes(newLocation.latitude, newLocation.longitude)
-
-            val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
-            updateAddress(newAddressResult)
+            moveCamera(newLocation.latitude, newLocation.longitude, 0f)
         }.onFailure { error ->
             when (error) {
                 is IOException -> {

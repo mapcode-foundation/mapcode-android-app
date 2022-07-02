@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,9 +26,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.MapsInitializer
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
 import kotlinx.coroutines.launch
@@ -46,8 +46,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapBox(
     modifier: Modifier = Modifier,
-    onCameraMoved: (Double, Double) -> Unit,
-    cameraPositionState: CameraPositionState
+    onCameraMoved: (Double, Double, Float) -> Unit,
+    cameraPositionState: CameraPositionState,
+    onMapLoaded: () -> Unit
 ) {
     Box(modifier) {
         val locationPermissionsState = rememberMultiplePermissionsState(
@@ -69,7 +70,8 @@ fun MapBox(
         Map(
             isMyLocationEnabled = isMyLocationEnabled,
             onCameraFinishedMoving = onCameraMoved,
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = onMapLoaded
         )
 
         //overlay the button to request location permission if my location is disabled.
@@ -91,8 +93,9 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
 fun Map(
     modifier: Modifier = Modifier,
     isMyLocationEnabled: Boolean,
-    onCameraFinishedMoving: (Double, Double) -> Unit,
-    cameraPositionState: CameraPositionState
+    onCameraFinishedMoving: (Double, Double, Float) -> Unit,
+    cameraPositionState: CameraPositionState,
+    onMapLoaded: () -> Unit
 ) {
     var uiSettings by remember { mutableStateOf(MapUiSettings()) }
     var properties by remember { mutableStateOf(MapProperties()) }
@@ -104,7 +107,8 @@ fun Map(
         if (!cameraPositionState.isMoving) {
             onCameraFinishedMoving(
                 cameraPositionState.position.target.latitude,
-                cameraPositionState.position.target.longitude
+                cameraPositionState.position.target.longitude,
+                cameraPositionState.position.zoom
             )
         }
     }
@@ -124,7 +128,8 @@ fun Map(
                 )
             }
         },
-        contentDescription = stringResource(R.string.google_maps_content_description)
+        contentDescription = stringResource(R.string.google_maps_content_description),
+        onMapLoaded = onMapLoaded
     )
 }
 
@@ -473,13 +478,8 @@ fun MapScreen(
     showMap: Boolean = true
 ) {
     val scaffoldState = rememberScaffoldState()
-    val mapcodeInfoState by viewModel.uiState.collectAsState()
-    val location by viewModel.location.collectAsState()
-    val cameraPositionState = rememberCameraPositionState()
-
-    MapsInitializer.initialize(LocalContext.current)
-    cameraPositionState.move(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
-
+    val uiState by viewModel.uiState.collectAsState()
+    
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
@@ -488,8 +488,12 @@ fun MapScreen(
             if (showMap) {
                 MapBox(
                     Modifier.weight(0.65f),
-                    onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) },
-                    cameraPositionState = cameraPositionState
+                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                    cameraPositionState = viewModel.cameraPositionState,
+                    onMapLoaded = {
+                        viewModel.isGoogleMapsSdkLoaded = true
+                        viewModel.restoreLastLocation()
+                    }
                 )
             }
 
@@ -497,7 +501,7 @@ fun MapScreen(
                 Modifier
                     .weight(0.35f)
                     .padding(8.dp),
-                mapcodeInfoState,
+                uiState,
                 onMapcodeClick = {
                     val copied = viewModel.copyMapcode()
                     if (copied) {

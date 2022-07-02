@@ -2,7 +2,6 @@ package com.mapcode
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,14 +13,17 @@ import com.mapcode.map.MapViewModel
  */
 
 @Composable
-fun MapcodeNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun MapcodeNavHost(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: MapViewModel
+) {
     NavHost(
         navController = navController,
         startDestination = MapcodeDestination.Map.name,
         modifier = modifier
     ) {
         composable(MapcodeDestination.Map.name) {
-            val viewModel: MapViewModel = hiltViewModel()
             MapScreen(viewModel)
         }
     }

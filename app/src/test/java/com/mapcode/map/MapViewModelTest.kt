@@ -14,6 +14,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -33,7 +34,7 @@ internal class MapViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         useCase = FakeShowMapcodeUseCase()
-        viewModel = MapViewModel(useCase, dispatchers = TestDispatcherProvider(testDispatcher))
+        viewModel = MapViewModel(useCase, dispatchers = TestDispatcherProvider(testDispatcher), preferences = mock())
     }
 
     @After
@@ -51,7 +52,7 @@ internal class MapViewModelTest {
                 mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD), Mapcode("1CD.YZ", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
 
         advanceUntilIdle()
 
@@ -71,7 +72,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         viewModel.copyMapcode()
 
         assertThat(useCase.clipboard).isEqualTo("AAA 1AB.XY")
@@ -108,7 +109,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -211,8 +212,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(0.0, 0.0) //first get the address set to something non empty
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f) //first get the address set to something non empty
+        viewModel.onCameraMoved(2.0, 3.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -231,7 +232,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(2.0, 3.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -250,7 +251,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -260,7 +261,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `update location state when moving camera`() = runTest {
-        viewModel.onCameraMoved(3.0, 2.0)
+        viewModel.onCameraMoved(3.0, 2.0, 0f)
         runCurrent()
 
         val uiState = viewModel.uiState.value
@@ -340,7 +341,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0) //fill the address with something
+        viewModel.onCameraMoved(1.0, 1.0, 0f) //fill the address with something
         viewModel.queryAddress("")
 
         runCurrent()
@@ -361,7 +362,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(2.0, 3.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -379,7 +380,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0)
+        viewModel.onCameraMoved(2.0, 3.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -401,7 +402,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         advanceUntilIdle()
 
         val uiState1 = viewModel.uiState.value
@@ -450,7 +451,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -490,7 +491,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `searching empty latitude should keep current location`() = runTest {
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
 
         viewModel.queryLatitude("")
         runCurrent()
@@ -532,7 +533,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `searching empty longitude should keep current location`() = runTest {
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
 
         viewModel.queryLongitude("")
         runCurrent()
@@ -544,7 +545,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `only show latitude and longitude to 7 decimal places`() = runTest {
-        viewModel.onCameraMoved(1.123456789, 0.123456789)
+        viewModel.onCameraMoved(1.123456789, 0.123456789, 0f)
         runCurrent()
 
         val uiState = viewModel.uiState.value

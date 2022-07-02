@@ -73,6 +73,7 @@ dependencies {
     implementation 'com.google.accompanist:accompanist-permissions:0.24.10-beta'
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
     implementation "com.google.accompanist:accompanist-insets:0.23.1"
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
 
     //other
     implementation 'com.jakewharton.timber:timber:5.0.1'
