@@ -374,8 +374,8 @@ class MapScreenTest {
     fun update_address_after_searching_longitude() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0,
                 0.0,
+                2.0,
                 addresses = listOf("Street, City, Country"),
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
