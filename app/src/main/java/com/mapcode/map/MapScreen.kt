@@ -423,6 +423,8 @@ fun MapScreen(
                     val copied = viewModel.copyMapcode()
                     if (copied) {
                         scope.launch {
+                            //dismiss current snack bar so they aren't queued up
+                            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                             scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
                         }
                     }
