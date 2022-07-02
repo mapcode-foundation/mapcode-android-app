@@ -15,6 +15,7 @@ import kotlin.Result.Companion.success
 class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
     var hasInternetConnection: Boolean = true
+    var currentLocation: Location? = null
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
 
@@ -66,5 +67,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         } else {
             return success(fakeLocation.addresses.first())
         }
+    }
+
+    override suspend fun getLastLocation(): Location? {
+        return currentLocation
     }
 }

@@ -17,7 +17,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 
@@ -89,15 +88,16 @@ class MapViewModel @Inject constructor(
 
     private var clearUnknownAddressErrorJob: Job? = null
 
-    var isGoogleMapsSdkLoaded = false
-    var cameraPositionState by mutableStateOf(CameraPositionState())
+    var isGoogleMapsSdkLoaded: Boolean = false
+    var cameraPositionState: CameraPositionState by mutableStateOf(CameraPositionState())
         private set
+
+    var showCantFindLocationSnackBar: Boolean by mutableStateOf(false)
 
     /**
      * When the camera has moved the mapcode information should be updated.
      */
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
-        Timber.e("on camera moved $lat $long $zoom")
         location.value = Location(lat, long)
         this.zoom.value = zoom
 
@@ -117,6 +117,19 @@ class MapViewModel @Inject constructor(
             }
 
             onCameraMoved(lat, long, zoom)
+        }
+    }
+
+    fun onMyLocationClick() {
+        viewModelScope.launch {
+            val myLocation = useCase.getLastLocation()
+
+            if (myLocation == null) {
+                showCantFindLocationSnackBar = true
+            } else {
+                showCantFindLocationSnackBar = false
+                moveCamera(myLocation.latitude, myLocation.longitude, 16f)
+            }
         }
     }
 
@@ -196,14 +209,11 @@ class MapViewModel @Inject constructor(
     }
 
     fun restoreLastLocation() {
-        Timber.e("call restore")
         viewModelScope.launch {
-
             val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@launch
             val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@launch
             val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@launch
 
-            Timber.e("restore $lastLatitude")
             moveCamera(lastLatitude, lastLongitude, lastZoom)
         }
     }
