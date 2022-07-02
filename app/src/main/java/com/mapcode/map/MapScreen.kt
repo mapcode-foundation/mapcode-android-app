@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +34,7 @@ import com.mapcode.R
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
@@ -67,12 +69,10 @@ fun MapBox(
         }
     }
 
-    var uiSettings by remember {
-        mutableStateOf(
-            MapUiSettings(zoomControlsEnabled = false)
-        )
-    }
+    var uiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = false)) }
     var properties by remember { mutableStateOf(MapProperties()) }
+
+    val scope: CoroutineScope = rememberCoroutineScope()
 
     uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
     properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
@@ -105,7 +105,23 @@ fun MapBox(
                 }
                 properties = properties.copy(mapType = mapType)
             },
-            isSatelliteModeEnabled = properties.mapType == MapType.SATELLITE
+            isSatelliteModeEnabled = properties.mapType == MapType.SATELLITE,
+            onZoomInClick = {
+                scope.launch {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.zoomIn(),
+                        ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onZoomOutClick = {
+                scope.launch {
+                    cameraPositionState.animate(
+                        CameraUpdateFactory.zoomOut(),
+                        ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            }
         )
 
         //overlay the button to request location permission if my location is disabled.
@@ -122,7 +138,9 @@ fun MapBox(
 fun MapControls(
     modifier: Modifier = Modifier,
     onSatelliteButtonClick: () -> Unit = {},
-    isSatelliteModeEnabled: Boolean
+    isSatelliteModeEnabled: Boolean,
+    onZoomInClick: () -> Unit = {},
+    onZoomOutClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -136,11 +154,11 @@ fun MapControls(
         painterResource(R.drawable.satellite)
     }
 
-    Box(modifier) {
+    Row(modifier) {
         Button(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .size(48.dp),
+                .size(48.dp)
+                .align(Alignment.Bottom),
             onClick = onSatelliteButtonClick,
             contentPadding = PaddingValues(8.dp),
             colors = satelliteButtonColors
@@ -150,10 +168,45 @@ fun MapControls(
                 contentDescription = stringResource(R.string.satellite_mode_button_content_description)
             )
         }
+        Spacer(Modifier.width(8.dp))
+        ZoomControls(onZoomInClick = onZoomInClick, onZoomOutClick = onZoomOutClick)
     }
 }
 
-private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
+@Composable
+fun ZoomControls(
+    modifier: Modifier = Modifier,
+    onZoomInClick: () -> Unit,
+    onZoomOutClick: () -> Unit
+) {
+    Column(modifier) {
+        Button(
+            modifier = Modifier.size(48.dp),
+            onClick = onZoomInClick,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray),
+            contentPadding = PaddingValues(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = stringResource(R.string.zoom_in_button_content_description)
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(
+            modifier = Modifier.size(48.dp),
+            onClick = onZoomOutClick,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray),
+            contentPadding = PaddingValues(8.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.minus),
+                contentDescription = stringResource(R.string.zoom_out_button_content_description)
+            )
+        }
+    }
+}
+
+private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
 
 /**
  * This handles the Google Map component.
@@ -555,7 +608,6 @@ fun MapScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val uiState by viewModel.uiState.collectAsState()
-
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
