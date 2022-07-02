@@ -41,7 +41,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         composeTestRule
             .onNodeWithText("Mapcode")
@@ -62,7 +62,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         composeTestRule
             .onNodeWithText("AB.XY")
@@ -83,7 +83,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         composeTestRule
             .onNodeWithText("AAA")
@@ -103,7 +103,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         setMapScreenAsContent()
 
@@ -123,7 +123,7 @@ class MapScreenTest {
         useCase.hasInternetConnection = false
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         composeTestRule
             .onNodeWithText("No internet?")
@@ -135,7 +135,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         useCase.knownLocations.clear()
-        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0)
 
         composeTestRule
             .onNodeWithText("No address found")
@@ -180,11 +180,8 @@ class MapScreenTest {
             .onNodeWithText("Enter address or mapcode").apply {
                 performTextClearance()
                 performTextInput("Street, City")
+                performImeAction()
             }
-
-        composeTestRule
-            .onNodeWithText("Street, City")
-            .performImeAction()
 
         composeTestRule.waitForIdle()
 
@@ -234,7 +231,7 @@ class MapScreenTest {
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill address field with something
+        viewModel.onCameraMoved(0.0, 0.0) //fill address field with something
 
         composeTestRule
             .onNodeWithContentDescription("Clear address")
@@ -268,7 +265,7 @@ class MapScreenTest {
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(0.0, 0.0, 1f) //fill address field with something
+        viewModel.onCameraMoved(0.0, 0.0) //fill address field with something
 
         setMapScreenAsContent()
 
@@ -294,7 +291,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        viewModel.onCameraMoved(1.0, 1.0)
 
         composeTestRule
             .onNodeWithText("City, Country")
@@ -314,7 +311,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        viewModel.onCameraMoved(1.0, 1.0)
         composeTestRule.waitForIdle()
 
         composeTestRule
@@ -340,6 +337,118 @@ class MapScreenTest {
         composeTestRule
             .onNodeWithText("City, Country")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun update_address_after_searching_latitude() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                3.0,
+                0.0,
+                addresses = listOf("Street, City, Country"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("Latitude (Y)").apply {
+                performTextClearance()
+                performTextInput("3")
+                performImeAction()
+            }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("Street, City, Country")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("City, Country")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun update_address_after_searching_longitude() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                2.0,
+                addresses = listOf("Street, City, Country"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("Longitude (X)").apply {
+                performTextClearance()
+                performTextInput("2.0")
+                performImeAction()
+            }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("Street, City, Country")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("City, Country")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun update_camera_after_searching_latitude() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("Latitude (Y)").apply {
+                performTextClearance()
+                performTextInput("3.0")
+                performImeAction()
+            }
+
+        composeTestRule.waitForIdle()
+
+        assertThat(viewModel.location.value).isEqualTo(Location(3.0, 0.0))
+    }
+
+    @Test
+    fun update_camera_after_searching_longitude() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithText("Longitude (X)").apply {
+                performTextClearance()
+                performTextInput("2.0")
+                performImeAction()
+            }
+
+        composeTestRule.waitForIdle()
+
+        assertThat(viewModel.location.value).isEqualTo(Location(0.0, 2.0))
     }
 
     private fun setMapScreenAsContent() {

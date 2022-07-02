@@ -7,7 +7,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNullOrEmpty
 import com.mapcode.Mapcode
 import com.mapcode.Territory
-import com.mapcode.util.Location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -52,7 +51,7 @@ internal class MapViewModelTest {
                 mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD), Mapcode("1CD.YZ", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(1.0, 1.0, 1f)
+        viewModel.onCameraMoved(1.0, 1.0)
 
         advanceUntilIdle()
 
@@ -72,7 +71,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 2f)
+        viewModel.onCameraMoved(1.0, 1.0)
         viewModel.copyMapcode()
 
         assertThat(useCase.clipboard).isEqualTo("AAA 1AB.XY")
@@ -109,7 +108,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1f)
+        viewModel.onCameraMoved(1.0, 1.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -147,8 +146,8 @@ internal class MapViewModelTest {
         val expectedUiState = UiState(
             code = "AB.CD",
             territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
-            latitude = "2.0",
-            longitude = "3.0",
+            latitude = "2.0000000",
+            longitude = "3.0000000",
             addressUi = AddressUi(
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
@@ -177,8 +176,8 @@ internal class MapViewModelTest {
         val expectedUiState = UiState(
             code = "AB.CD",
             territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
-            latitude = "2.0",
-            longitude = "3.0",
+            latitude = "2.0000000",
+            longitude = "3.0000000",
             addressUi = AddressUi(
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
@@ -212,8 +211,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(0.0, 0.0, 1f) //first get the address set to something non empty
-        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        viewModel.onCameraMoved(0.0, 0.0) //first get the address set to something non empty
+        viewModel.onCameraMoved(2.0, 3.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -232,7 +231,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        viewModel.onCameraMoved(2.0, 3.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -251,7 +250,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1f)
+        viewModel.onCameraMoved(1.0, 1.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -260,17 +259,13 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `update zoom state when moving camera`() = runTest {
-        viewModel.onCameraMoved(1.0, 1.0, 2f)
-
-        assertThat(viewModel.zoom.value).isEqualTo(2f)
-    }
-
-    @Test
     fun `update location state when moving camera`() = runTest {
-        viewModel.onCameraMoved(3.0, 3.0, 2f)
+        viewModel.onCameraMoved(3.0, 2.0)
+        runCurrent()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(3.0, 3.0))
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("3.0000000")
+        assertThat(uiState.longitude).isEqualTo("2.0000000")
     }
 
     @Test
@@ -345,7 +340,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1f) //fill the address with something
+        viewModel.onCameraMoved(1.0, 1.0) //fill the address with something
         viewModel.queryAddress("")
 
         runCurrent()
@@ -366,7 +361,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        viewModel.onCameraMoved(2.0, 3.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -384,7 +379,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(2.0, 3.0, 1f)
+        viewModel.onCameraMoved(2.0, 3.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -406,7 +401,7 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        viewModel.onCameraMoved(1.0, 1.0)
         advanceUntilIdle()
 
         val uiState1 = viewModel.uiState.value
@@ -455,11 +450,105 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0, 1.0f)
+        viewModel.onCameraMoved(1.0, 1.0)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
         assertThat(uiState.code).isEqualTo("AB.CD")
         assertThat(uiState.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 1))
+    }
+
+    @Test
+    fun `searching latitude should update location`() = runTest {
+        viewModel.queryLatitude("1.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("1.0000000")
+        assertThat(uiState.longitude).isEqualTo("0.0000000")
+    }
+
+    @Test
+    fun `searching too large latitude should go to 90`() = runTest {
+        viewModel.queryLatitude("91.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("90.0000000")
+        assertThat(uiState.longitude).isEqualTo("0.0000000")
+    }
+
+    @Test
+    fun `searching too small latitude should go to -90`() = runTest {
+        viewModel.queryLatitude("-91.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("-90.0000000")
+        assertThat(uiState.longitude).isEqualTo("0.0000000")
+    }
+
+    @Test
+    fun `searching empty latitude should keep current location`() = runTest {
+        viewModel.onCameraMoved(1.0, 1.0)
+
+        viewModel.queryLatitude("")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("1.0000000")
+        assertThat(uiState.longitude).isEqualTo("1.0000000")
+    }
+
+    @Test
+    fun `searching longitude should update location`() = runTest {
+        viewModel.queryLongitude("1.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("0.0000000")
+        assertThat(uiState.longitude).isEqualTo("1.0000000")
+    }
+
+    @Test
+    fun `searching too large longitude should go to 180`() = runTest {
+        viewModel.queryLongitude("181.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("0.0000000")
+        assertThat(uiState.longitude).isEqualTo("180.0000000")
+    }
+
+    @Test
+    fun `searching too small longitude should go to -180`() = runTest {
+        viewModel.queryLongitude("-180.0")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("0.0000000")
+        assertThat(uiState.longitude).isEqualTo("-180.0000000")
+    }
+
+    @Test
+    fun `searching empty longitude should keep current location`() = runTest {
+        viewModel.onCameraMoved(1.0, 1.0)
+
+        viewModel.queryLongitude("")
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("1.0000000")
+        assertThat(uiState.longitude).isEqualTo("1.0000000")
+    }
+
+    @Test
+    fun `only show latitude and longitude to 7 decimal places`() = runTest {
+        viewModel.onCameraMoved(1.123456789, 0.123456789)
+        runCurrent()
+
+        val uiState = viewModel.uiState.value
+        assertThat(uiState.latitude).isEqualTo("1.1234568")
+        assertThat(uiState.longitude).isEqualTo("0.1234568")
     }
 }

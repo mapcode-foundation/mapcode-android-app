@@ -9,7 +9,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 
@@ -59,7 +58,7 @@ class MapViewModel @Inject constructor(
         }
 
     val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
-    val zoom: MutableStateFlow<Float> = MutableStateFlow(1f)
+    private val locationStringFormat = "%.7f"
 
     val uiState: StateFlow<UiState> =
         combine(
@@ -72,8 +71,8 @@ class MapViewModel @Inject constructor(
                 code = mapcode?.code ?: "",
                 addressUi = addressUi,
                 territoryUi = territoryUi,
-                latitude = location.latitude.toString(),
-                longitude = location.longitude.toString()
+                latitude = String.format(locationStringFormat, location.latitude),
+                longitude = String.format(locationStringFormat, location.longitude)
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
@@ -82,14 +81,8 @@ class MapViewModel @Inject constructor(
     /**
      * When the camera has moved the mapcode information should be updated.
      */
-    fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
-        //if nothing changes
-        if (location.value.latitude == lat && location.value.longitude == long && this.zoom.value == zoom) {
-            return
-        }
-
-        this.location.value = Location(lat, long)
-        this.zoom.value = zoom
+    fun onCameraMoved(lat: Double, long: Double) {
+        location.value = Location(lat, long)
 
         //update the mapcode when the map moves
         updateMapcodes(lat, long)
@@ -138,6 +131,24 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun queryLatitude(query: String) {
+        if (query.isEmpty()) {
+            return
+        }
+
+        val cleansedLatitude = LocationUtils.cleanseLatitude(query.toDouble())
+        onCameraMoved(cleansedLatitude, location.value.longitude)
+    }
+
+    fun queryLongitude(query: String) {
+        if (query.isEmpty()) {
+            return
+        }
+
+        val cleansedLongitude = LocationUtils.cleanseLongitude(query.toDouble())
+        onCameraMoved(location.value.latitude, cleansedLongitude)
+    }
+
     fun onTerritoryClick() {
         if (mapcodeIndex.value == -1) {
             return
@@ -156,7 +167,6 @@ class MapViewModel @Inject constructor(
     private fun onResolveAddressQuery(query: String, result: Result<Location>) {
         result.onSuccess { newLocation ->
             location.value = newLocation
-
             updateMapcodes(newLocation.latitude, newLocation.longitude)
 
             val newAddressResult = useCase.reverseGeocode(newLocation.latitude, newLocation.longitude)
@@ -212,7 +222,6 @@ class MapViewModel @Inject constructor(
     }
 
     private fun updateMapcodes(lat: Double, long: Double) {
-        Timber.e("update mapcodes $lat $long")
         //remove duplicate mapcodes for a territory because only the highest priority one should be shown.
         val newMapcodes = useCase.getMapcodes(lat, long).distinctBy { it.territory }
         mapcodes.value = newMapcodes
