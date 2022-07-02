@@ -99,7 +99,7 @@ fun MapBox(
                 .padding(8.dp),
             onSatelliteButtonClick = {
                 val mapType = if (properties.mapType == MapType.NORMAL) {
-                    MapType.SATELLITE
+                    MapType.HYBRID
                 } else {
                     MapType.NORMAL
                 }
