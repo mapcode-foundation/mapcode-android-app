@@ -16,5 +16,6 @@
     <string name="clear_latitude_content_description">Clear latitude</string>
     <string name="longitude_text_field_label">Longitude (X)</string>
     <string name="clear_longitude_content_description">Clear longitude</string>
+    <string name="satellite_mode_button_content_description">Toggle satellite mode</string>
     <!--  Map screen  -->
 </resources>

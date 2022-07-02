@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,12 +28,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.*
 import com.mapcode.R
+import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
+import com.mapcode.theme.Yellow300
 import kotlinx.coroutines.launch
 
 /**
@@ -50,35 +51,61 @@ fun MapBox(
     cameraPositionState: CameraPositionState,
     onMapLoaded: () -> Unit
 ) {
-    Box(modifier) {
-        val locationPermissionsState = rememberMultiplePermissionsState(
-            listOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
+    )
 
-        val isMyLocationEnabled by remember {
-            derivedStateOf {
-                val coarseLocationPermission = locationPermissionsState.permissions
-                    .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
+    val isMyLocationEnabled by remember {
+        derivedStateOf {
+            val coarseLocationPermission = locationPermissionsState.permissions
+                .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
 
-                coarseLocationPermission.status == PermissionStatus.Granted
-            }
+            coarseLocationPermission.status == PermissionStatus.Granted
         }
+    }
 
+    var uiSettings by remember {
+        mutableStateOf(
+            MapUiSettings(zoomControlsEnabled = false)
+        )
+    }
+    var properties by remember { mutableStateOf(MapProperties()) }
+
+    uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
+    properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
+
+    Box(modifier) {
         Map(
-            isMyLocationEnabled = isMyLocationEnabled,
+            uiSettings = uiSettings,
+            properties = properties,
             onCameraFinishedMoving = onCameraMoved,
             cameraPositionState = cameraPositionState,
             onMapLoaded = onMapLoaded
         )
-    
+
         Icon(
             modifier = Modifier
                 .align(Alignment.Center),
             painter = painterResource(R.drawable.crosshairs),
-            contentDescription = ""
+            contentDescription = null
+        )
+
+        MapControls(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(8.dp),
+            onSatelliteButtonClick = {
+                val mapType = if (properties.mapType == MapType.NORMAL) {
+                    MapType.SATELLITE
+                } else {
+                    MapType.NORMAL
+                }
+                properties = properties.copy(mapType = mapType)
+            },
+            isSatelliteModeEnabled = properties.mapType == MapType.SATELLITE
         )
 
         //overlay the button to request location permission if my location is disabled.
@@ -86,6 +113,41 @@ fun MapBox(
             RequestLocationPermissionButton(
                 onClick = { locationPermissionsState.launchMultiplePermissionRequest() },
                 modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
+    }
+}
+
+@Composable
+fun MapControls(
+    modifier: Modifier = Modifier,
+    onSatelliteButtonClick: () -> Unit = {},
+    isSatelliteModeEnabled: Boolean
+) {
+    val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
+        ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
+    } else {
+        ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
+    }
+
+    val satelliteButtonIcon: Painter = if (isSatelliteModeEnabled) {
+        painterResource(R.drawable.map_outline)
+    } else {
+        painterResource(R.drawable.satellite)
+    }
+
+    Box(modifier) {
+        Button(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(48.dp),
+            onClick = onSatelliteButtonClick,
+            contentPadding = PaddingValues(8.dp),
+            colors = satelliteButtonColors
+        ) {
+            Icon(
+                painter = satelliteButtonIcon,
+                contentDescription = stringResource(R.string.satellite_mode_button_content_description)
             )
         }
     }
@@ -99,17 +161,12 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
 @Composable
 fun Map(
     modifier: Modifier = Modifier,
-    isMyLocationEnabled: Boolean,
+    uiSettings: MapUiSettings,
+    properties: MapProperties,
     onCameraFinishedMoving: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
     onMapLoaded: () -> Unit
 ) {
-    var uiSettings by remember { mutableStateOf(MapUiSettings()) }
-    var properties by remember { mutableStateOf(MapProperties()) }
-
-    uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
-    properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
-
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
             onCameraFinishedMoving(
@@ -454,6 +511,18 @@ fun InfoArea(
                 onChange = onLongitudeChange
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MapControlsPreview() {
+    var isSatelliteModeEnabled by remember { mutableStateOf(false) }
+    MapcodeTheme {
+        MapControls(
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
+        )
     }
 }
 
