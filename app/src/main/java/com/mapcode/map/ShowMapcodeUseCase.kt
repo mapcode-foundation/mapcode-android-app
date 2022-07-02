@@ -1,10 +1,13 @@
 package com.mapcode.map
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.location.Geocoder
 import androidx.core.content.getSystemService
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
 import com.mapcode.UnknownMapcodeException
@@ -17,6 +20,8 @@ import java.io.IOException
 import javax.inject.Inject
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -25,6 +30,8 @@ import kotlin.Result.Companion.success
 class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val ctx: Context) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
+    private val fusedLocationClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(ctx)
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return MapcodeCodec.encode(lat, long)
@@ -90,6 +97,17 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
             return failure(UnknownMapcodeException("Unknown mapcode $mapcode"))
         }
     }
+
+    @SuppressLint("MissingPermission")
+    override suspend fun getLastLocation(): Location? = suspendCoroutine { continuation ->
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location == null) {
+                continuation.resume(null)
+            } else {
+                continuation.resume(Location(location.latitude, location.longitude))
+            }
+        }
+    }
 }
 
 /**
@@ -128,4 +146,9 @@ interface ShowMapcodeUseCase {
      * @return [NoAddressException] failure if no address exists for this location.
      */
     fun reverseGeocode(lat: Double, long: Double): Result<String>
+
+    /**
+     * Get the last known GPS location of the device. Check that the location is available before calling this method.
+     */
+    suspend fun getLastLocation(): Location?
 }

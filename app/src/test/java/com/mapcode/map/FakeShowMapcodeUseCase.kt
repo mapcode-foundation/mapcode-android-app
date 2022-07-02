@@ -67,4 +67,8 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
             return success(fakeLocation.addresses.first())
         }
     }
+
+    override suspend fun getLastLocation(): Location? {
+        return null
+    }
 }

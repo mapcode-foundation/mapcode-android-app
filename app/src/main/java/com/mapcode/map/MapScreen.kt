@@ -10,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +52,8 @@ fun MapBox(
     modifier: Modifier = Modifier,
     onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
-    onMapLoaded: () -> Unit
+    onMapLoaded: () -> Unit,
+    onMyLocationClick: () -> Unit
 ) {
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -60,7 +62,7 @@ fun MapBox(
         )
     )
 
-    val isMyLocationEnabled by remember {
+    val isLocationPermissionGranted by remember {
         derivedStateOf {
             val coarseLocationPermission = locationPermissionsState.permissions
                 .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
@@ -69,13 +71,14 @@ fun MapBox(
         }
     }
 
-    var uiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = false)) }
+    val uiSettings by remember {
+        mutableStateOf(MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false))
+    }
     var properties by remember { mutableStateOf(MapProperties()) }
 
     val scope: CoroutineScope = rememberCoroutineScope()
 
-    uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
-    properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
+    properties = properties.copy(isMyLocationEnabled = isLocationPermissionGranted)
 
     Box(modifier) {
         Map(
@@ -105,7 +108,7 @@ fun MapBox(
                 }
                 properties = properties.copy(mapType = mapType)
             },
-            isSatelliteModeEnabled = properties.mapType == MapType.SATELLITE,
+            isSatelliteModeEnabled = properties.mapType == MapType.HYBRID,
             onZoomInClick = {
                 scope.launch {
                     cameraPositionState.animate(
@@ -121,16 +124,15 @@ fun MapBox(
                         ANIMATE_CAMERA_UPDATE_DURATION_MS
                     )
                 }
+            },
+            onMyLocationClick = {
+                if (isLocationPermissionGranted) {
+                    onMyLocationClick()
+                } else {
+                    locationPermissionsState.launchMultiplePermissionRequest()
+                }
             }
         )
-
-        //overlay the button to request location permission if my location is disabled.
-        if (!isMyLocationEnabled) {
-            RequestLocationPermissionButton(
-                onClick = { locationPermissionsState.launchMultiplePermissionRequest() },
-                modifier = Modifier.align(Alignment.TopEnd)
-            )
-        }
     }
 }
 
@@ -140,7 +142,8 @@ fun MapControls(
     onSatelliteButtonClick: () -> Unit = {},
     isSatelliteModeEnabled: Boolean,
     onZoomInClick: () -> Unit = {},
-    onZoomOutClick: () -> Unit = {}
+    onZoomOutClick: () -> Unit = {},
+    onMyLocationClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -168,6 +171,14 @@ fun MapControls(
                 contentDescription = stringResource(R.string.satellite_mode_button_content_description)
             )
         }
+        Spacer(Modifier.width(8.dp))
+        MyLocationButton(
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.Bottom),
+            onClick = onMyLocationClick
+        )
+
         Spacer(Modifier.width(8.dp))
         ZoomControls(onZoomInClick = onZoomInClick, onZoomOutClick = onZoomOutClick)
     }
@@ -254,9 +265,16 @@ fun Map(
  * This is the button to request location permission.
  */
 @Composable
-fun RequestLocationPermissionButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
-    Button(onClick = onClick, modifier) {
-        Text("Request location permission")
+fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    Button(
+        modifier = modifier,
+        onClick = onClick,
+        contentPadding = PaddingValues(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.LocationOn,
+            contentDescription = stringResource(R.string.my_location_button_content_description)
+        )
     }
 }
 
@@ -610,6 +628,18 @@ fun MapScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
+    val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
+
+    if (viewModel.showCantFindLocationSnackBar) {
+        LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindLocationMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindLocationSnackBar = false
+            }
+        }
+    }
 
     Scaffold(scaffoldState = scaffoldState) {
         Column {
@@ -621,7 +651,8 @@ fun MapScreen(
                     onMapLoaded = {
                         viewModel.isGoogleMapsSdkLoaded = true
                         viewModel.restoreLastLocation()
-                    }
+                    },
+                    onMyLocationClick = { viewModel.onMyLocationClick() }
                 )
             }
 

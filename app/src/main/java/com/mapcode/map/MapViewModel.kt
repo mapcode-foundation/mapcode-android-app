@@ -89,9 +89,11 @@ class MapViewModel @Inject constructor(
 
     private var clearUnknownAddressErrorJob: Job? = null
 
-    var isGoogleMapsSdkLoaded = false
-    var cameraPositionState by mutableStateOf(CameraPositionState())
+    var isGoogleMapsSdkLoaded: Boolean = false
+    var cameraPositionState: CameraPositionState by mutableStateOf(CameraPositionState())
         private set
+
+    var showCantFindLocationSnackBar: Boolean by mutableStateOf(false)
 
     /**
      * When the camera has moved the mapcode information should be updated.
@@ -117,6 +119,18 @@ class MapViewModel @Inject constructor(
             }
 
             onCameraMoved(lat, long, zoom)
+        }
+    }
+
+    fun onMyLocationClick() {
+        viewModelScope.launch {
+            val myLocation = useCase.getLastLocation()
+
+            if (myLocation == null) {
+                showCantFindLocationSnackBar = true
+            } else {
+                moveCamera(myLocation.latitude, myLocation.longitude, 16f)
+            }
         }
     }
 
