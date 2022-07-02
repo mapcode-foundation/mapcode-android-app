@@ -12,6 +12,7 @@ import com.mapcode.UnknownPrecisionFormatException
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.Result.Companion.failure
@@ -21,7 +22,7 @@ import kotlin.Result.Companion.success
  * Created by sds100 on 01/06/2022.
  */
 
-class ShowMapcodeUseCaseImpl @Inject constructor(private val ctx: Context) : ShowMapcodeUseCase {
+class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val ctx: Context) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
 

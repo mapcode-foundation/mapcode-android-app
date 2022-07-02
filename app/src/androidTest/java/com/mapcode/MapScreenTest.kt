@@ -11,6 +11,7 @@ import com.mapcode.util.Location
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -26,7 +27,7 @@ class MapScreenTest {
     @Before
     fun setUp() {
         useCase = FakeShowMapcodeUseCase()
-        viewModel = MapViewModel(useCase)
+        viewModel = MapViewModel(useCase, mock())
     }
 
     @Test
@@ -41,7 +42,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
             .onNodeWithText("Mapcode")
@@ -62,7 +63,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
             .onNodeWithText("AB.XY")
@@ -83,7 +84,7 @@ class MapScreenTest {
         )
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
             .onNodeWithText("AAA")
@@ -103,7 +104,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         setMapScreenAsContent()
 
@@ -123,7 +124,7 @@ class MapScreenTest {
         useCase.hasInternetConnection = false
 
         setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
             .onNodeWithText("No internet?")
@@ -135,7 +136,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         useCase.knownLocations.clear()
-        viewModel.onCameraMoved(0.0, 0.0)
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
             .onNodeWithText("No address found")
@@ -231,7 +232,7 @@ class MapScreenTest {
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(0.0, 0.0) //fill address field with something
+        viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
 
         composeTestRule
             .onNodeWithContentDescription("Clear address")
@@ -265,7 +266,7 @@ class MapScreenTest {
                 mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
-        viewModel.onCameraMoved(0.0, 0.0) //fill address field with something
+        viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
 
         setMapScreenAsContent()
 
@@ -291,7 +292,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
 
         composeTestRule
             .onNodeWithText("City, Country")
@@ -311,7 +312,7 @@ class MapScreenTest {
             )
         )
 
-        viewModel.onCameraMoved(1.0, 1.0)
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
         composeTestRule.waitForIdle()
 
         composeTestRule
