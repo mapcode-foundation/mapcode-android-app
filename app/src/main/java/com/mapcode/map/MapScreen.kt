@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,15 +27,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.MapsInitializer
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.*
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -49,7 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapBox(
     modifier: Modifier = Modifier,
-    onCameraMoved: (Double, Double, Float) -> Unit,
+    onCameraMoved: (Double, Double) -> Unit,
     cameraPositionState: CameraPositionState
 ) {
     Box(modifier) {
@@ -94,7 +91,7 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 500
 fun Map(
     modifier: Modifier = Modifier,
     isMyLocationEnabled: Boolean,
-    onCameraFinishedMoving: (Double, Double, Float) -> Unit,
+    onCameraFinishedMoving: (Double, Double) -> Unit,
     cameraPositionState: CameraPositionState
 ) {
     var uiSettings by remember { mutableStateOf(MapUiSettings()) }
@@ -103,12 +100,13 @@ fun Map(
     uiSettings = uiSettings.copy(myLocationButtonEnabled = isMyLocationEnabled)
     properties = properties.copy(isMyLocationEnabled = isMyLocationEnabled)
 
-    if (!cameraPositionState.isMoving) {
-        onCameraFinishedMoving(
-            cameraPositionState.position.target.latitude,
-            cameraPositionState.position.target.longitude,
-            cameraPositionState.position.zoom
-        )
+    LaunchedEffect(cameraPositionState.isMoving) {
+        if (!cameraPositionState.isMoving) {
+            onCameraFinishedMoving(
+                cameraPositionState.position.target.latitude,
+                cameraPositionState.position.target.longitude
+            )
+        }
     }
 
     val scope = rememberCoroutineScope()
@@ -394,7 +392,9 @@ fun InfoArea(
     state: UiState,
     onMapcodeClick: () -> Unit = {},
     onAddressChange: (String) -> Unit = {},
-    onTerritoryClick: () -> Unit = {}
+    onTerritoryClick: () -> Unit = {},
+    onLatitudeChange: (String) -> Unit = {},
+    onLongitudeChange: (String) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         AddressArea(
@@ -431,14 +431,16 @@ fun InfoArea(
                     .weight(0.5f)
                     .padding(end = 8.dp),
                 latitude = state.latitude,
-                onChange = {})
+                onChange = onLatitudeChange
+            )
 
             LongitudeTextBox(
                 Modifier
                     .weight(0.5f)
                     .padding(start = 8.dp),
                 longitude = state.longitude,
-                onChange = {})
+                onChange = onLongitudeChange
+            )
         }
     }
 }
@@ -471,12 +473,12 @@ fun MapScreen(
     showMap: Boolean = true
 ) {
     val scaffoldState = rememberScaffoldState()
-    val cameraPosition by combine(viewModel.location, viewModel.zoom) { location, zoom ->
-        val latLng = LatLng(location.latitude, location.longitude)
-
-        CameraPositionState(CameraPosition.fromLatLngZoom(latLng, zoom))
-    }.collectAsState(initial = CameraPositionState())
     val mapcodeInfoState by viewModel.uiState.collectAsState()
+    val location by viewModel.location.collectAsState()
+    val cameraPositionState = rememberCameraPositionState()
+
+    MapsInitializer.initialize(LocalContext.current)
+    cameraPositionState.move(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
 
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
@@ -486,8 +488,8 @@ fun MapScreen(
             if (showMap) {
                 MapBox(
                     Modifier.weight(0.65f),
-                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                    cameraPositionState = cameraPosition
+                    onCameraMoved = { lat, long -> viewModel.onCameraMoved(lat, long) },
+                    cameraPositionState = cameraPositionState
                 )
             }
 
@@ -505,7 +507,9 @@ fun MapScreen(
                     }
                 },
                 onAddressChange = { viewModel.queryAddress(it) },
-                onTerritoryClick = { viewModel.onTerritoryClick() }
+                onTerritoryClick = { viewModel.onTerritoryClick() },
+                onLatitudeChange = { viewModel.queryLatitude(it) },
+                onLongitudeChange = { viewModel.queryLongitude(it) }
             )
         }
     }
