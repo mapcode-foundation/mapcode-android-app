@@ -73,6 +73,13 @@ fun MapBox(
             cameraPositionState = cameraPositionState,
             onMapLoaded = onMapLoaded
         )
+    
+        Icon(
+            modifier = Modifier
+                .align(Alignment.Center),
+            painter = painterResource(R.drawable.crosshairs),
+            contentDescription = ""
+        )
 
         //overlay the button to request location permission if my location is disabled.
         if (!isMyLocationEnabled) {
@@ -479,7 +486,7 @@ fun MapScreen(
 ) {
     val scaffoldState = rememberScaffoldState()
     val uiState by viewModel.uiState.collectAsState()
-    
+
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
 
