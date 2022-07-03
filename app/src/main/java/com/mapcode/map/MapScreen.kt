@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -447,18 +448,17 @@ fun MapcodeBox(
                 stringResource(R.string.mapcode_header_button),
                 R.drawable.ic_outline_content_copy_24
             )
-            Row {
-                Text(
-                    text = territory,
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier.align(Alignment.Bottom)
-                )
-                Text(
-                    text = code,
-                    style = MaterialTheme.typography.body1,
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+            val styledString = buildAnnotatedString {
+                pushStyle(MaterialTheme.typography.body2.toSpanStyle())
+                append(territory)
+                pop()
+                pushStyle(MaterialTheme.typography.body1.toSpanStyle())
+                append(code)
+                pop()
             }
+
+            Text(text = styledString)
         }
     }
 }
