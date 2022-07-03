@@ -53,7 +53,6 @@ fun MapBox(
     modifier: Modifier = Modifier,
     onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
-    onMapLoaded: () -> Unit,
     onMyLocationClick: () -> Unit,
     renderGoogleMaps: Boolean = true
 ) {
@@ -88,8 +87,7 @@ fun MapBox(
                 uiSettings = uiSettings,
                 properties = properties,
                 onCameraFinishedMoving = onCameraMoved,
-                cameraPositionState = cameraPositionState,
-                onMapLoaded = onMapLoaded
+                cameraPositionState = cameraPositionState
             )
         }
 
@@ -232,8 +230,7 @@ fun Map(
     uiSettings: MapUiSettings,
     properties: MapProperties,
     onCameraFinishedMoving: (Double, Double, Float) -> Unit,
-    cameraPositionState: CameraPositionState,
-    onMapLoaded: () -> Unit
+    cameraPositionState: CameraPositionState
 ) {
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
@@ -260,8 +257,7 @@ fun Map(
                 )
             }
         },
-        contentDescription = stringResource(R.string.google_maps_content_description),
-        onMapLoaded = onMapLoaded
+        contentDescription = stringResource(R.string.google_maps_content_description)
     )
 }
 
@@ -543,7 +539,7 @@ fun InfoArea(
         AddressArea(
             modifier = Modifier.fillMaxWidth(),
             address = state.addressUi.address,
-            onChange = onAddressChange,
+            onChange = remember { onAddressChange },
             helper = state.addressUi.helper,
             error = state.addressUi.error
         )
@@ -650,10 +646,6 @@ fun MapScreen(
                 Modifier.weight(0.65f),
                 onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
                 cameraPositionState = viewModel.cameraPositionState,
-                onMapLoaded = {
-                    viewModel.isGoogleMapsSdkLoaded = true
-                    viewModel.restoreLastLocation()
-                },
                 onMyLocationClick = { viewModel.onMyLocationClick() },
                 renderGoogleMaps = renderGoogleMaps
             )

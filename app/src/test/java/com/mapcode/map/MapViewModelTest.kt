@@ -13,7 +13,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.mock
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -33,7 +32,11 @@ internal class MapViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         useCase = FakeShowMapcodeUseCase()
-        viewModel = MapViewModel(useCase, dispatchers = TestDispatcherProvider(testDispatcher), preferences = mock())
+        viewModel = MapViewModel(
+            useCase,
+            dispatchers = TestDispatcherProvider(testDispatcher),
+            preferences = FakePreferenceRepository()
+        )
     }
 
     @After
@@ -570,7 +573,7 @@ internal class MapViewModelTest {
         runCurrent()
 
         assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
-        
+
         val uiState = viewModel.uiState.value
         assertThat(uiState.latitude).isEqualTo("1.0000000")
         assertThat(uiState.longitude).isEqualTo("2.0000000")

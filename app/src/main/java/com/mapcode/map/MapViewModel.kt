@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.mapcode.Mapcode
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import javax.inject.Inject
 
@@ -89,7 +91,7 @@ class MapViewModel @Inject constructor(
     private var clearUnknownAddressErrorJob: Job? = null
 
     var isGoogleMapsSdkLoaded: Boolean = false
-    var cameraPositionState: CameraPositionState by mutableStateOf(CameraPositionState())
+    var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
         private set
 
     var showCantFindLocationSnackBar: Boolean by mutableStateOf(false)
@@ -208,13 +210,22 @@ class MapViewModel @Inject constructor(
         preferences.set(Keys.lastLocationZoom, zoom.value)
     }
 
-    fun restoreLastLocation() {
-        viewModelScope.launch {
-            val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@launch
-            val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@launch
-            val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@launch
+    private fun getInitialCameraPositionState(): CameraPositionState {
+        val lastCameraPosition = getLastCameraPosition()
+        if (lastCameraPosition == null) {
+            return CameraPositionState()
+        } else {
+            return CameraPositionState(lastCameraPosition)
+        }
+    }
 
-            moveCamera(lastLatitude, lastLongitude, lastZoom)
+    private fun getLastCameraPosition(): CameraPosition? {
+        return runBlocking {
+            val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@runBlocking null
+            val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@runBlocking null
+            val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@runBlocking null
+
+            CameraPosition.fromLatLngZoom(LatLng(lastLatitude, lastLongitude), lastZoom)
         }
     }
 
