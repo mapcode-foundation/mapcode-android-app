@@ -15,6 +15,8 @@ import kotlin.Result.Companion.success
  */
 class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
+        private set
+
     var hasInternetConnection: Boolean = true
     var currentLocation: Location? = null
 
@@ -72,5 +74,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
 
     override suspend fun getLastLocation(): Location? {
         return currentLocation
+    }
+
+    override fun openLocationExternally(location: Location, zoom: Float): Boolean {
+        return true
     }
 }

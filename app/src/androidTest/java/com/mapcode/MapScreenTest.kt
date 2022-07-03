@@ -439,7 +439,21 @@ class MapScreenTest {
             .onNodeWithText("Can't find location. Is your GPS turned on?")
             .assertIsDisplayed()
     }
-    
+
+    @Test
+    fun show_error_snackbar_when_no_external_app_to_view_map() {
+        useCase.isMapsAppInstalled = false
+        setMapScreenAsContent()
+
+        composeTestRule
+            .onNodeWithContentDescription("View location in maps app")
+            .performClick()
+
+        composeTestRule
+            .onNodeWithText("You have no map app installed to open this in.")
+            .assertIsDisplayed()
+    }
+
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
             MapScreen(viewModel = viewModel, renderGoogleMaps = false)

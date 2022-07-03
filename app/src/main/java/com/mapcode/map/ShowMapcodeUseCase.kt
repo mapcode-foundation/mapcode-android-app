@@ -1,10 +1,9 @@
 package com.mapcode.map
 
 import android.annotation.SuppressLint
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
+import android.content.*
 import android.location.Geocoder
+import android.net.Uri
 import androidx.core.content.getSystemService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -122,6 +121,20 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
             }
         }
     }
+
+    override fun openLocationExternally(location: Location, zoom: Float): Boolean {
+        try {
+            val gmmIntentUri: Uri = Uri.parse("geo:${location.latitude},${location.longitude}?z=$zoom")
+            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+//        mapIntent.setPackage("com.google.android.apps.maps")
+            ctx.startActivity(mapIntent)
+            return true
+        } catch (e: ActivityNotFoundException) {
+            return false
+        }
+    }
 }
 
 /**
@@ -165,4 +178,9 @@ interface ShowMapcodeUseCase {
      * Get the last known GPS location of the device. Check that the location is available before calling this method.
      */
     suspend fun getLastLocation(): Location?
+
+    /**
+     * Open the [location] in an external maps app. Returns whether a map app was found and opened.
+     */
+    fun openLocationExternally(location: Location, zoom: Float): Boolean
 }
