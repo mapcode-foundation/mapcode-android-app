@@ -105,9 +105,11 @@ class MapViewModel @Inject constructor(
         //update the mapcode when the map moves
         updateMapcodes(lat, long)
 
-        //update the address when the map moves
-        val addressResult = useCase.reverseGeocode(lat, long)
-        updateAddress(addressResult)
+        viewModelScope.launch {
+            //update the address when the map moves
+            val addressResult = useCase.reverseGeocode(lat, long)
+            updateAddress(addressResult)
+        }
     }
 
     private fun moveCamera(lat: Double, long: Double, zoom: Float) {
@@ -249,6 +251,8 @@ class MapViewModel @Inject constructor(
         result.onSuccess { newLocation ->
             moveCamera(newLocation.latitude, newLocation.longitude, 0f)
         }.onFailure { error ->
+            address.value = "" //clear address if error
+
             when (error) {
                 is IOException -> {
                     addressHelper.value = AddressHelper.NoInternet
@@ -263,24 +267,21 @@ class MapViewModel @Inject constructor(
                     }
                 }
             }
-
-            address.value = "" //clear address if error
         }
     }
 
     private fun updateAddress(addressResult: Result<String>) {
-        addressResult
-            .onSuccess { newAddress ->
-                address.value = newAddress
+        addressResult.onSuccess { newAddress ->
+            address.value = newAddress
 
-                // only show the last 2 parts of the address if the address is longer than 2 parts
-                if (newAddress.split(',').size <= 2) {
-                    addressHelper.value = AddressHelper.None
-                } else {
-                    val lastTwoParts = getLastTwoPartsOfAddress(newAddress)
-                    addressHelper.value = AddressHelper.Location(lastTwoParts)
-                }
+            // only show the last 2 parts of the address if the address is longer than 2 parts
+            if (newAddress.split(',').size <= 2) {
+                addressHelper.value = AddressHelper.None
+            } else {
+                val lastTwoParts = getLastTwoPartsOfAddress(newAddress)
+                addressHelper.value = AddressHelper.Location(lastTwoParts)
             }
+        }
             .onFailure { error ->
                 when (error) {
                     is IOException -> addressHelper.value = AddressHelper.NoInternet

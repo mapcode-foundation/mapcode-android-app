@@ -42,7 +42,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         clipboard = text
     }
 
-    override fun geocode(address: String): Result<Location> {
+    override suspend fun geocode(address: String): Result<Location> {
         if (!hasInternetConnection) {
             return failure(IOException())
         }
@@ -56,7 +56,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         }
     }
 
-    override fun reverseGeocode(lat: Double, long: Double): Result<String> {
+    override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         if (!hasInternetConnection) {
             return failure(IOException())
         }

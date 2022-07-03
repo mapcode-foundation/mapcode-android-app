@@ -16,6 +16,8 @@ import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.Result.Companion.failure
@@ -50,7 +52,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
         clipboardManager?.setPrimaryClip(clipData)
     }
 
-    override fun geocode(address: String): Result<Location> {
+    override suspend fun geocode(address: String): Result<Location> {
         try {
             //sending an empty string to Geocoder API results in IOException even if you have internet access
             //so return the correct exception here.
@@ -58,7 +60,9 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
                 return failure(UnknownAddressException())
             }
 
-            val matchingAddress = geocoder.getFromLocationName(address, 1).firstOrNull()
+            val matchingAddress = withContext(Dispatchers.Default) {
+                geocoder.getFromLocationName(address, 1).firstOrNull()
+            }
 
             if (matchingAddress == null) {
                 return failure(UnknownAddressException())
@@ -70,9 +74,11 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
         }
     }
 
-    override fun reverseGeocode(lat: Double, long: Double): Result<String> {
+    override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         try {
-            val addressList = geocoder.getFromLocation(lat, long, 1)
+            val addressList = withContext(Dispatchers.Default) {
+                geocoder.getFromLocation(lat, long, 1)
+            }
 
             if (addressList.isEmpty()) {
                 return failure(NoAddressException())
@@ -146,14 +152,14 @@ interface ShowMapcodeUseCase {
      * @return [IOException] failure if the address can't be geocoded due to a network failure.
      * @return [UnknownAddressException] failure if the address doesn't exist and can't be geocoded.
      */
-    fun geocode(address: String): Result<Location>
+    suspend fun geocode(address: String): Result<Location>
 
     /**
      * Converts a latitude and longitude to an address.
      * @return [IOException] failure if the address can't be found due to a network failure.
      * @return [NoAddressException] failure if no address exists for this location.
      */
-    fun reverseGeocode(lat: Double, long: Double): Result<String>
+    suspend fun reverseGeocode(lat: Double, long: Double): Result<String>
 
     /**
      * Get the last known GPS location of the device. Check that the location is available before calling this method.
