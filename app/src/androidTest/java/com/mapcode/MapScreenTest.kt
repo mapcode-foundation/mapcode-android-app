@@ -66,28 +66,7 @@ class MapScreenTest {
         viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
-            .onNodeWithText("AB.XY")
-            .performClick()
-
-        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
-    }
-
-    @Test
-    fun copy_mapcode_to_clipboard_when_click_mapcode_territory() {
-        useCase.knownLocations.add(
-            FakeLocation(
-                0.0,
-                0.0,
-                addresses = emptyList(),
-                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
-            )
-        )
-
-        setMapScreenAsContent()
-        viewModel.onCameraMoved(0.0, 0.0, 0f)
-
-        composeTestRule
-            .onNodeWithText("AAA")
+            .onNodeWithText("AAAAB.XY")
             .performClick()
 
         assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
@@ -109,7 +88,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("AAA")
+            .onNodeWithText("AAAAB.XY")
             .performClick()
 
         composeTestRule.waitForIdle()
@@ -316,11 +295,7 @@ class MapScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithText("AB.XY")
-            .assertIsDisplayed()
-
-        composeTestRule
-            .onNodeWithText("NLD")
+            .onNodeWithText("NLDAB.XY")
             .assertIsDisplayed()
 
         composeTestRule
