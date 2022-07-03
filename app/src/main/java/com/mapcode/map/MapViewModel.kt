@@ -40,31 +40,24 @@ class MapViewModel @Inject constructor(
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
+    private val addressUi: MutableStateFlow<AddressUi> =
+        MutableStateFlow(AddressUi("", AddressError.None, AddressHelper.None))
 
-    private val address: MutableStateFlow<String> = MutableStateFlow("")
-    private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
-    private val addressHelper: MutableStateFlow<AddressHelper> = MutableStateFlow(AddressHelper.None)
-    private val addressUi: Flow<AddressUi> =
-        combine(address, addressError, addressHelper) { address, addressError, addressHelper ->
-            AddressUi(address, addressError, addressHelper)
+    private val mapcodeUi: Flow<MapcodeUi> = combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
+        val mapcode = mapcodes.getOrNull(mapcodeIndex)
+
+        if (mapcode == null) {
+            MapcodeUi("", "", "", 0, 0)
+        } else {
+            MapcodeUi(
+                mapcode.code,
+                mapcode.territory.name,
+                mapcode.territory.fullName,
+                mapcodeIndex + 1,
+                mapcodes.size
+            )
         }
-
-    private val mapcodeUi: Flow<MapcodeUi> =
-        combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
-            val mapcode = mapcodes.getOrNull(mapcodeIndex)
-
-            if (mapcode == null) {
-                MapcodeUi("", "", "", 0, 0)
-            } else {
-                MapcodeUi(
-                    mapcode.code,
-                    mapcode.territory.name,
-                    mapcode.territory.fullName,
-                    mapcodeIndex + 1,
-                    mapcodes.size
-                )
-            }
-        }
+    }
 
     val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
     val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
@@ -75,10 +68,10 @@ class MapViewModel @Inject constructor(
             addressUi,
             mapcodeUi,
             location
-        ) { addressUi, territoryUi, location ->
+        ) { addressUi, mapcodeUi, location ->
             UiState(
                 addressUi = addressUi,
-                mapcodeUi = territoryUi,
+                mapcodeUi = mapcodeUi,
                 latitude = String.format(locationStringFormat, location.latitude),
                 longitude = String.format(locationStringFormat, location.longitude)
             )
@@ -251,45 +244,63 @@ class MapViewModel @Inject constructor(
         result.onSuccess { newLocation ->
             moveCamera(newLocation.latitude, newLocation.longitude, 0f)
         }.onFailure { error ->
-            address.value = "" //clear address if error
+            val addressHelper: AddressHelper
+            val addressError: AddressError
 
             when (error) {
                 is IOException -> {
-                    addressHelper.value = AddressHelper.NoInternet
+                    addressHelper = AddressHelper.NoInternet
+                    addressError = AddressError.None
                 }
                 is UnknownAddressException -> {
-                    addressError.value = AddressError.UnknownAddress(query)
+                    addressError = AddressError.UnknownAddress(query)
+                    addressHelper = AddressHelper.None
 
                     clearUnknownAddressErrorJob?.cancel()
                     clearUnknownAddressErrorJob = viewModelScope.launch {
                         delay(UNKNOWN_ADDRESS_ERROR_TIMEOUT)
-                        addressError.value = AddressError.None
+                        addressUi.update { it.copy(error = AddressError.None) }
                     }
                 }
+                else -> throw error
             }
+
+            addressUi.value = AddressUi(
+                address = "",//clear address if error
+                helper = addressHelper,
+                error = addressError
+            )
         }
     }
 
     private fun updateAddress(addressResult: Result<String>) {
         addressResult.onSuccess { newAddress ->
-            address.value = newAddress
-
             // only show the last 2 parts of the address if the address is longer than 2 parts
-            if (newAddress.split(',').size <= 2) {
-                addressHelper.value = AddressHelper.None
+            val addressHelper: AddressHelper = if (newAddress.split(',').size <= 2) {
+                AddressHelper.None
             } else {
                 val lastTwoParts = getLastTwoPartsOfAddress(newAddress)
-                addressHelper.value = AddressHelper.Location(lastTwoParts)
+                AddressHelper.Location(lastTwoParts)
             }
-        }
-            .onFailure { error ->
-                when (error) {
-                    is IOException -> addressHelper.value = AddressHelper.NoInternet
-                    is NoAddressException -> addressHelper.value = AddressHelper.NoAddress
-                }
 
-                address.value = ""
+            addressUi.value = AddressUi(
+                address = newAddress,
+                helper = addressHelper,
+                error = AddressError.None
+            )
+        }.onFailure { error ->
+            val addressHelper: AddressHelper = when (error) {
+                is IOException -> AddressHelper.NoInternet
+                is NoAddressException -> AddressHelper.NoAddress
+                else -> AddressHelper.None
             }
+
+            addressUi.value = AddressUi(
+                address = "",
+                helper = addressHelper,
+                error = AddressError.None
+            )
+        }
     }
 
     private fun getLastTwoPartsOfAddress(address: String): String {
