@@ -58,6 +58,7 @@ fun MapBox(
     mapProperties: MapProperties,
     onMyLocationClick: () -> Unit,
     onSatelliteButtonClick: () -> Unit,
+    onExternalMapAppClick: () -> Unit,
     renderGoogleMaps: Boolean
 ) {
     val scope: CoroutineScope = rememberCoroutineScope()
@@ -100,9 +101,15 @@ fun MapBox(
                     )
                 }
             },
-            onMyLocationClick = onMyLocationClick
+            onMyLocationClick = onMyLocationClick,
+            onExternalMapAppClick = onExternalMapAppClick
         )
     }
+}
+
+@Composable
+fun greyButtonColors(): ButtonColors {
+    return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
 }
 
 @Composable
@@ -112,7 +119,8 @@ fun MapControls(
     isSatelliteModeEnabled: Boolean,
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
-    onMyLocationClick: () -> Unit = {}
+    onMyLocationClick: () -> Unit = {},
+    onExternalMapAppClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -127,6 +135,20 @@ fun MapControls(
     }
 
     Row(modifier) {
+        Button(
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.Bottom),
+            onClick = onExternalMapAppClick,
+            contentPadding = PaddingValues(8.dp),
+            colors = greyButtonColors()
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_outline_open_in_new_24),
+                contentDescription = stringResource(R.string.open_external_maps_app_content_description)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
         Button(
             modifier = Modifier
                 .size(48.dp)
@@ -163,7 +185,7 @@ fun ZoomControls(
         Button(
             modifier = Modifier.size(48.dp),
             onClick = onZoomInClick,
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray),
+            colors = greyButtonColors(),
             contentPadding = PaddingValues(8.dp)
         ) {
             Icon(
@@ -175,7 +197,7 @@ fun ZoomControls(
         Button(
             modifier = Modifier.size(48.dp),
             onClick = onZoomOutClick,
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray),
+            colors = greyButtonColors(),
             contentPadding = PaddingValues(8.dp)
         ) {
             Icon(
@@ -614,6 +636,7 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
+    val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
 
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -644,6 +667,17 @@ fun MapScreen(
         }
     }
 
+    if (viewModel.showCantFindMapsAppSnackBar) {
+        LaunchedEffect(viewModel.showCantFindMapsAppSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindMapsAppMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindMapsAppSnackBar = false
+            }
+        }
+    }
+
     Scaffold(scaffoldState = scaffoldState) {
         Column {
             MapBox(
@@ -659,7 +693,8 @@ fun MapScreen(
                 },
                 onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
                 renderGoogleMaps = renderGoogleMaps,
-                mapProperties = viewModel.mapProperties
+                mapProperties = viewModel.mapProperties,
+                onExternalMapAppClick = { viewModel.onExternalMapsAppClick() }
             )
 
             InfoArea(

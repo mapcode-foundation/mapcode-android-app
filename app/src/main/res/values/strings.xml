@@ -17,9 +17,11 @@
     <string name="longitude_text_field_label">Longitude (X)</string>
     <string name="clear_longitude_content_description">Clear longitude</string>
     <string name="satellite_mode_button_content_description">Toggle satellite mode</string>
+    <string name="open_external_maps_app_content_description">View location in maps app</string>
     <string name="zoom_in_button_content_description">Zoom in</string>
     <string name="zoom_out_button_content_description">Zoom out</string>
     <string name="my_location_button_content_description">Go to my location</string>
     <string name="cant_find_my_location_snackbar">Can\'t find location. Is your GPS turned on?</string>
+    <string name="no_map_app_installed_error">You have no map app installed to open this in.</string>
     <!--  Map screen  -->
 </resources>

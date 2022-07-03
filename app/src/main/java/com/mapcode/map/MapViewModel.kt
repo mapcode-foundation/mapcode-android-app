@@ -88,6 +88,8 @@ class MapViewModel @Inject constructor(
 
     var showCantFindLocationSnackBar: Boolean by mutableStateOf(false)
 
+    var showCantFindMapsAppSnackBar: Boolean by mutableStateOf(false)
+
     /**
      * When the camera has moved the mapcode information should be updated.
      */
@@ -216,6 +218,12 @@ class MapViewModel @Inject constructor(
         preferences.set(Keys.lastLocationLatitude, location.value.latitude)
         preferences.set(Keys.lastLocationLongitude, location.value.longitude)
         preferences.set(Keys.lastLocationZoom, zoom.value)
+    }
+
+    fun onExternalMapsAppClick() {
+        val success = useCase.openLocationExternally(location.value, zoom.value)
+
+        showCantFindMapsAppSnackBar = !success
     }
 
     private fun getInitialCameraPositionState(): CameraPositionState {
