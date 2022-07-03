@@ -9,6 +9,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
@@ -94,6 +96,9 @@ class MapViewModel @Inject constructor(
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
         private set
 
+    var mapProperties: MapProperties by mutableStateOf(MapProperties())
+        private set
+
     var showCantFindLocationSnackBar: Boolean by mutableStateOf(false)
 
     /**
@@ -122,7 +127,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun onMyLocationClick() {
+    fun goToMyLocation() {
         viewModelScope.launch {
             val myLocation = useCase.getLastLocation()
 
@@ -133,6 +138,20 @@ class MapViewModel @Inject constructor(
                 moveCamera(myLocation.latitude, myLocation.longitude, 16f)
             }
         }
+    }
+
+    fun onSatelliteButtonClick() {
+        val mapType = if (mapProperties.mapType == MapType.NORMAL) {
+            MapType.HYBRID
+        } else {
+            MapType.NORMAL
+        }
+        
+        mapProperties = mapProperties.copy(mapType = mapType)
+    }
+
+    fun setMyLocationEnabled(enabled: Boolean) {
+        mapProperties = mapProperties.copy(isMyLocationEnabled = enabled)
     }
 
     /**

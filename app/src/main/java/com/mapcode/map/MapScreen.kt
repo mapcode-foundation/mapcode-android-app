@@ -47,53 +47,30 @@ import kotlinx.coroutines.launch
  * The top portion of the screen containing the map and
  * the button to request location.
  */
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapBox(
     modifier: Modifier = Modifier,
     onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
+    mapProperties: MapProperties,
     onMyLocationClick: () -> Unit,
-    renderGoogleMaps: Boolean = true
+    onSatelliteButtonClick: () -> Unit,
+    renderGoogleMaps: Boolean
 ) {
-    val locationPermissionsState = rememberMultiplePermissionsState(
-        listOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    )
-
-    val isLocationPermissionGranted by remember {
-        derivedStateOf {
-            val coarseLocationPermission = locationPermissionsState.permissions
-                .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
-
-            coarseLocationPermission.status == PermissionStatus.Granted
-        }
-    }
-
-    val uiSettings by remember {
-        mutableStateOf(MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false))
-    }
-    var properties by remember { mutableStateOf(MapProperties()) }
-
     val scope: CoroutineScope = rememberCoroutineScope()
-
-    properties = properties.copy(isMyLocationEnabled = isLocationPermissionGranted)
+    val isSatelliteModeEnabled by derivedStateOf { mapProperties.mapType == MapType.HYBRID }
 
     Box(modifier) {
         if (renderGoogleMaps) {
             Map(
-                uiSettings = uiSettings,
-                properties = properties,
+                properties = mapProperties,
                 onCameraFinishedMoving = onCameraMoved,
                 cameraPositionState = cameraPositionState
             )
         }
 
         Icon(
-            modifier = Modifier
-                .align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center),
             painter = painterResource(R.drawable.crosshairs),
             contentDescription = null
         )
@@ -102,15 +79,8 @@ fun MapBox(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(8.dp),
-            onSatelliteButtonClick = {
-                val mapType = if (properties.mapType == MapType.NORMAL) {
-                    MapType.HYBRID
-                } else {
-                    MapType.NORMAL
-                }
-                properties = properties.copy(mapType = mapType)
-            },
-            isSatelliteModeEnabled = properties.mapType == MapType.HYBRID,
+            onSatelliteButtonClick = onSatelliteButtonClick,
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
             onZoomInClick = {
                 scope.launch {
                     cameraPositionState.animate(
@@ -127,13 +97,7 @@ fun MapBox(
                     )
                 }
             },
-            onMyLocationClick = {
-                if (isLocationPermissionGranted) {
-                    onMyLocationClick()
-                } else {
-                    locationPermissionsState.launchMultiplePermissionRequest()
-                }
-            }
+            onMyLocationClick = onMyLocationClick
         )
     }
 }
@@ -227,7 +191,6 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
 @Composable
 fun Map(
     modifier: Modifier = Modifier,
-    uiSettings: MapUiSettings,
     properties: MapProperties,
     onCameraFinishedMoving: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState
@@ -243,6 +206,8 @@ fun Map(
     }
 
     val scope = rememberCoroutineScope()
+
+    val uiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
 
     GoogleMap(
         cameraPositionState = cameraPositionState,
@@ -539,7 +504,7 @@ fun InfoArea(
         AddressArea(
             modifier = Modifier.fillMaxWidth(),
             address = state.addressUi.address,
-            onChange = remember { onAddressChange },
+            onChange = onAddressChange,
             helper = state.addressUi.helper,
             error = state.addressUi.error
         )
@@ -615,6 +580,7 @@ fun MapcodeInfoBoxPreview() {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -628,6 +594,24 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
+
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+
+    val isLocationPermissionGranted by remember {
+        derivedStateOf {
+            val coarseLocationPermission = locationPermissionsState.permissions
+                .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
+
+            coarseLocationPermission.status == PermissionStatus.Granted
+        }
+    }
+
+    viewModel.setMyLocationEnabled(isLocationPermissionGranted)
 
     if (viewModel.showCantFindLocationSnackBar) {
         LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
@@ -646,8 +630,16 @@ fun MapScreen(
                 Modifier.weight(0.65f),
                 onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
                 cameraPositionState = viewModel.cameraPositionState,
-                onMyLocationClick = { viewModel.onMyLocationClick() },
-                renderGoogleMaps = renderGoogleMaps
+                onMyLocationClick = {
+                    if (isLocationPermissionGranted) {
+                        viewModel.goToMyLocation()
+                    } else {
+                        locationPermissionsState.launchMultiplePermissionRequest()
+                    }
+                },
+                onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
+                renderGoogleMaps = renderGoogleMaps,
+                mapProperties = viewModel.mapProperties
             )
 
             InfoArea(

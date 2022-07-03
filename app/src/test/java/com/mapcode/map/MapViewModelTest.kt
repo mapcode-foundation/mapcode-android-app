@@ -559,7 +559,7 @@ internal class MapViewModelTest {
     fun `show snack bar if fail to get current location`() = runTest {
         useCase.currentLocation = null
 
-        viewModel.onMyLocationClick()
+        viewModel.goToMyLocation()
         runCurrent()
 
         assertThat(viewModel.showCantFindLocationSnackBar).isTrue()
@@ -569,7 +569,7 @@ internal class MapViewModelTest {
     fun `update location when clicking my location button`() = runTest {
         useCase.currentLocation = Location(1.0, 2.0)
 
-        viewModel.onMyLocationClick()
+        viewModel.goToMyLocation()
         runCurrent()
 
         assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
@@ -582,11 +582,11 @@ internal class MapViewModelTest {
     @Test
     fun `clicking my location should dismiss snack bar if location is found`() = runTest {
         useCase.currentLocation = null
-        viewModel.onMyLocationClick()
+        viewModel.goToMyLocation()
         runCurrent()
 
         useCase.currentLocation = Location(1.0, 2.0)
-        viewModel.onMyLocationClick()
+        viewModel.goToMyLocation()
         runCurrent()
 
         assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
