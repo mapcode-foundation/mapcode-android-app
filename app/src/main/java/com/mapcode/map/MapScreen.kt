@@ -31,6 +31,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.mapcode.R
 import com.mapcode.theme.Green600
@@ -222,7 +223,15 @@ fun Map(
                 )
             }
         },
-        contentDescription = stringResource(R.string.google_maps_content_description)
+        contentDescription = stringResource(R.string.google_maps_content_description),
+        onMyLocationClick = { location ->
+            scope.launch {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)),
+                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                )
+            }
+        }
     )
 }
 
