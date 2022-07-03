@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -267,8 +268,8 @@ fun AddressArea(
             label = stringResource(R.string.address_bar_label),
             clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
         )
-        AddressHelper(helper = helper)
-        AddressError(error = error)
+        AddressHelper(Modifier.padding(start = 4.dp, top = 4.dp), helper = helper)
+        AddressError(Modifier.padding(start = 4.dp), error = error)
     }
 }
 
@@ -338,7 +339,7 @@ fun ClearableTextField(
  * Create the correct components for the helper message state.
  */
 @Composable
-fun AddressHelper(helper: AddressHelper) {
+fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) {
     val helperMessage = when (helper) {
         AddressHelper.NoInternet -> stringResource(R.string.no_internet_error)
         AddressHelper.NoAddress -> stringResource(R.string.no_address_error)
@@ -347,7 +348,7 @@ fun AddressHelper(helper: AddressHelper) {
     }
 
     if (helperMessage != null) {
-        HelperText(message = helperMessage)
+        HelperText(modifier, message = helperMessage)
     }
 }
 
@@ -355,14 +356,14 @@ fun AddressHelper(helper: AddressHelper) {
  * Create the correct components for the error message state.
  */
 @Composable
-fun AddressError(error: AddressError) {
+fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
     val errorMessage = when (error) {
         is AddressError.UnknownAddress -> stringResource(R.string.cant_find_address_error, error.addressQuery)
         AddressError.None -> null
     }
 
     if (errorMessage != null) {
-        ErrorText(message = errorMessage)
+        ErrorText(modifier, message = errorMessage)
     }
 }
 
@@ -371,7 +372,13 @@ fun AddressError(error: AddressError) {
  */
 @Composable
 fun ErrorText(modifier: Modifier = Modifier, message: String) {
-    Text(modifier = modifier, text = message, color = MaterialTheme.colors.error)
+    Text(
+        modifier = modifier,
+        text = message,
+        color = MaterialTheme.colors.error,
+        style = MaterialTheme.typography.body1,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 /**
@@ -379,7 +386,7 @@ fun ErrorText(modifier: Modifier = Modifier, message: String) {
  */
 @Composable
 fun HelperText(modifier: Modifier = Modifier, message: String) {
-    Text(modifier = modifier, text = message)
+    Text(modifier = modifier, text = message, style = MaterialTheme.typography.body1, fontWeight = FontWeight.Bold)
 }
 
 @Composable
