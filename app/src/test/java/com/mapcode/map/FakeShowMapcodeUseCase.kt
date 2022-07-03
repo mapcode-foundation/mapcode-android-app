@@ -1,5 +1,6 @@
 package com.mapcode.map
 
+import com.mapcode.FakeLocation
 import com.mapcode.Mapcode
 import com.mapcode.UnknownMapcodeException
 import com.mapcode.util.Location

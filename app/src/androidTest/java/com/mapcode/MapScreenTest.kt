@@ -11,7 +11,6 @@ import com.mapcode.util.Location
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.mock
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -27,7 +26,7 @@ class MapScreenTest {
     @Before
     fun setUp() {
         useCase = FakeShowMapcodeUseCase()
-        viewModel = MapViewModel(useCase, mock())
+        viewModel = MapViewModel(useCase, FakePreferenceRepository())
     }
 
     @Test

@@ -3,8 +3,7 @@ package com.mapcode.map
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import assertk.assertThat
 import assertk.assertions.*
-import com.mapcode.Mapcode
-import com.mapcode.Territory
+import com.mapcode.*
 import com.mapcode.util.Location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,8 +58,8 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.code).isEqualTo("1AB.XY")
-        assertThat(uiState.territoryUi.shortName).isEqualTo("NLD")
+        assertThat(uiState.mapcodeUi.code).isEqualTo("1AB.XY")
+        assertThat(uiState.mapcodeUi.territoryShortName).isEqualTo("NLD")
     }
 
     @Test
@@ -147,8 +146,7 @@ internal class MapViewModelTest {
 
         val uiState = viewModel.uiState.value
         val expectedUiState = UiState(
-            code = "AB.CD",
-            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
+            mapcodeUi = MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 1),
             latitude = "2.0000000",
             longitude = "3.0000000",
             addressUi = AddressUi(
@@ -177,8 +175,7 @@ internal class MapViewModelTest {
 
         val uiState = viewModel.uiState.value
         val expectedUiState = UiState(
-            code = "AB.CD",
-            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
+            mapcodeUi = MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 1),
             latitude = "2.0000000",
             longitude = "3.0000000",
             addressUi = AddressUi(
@@ -408,35 +405,31 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         val uiState1 = viewModel.uiState.value
-        assertThat(uiState1.code).isEqualTo("AB.CD")
-        assertThat(uiState1.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 3))
+        assertThat(uiState1.mapcodeUi).isEqualTo(MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 3))
 
         viewModel.onTerritoryClick()
         runCurrent()
 
         val uiState2 = viewModel.uiState.value
-        assertThat(uiState2.code).isEqualTo("HHH.HHH")
-        assertThat(uiState2.territoryUi).isEqualTo(TerritoryUi("AAA", "International", 2, 3))
+        assertThat(uiState2.mapcodeUi).isEqualTo(MapcodeUi("HHH.HHH", "AAA", "International", 2, 3))
 
         viewModel.onTerritoryClick()
         runCurrent()
 
         val uiState3 = viewModel.uiState.value
-        assertThat(uiState3.code).isEqualTo("GGG.GGG")
-        assertThat(uiState3.territoryUi).isEqualTo(TerritoryUi("DEU", "Germany", 3, 3))
+        assertThat(uiState3.mapcodeUi).isEqualTo(MapcodeUi("GGG.GGG", "DEU", "Germany", 3, 3))
 
         viewModel.onTerritoryClick()
         runCurrent()
 
         val uiState4 = viewModel.uiState.value
-        assertThat(uiState4.code).isEqualTo("AB.CD")
-        assertThat(uiState4.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 3))
+        assertThat(uiState4.mapcodeUi).isEqualTo(MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 3))
     }
 
     @Test
     fun `clicking territory should do nothing if no mapcodes`() = runTest {
         viewModel.onTerritoryClick()
-        assertThat(viewModel.uiState.value.territoryUi).isEqualTo(TerritoryUi("", "", 0, 0))
+        assertThat(viewModel.uiState.value.mapcodeUi).isEqualTo(MapcodeUi("", "", "", 0, 0))
     }
 
     @Test
@@ -457,8 +450,7 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.code).isEqualTo("AB.CD")
-        assertThat(uiState.territoryUi).isEqualTo(TerritoryUi("NLD", "Netherlands", 1, 1))
+        assertThat(uiState.mapcodeUi).isEqualTo(MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 1))
     }
 
     @Test

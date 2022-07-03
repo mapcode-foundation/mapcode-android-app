@@ -1,4 +1,4 @@
-package com.mapcode.map
+package com.mapcode
 
 import androidx.datastore.preferences.core.Preferences
 import com.mapcode.data.PreferenceRepository

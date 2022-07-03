@@ -40,13 +40,6 @@ class MapViewModel @Inject constructor(
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
-    private val mapcode: Flow<Mapcode?> = combine(mapcodes, mapcodeIndex) { mapcodes, index ->
-        if (index == -1 || index >= mapcodes.size) {
-            null
-        } else {
-            mapcodes[index]
-        }
-    }
 
     private val address: MutableStateFlow<String> = MutableStateFlow("")
     private val addressError: MutableStateFlow<AddressError> = MutableStateFlow(AddressError.None)
@@ -56,12 +49,15 @@ class MapViewModel @Inject constructor(
             AddressUi(address, addressError, addressHelper)
         }
 
-    private val territoryUi: Flow<TerritoryUi> =
-        combine(mapcodeIndex, mapcodes, mapcode) { mapcodeIndex, mapcodes, mapcode ->
+    private val mapcodeUi: Flow<MapcodeUi> =
+        combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
+            val mapcode = mapcodes.getOrNull(mapcodeIndex)
+
             if (mapcode == null) {
-                TerritoryUi("", "", 0, 0)
+                MapcodeUi("", "", "", 0, 0)
             } else {
-                TerritoryUi(
+                MapcodeUi(
+                    mapcode.code,
                     mapcode.territory.name,
                     mapcode.territory.fullName,
                     mapcodeIndex + 1,
@@ -76,15 +72,13 @@ class MapViewModel @Inject constructor(
 
     val uiState: StateFlow<UiState> =
         combine(
-            mapcode,
             addressUi,
-            territoryUi,
+            mapcodeUi,
             location
-        ) { mapcode, addressUi, territoryUi, location ->
+        ) { addressUi, territoryUi, location ->
             UiState(
-                code = mapcode?.code ?: "",
                 addressUi = addressUi,
-                territoryUi = territoryUi,
+                mapcodeUi = territoryUi,
                 latitude = String.format(locationStringFormat, location.latitude),
                 longitude = String.format(locationStringFormat, location.longitude)
             )
@@ -146,7 +140,7 @@ class MapViewModel @Inject constructor(
         } else {
             MapType.NORMAL
         }
-        
+
         mapProperties = mapProperties.copy(mapType = mapType)
     }
 
@@ -318,16 +312,14 @@ class MapViewModel @Inject constructor(
 }
 
 data class UiState(
-    val code: String,
-    val territoryUi: TerritoryUi,
+    val mapcodeUi: MapcodeUi,
     val addressUi: AddressUi,
     val latitude: String,
     val longitude: String
 ) {
     companion object {
         val EMPTY: UiState = UiState(
-            code = "",
-            territoryUi = TerritoryUi("", "", 0, 0),
+            mapcodeUi = MapcodeUi("", "", "", 0, 0),
             addressUi = AddressUi("", AddressError.None, AddressHelper.None),
             latitude = "",
             longitude = ""

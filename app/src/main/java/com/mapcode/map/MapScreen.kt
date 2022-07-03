@@ -523,8 +523,8 @@ fun InfoArea(
                     .weight(0.5f)
                     .padding(end = 8.dp)
                     .clickable { onMapcodeClick() },
-                code = state.code,
-                territory = state.territoryUi.shortName
+                code = state.mapcodeUi.code,
+                territory = state.mapcodeUi.territoryShortName
             )
 
             TerritoryBox(
@@ -532,9 +532,9 @@ fun InfoArea(
                     .weight(0.5f)
                     .padding(start = 8.dp)
                     .clickable { onTerritoryClick() },
-                index = state.territoryUi.number,
-                count = state.territoryUi.count,
-                territoryName = state.territoryUi.fullName
+                index = state.mapcodeUi.number,
+                count = state.mapcodeUi.count,
+                territoryName = state.mapcodeUi.territoryFullName
             )
         }
 
@@ -575,8 +575,7 @@ fun MapControlsPreview() {
 fun MapcodeInfoBoxPreview() {
     MapcodeTheme {
         val state = UiState(
-            code = "1AB.XY",
-            territoryUi = TerritoryUi("NLD", "Netherlands", 1, 1),
+            mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
             addressUi = AddressUi(
                 "I am a very very very very very very extremely long address",
                 AddressError.UnknownAddress("Street, City"),

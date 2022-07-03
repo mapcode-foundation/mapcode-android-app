@@ -1,4 +1,4 @@
-package com.mapcode.map
+package com.mapcode
 
 import com.mapcode.util.DispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
