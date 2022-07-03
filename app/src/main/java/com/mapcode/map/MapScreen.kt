@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -426,11 +427,15 @@ fun MapcodeBox(
                 R.drawable.ic_outline_content_copy_24
             )
 
+            val codeSpanStyle: SpanStyle =
+                MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold).toSpanStyle()
+
             val styledString = buildAnnotatedString {
                 pushStyle(MaterialTheme.typography.body2.toSpanStyle())
                 append(territory)
                 pop()
-                pushStyle(MaterialTheme.typography.body1.toSpanStyle())
+                append(" ")
+                pushStyle(codeSpanStyle)
                 append(code)
                 pop()
             }

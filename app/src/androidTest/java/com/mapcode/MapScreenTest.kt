@@ -65,7 +65,7 @@ class MapScreenTest {
         viewModel.onCameraMoved(0.0, 0.0, 0f)
 
         composeTestRule
-            .onNodeWithText("AAAAB.XY")
+            .onNodeWithText("AAA AB.XY")
             .performClick()
 
         assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
@@ -87,7 +87,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule
-            .onNodeWithText("AAAAB.XY")
+            .onNodeWithText("AAA AB.XY")
             .performClick()
 
         composeTestRule.waitForIdle()
@@ -294,7 +294,7 @@ class MapScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule
-            .onNodeWithText("NLDAB.XY")
+            .onNodeWithText("NLD AB.XY")
             .assertIsDisplayed()
 
         composeTestRule
