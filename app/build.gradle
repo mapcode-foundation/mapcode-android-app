@@ -29,12 +29,13 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        release_unsigned {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        benchmark {
+            initWith buildTypes.release
             signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-benchmark-rules.pro'
+            debuggable false
         }
-
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
