@@ -76,7 +76,8 @@ fun MapBox(
         Icon(
             modifier = Modifier.align(Alignment.Center),
             painter = painterResource(R.drawable.crosshairs),
-            contentDescription = null
+            contentDescription = null,
+            tint = Color.Black
         )
 
         MapControls(
