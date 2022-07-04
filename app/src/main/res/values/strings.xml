@@ -23,5 +23,6 @@
     <string name="my_location_button_content_description">Go to my location</string>
     <string name="cant_find_my_location_snackbar">Can\'t find location. Is your GPS turned on?</string>
     <string name="no_map_app_installed_error">You have no map app installed to open this in.</string>
+    <string name="share_mapcode_content_description">Share mapcode</string>
     <!--  Map screen  -->
 </resources>

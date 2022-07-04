@@ -79,4 +79,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     override fun openLocationExternally(location: Location, zoom: Float): Boolean {
         return true
     }
+
+    override fun shareText(text: String, description: String) {}
 }

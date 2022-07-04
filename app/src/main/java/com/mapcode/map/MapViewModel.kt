@@ -329,6 +329,11 @@ class MapViewModel @Inject constructor(
             mapcodeIndex.value = 0
         }
     }
+
+    fun shareMapcode() {
+        val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
+        useCase.shareText(text = "$mapcode", description = "Mapcode: $mapcode")
+    }
 }
 
 data class UiState(

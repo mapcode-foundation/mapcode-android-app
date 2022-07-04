@@ -454,6 +454,27 @@ class MapScreenTest {
             .assertIsDisplayed()
     }
 
+    @Test
+    fun share_mapcode_when_clicking_share_button() {
+        useCase.knownLocations.add(
+            FakeLocation(
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+            )
+        )
+        setMapScreenAsContent()
+
+        viewModel.onCameraMoved(3.0, 2.0, 1f)
+
+        composeTestRule
+            .onNodeWithContentDescription("Share mapcode")
+            .performClick()
+
+        assertThat(useCase.sharedText).isEqualTo("AAA AB.XY")
+    }
+
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
             MapScreen(viewModel = viewModel, renderGoogleMaps = false)

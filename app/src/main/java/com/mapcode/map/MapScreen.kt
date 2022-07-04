@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,7 @@ fun MapBox(
     onMyLocationClick: () -> Unit,
     onSatelliteButtonClick: () -> Unit,
     onExternalMapAppClick: () -> Unit,
+    onShareMapcodeClick: () -> Unit,
     renderGoogleMaps: Boolean
 ) {
     val scope: CoroutineScope = rememberCoroutineScope()
@@ -103,7 +105,8 @@ fun MapBox(
                 }
             },
             onMyLocationClick = onMyLocationClick,
-            onExternalMapAppClick = onExternalMapAppClick
+            onExternalMapAppClick = onExternalMapAppClick,
+            onShareMapcodeClick = onShareMapcodeClick
         )
     }
 }
@@ -121,7 +124,8 @@ fun MapControls(
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
-    onExternalMapAppClick: () -> Unit = {}
+    onExternalMapAppClick: () -> Unit = {},
+    onShareMapcodeClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -136,6 +140,20 @@ fun MapControls(
     }
 
     Row(modifier) {
+        Button(
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.Bottom),
+            onClick = onShareMapcodeClick,
+            contentPadding = PaddingValues(8.dp),
+            colors = greyButtonColors()
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Share,
+                contentDescription = stringResource(R.string.share_mapcode_content_description)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
         Button(
             modifier = Modifier
                 .size(48.dp)
@@ -714,7 +732,8 @@ fun MapScreen(
                 onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
                 renderGoogleMaps = renderGoogleMaps,
                 mapProperties = viewModel.mapProperties,
-                onExternalMapAppClick = { viewModel.onExternalMapsAppClick() }
+                onExternalMapAppClick = { viewModel.onExternalMapsAppClick() },
+                onShareMapcodeClick = { viewModel.shareMapcode() }
             )
 
             InfoArea(

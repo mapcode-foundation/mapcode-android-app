@@ -17,6 +17,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var currentLocation: Location? = null
     var isMapsAppInstalled: Boolean = true
 
+    var sharedText: String? = null
+        private set
+
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
@@ -75,5 +78,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
 
     override fun openLocationExternally(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
+    }
+
+    override fun shareText(text: String, description: String) {
+        sharedText = text
     }
 }
