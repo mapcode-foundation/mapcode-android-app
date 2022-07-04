@@ -292,8 +292,24 @@ fun AddressArea(
             label = stringResource(R.string.address_bar_label),
             clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
         )
-        AddressHelper(Modifier.padding(start = 4.dp, top = 4.dp), helper = helper)
-        AddressError(Modifier.padding(start = 4.dp), error = error)
+
+        val extraTextHeight = 20.dp
+
+        //to prevent the layout jumping up and down fill with empty space if no helper or error
+        if (helper == AddressHelper.None && error == AddressError.None) {
+            Spacer(Modifier.height(extraTextHeight))
+        } else {
+            AddressHelper(
+                Modifier
+                    .height(extraTextHeight)
+                    .padding(start = 4.dp), helper = helper
+            )
+            AddressError(
+                Modifier
+                    .height(extraTextHeight)
+                    .padding(start = 4.dp), error = error
+            )
+        }
     }
 }
 
