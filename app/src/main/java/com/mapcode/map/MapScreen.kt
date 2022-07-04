@@ -713,49 +713,51 @@ fun MapScreen(
         }
     }
 
-    Scaffold(scaffoldState = scaffoldState) {
-        Column(
-            Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            MapBox(
-                Modifier.weight(1f),
-                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                cameraPositionState = viewModel.cameraPositionState,
-                onMyLocationClick = {
-                    if (isLocationPermissionGranted) {
-                        viewModel.goToMyLocation()
-                    } else {
-                        locationPermissionsState.launchMultiplePermissionRequest()
-                    }
-                },
-                onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
-                renderGoogleMaps = renderGoogleMaps,
-                mapProperties = viewModel.mapProperties,
-                onExternalMapAppClick = { viewModel.onExternalMapsAppClick() },
-                onShareMapcodeClick = { viewModel.shareMapcode() }
-            )
-
-            InfoArea(
-                Modifier
-                    .wrapContentHeight()
-                    .padding(8.dp),
-                uiState,
-                onMapcodeClick = {
-                    val copied = viewModel.copyMapcode()
-                    if (copied) {
-                        scope.launch {
-                            //dismiss current snack bar so they aren't queued up
-                            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                            scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
+    Surface {
+        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
+            Column(
+                Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                MapBox(
+                    Modifier.weight(1f),
+                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                    cameraPositionState = viewModel.cameraPositionState,
+                    onMyLocationClick = {
+                        if (isLocationPermissionGranted) {
+                            viewModel.goToMyLocation()
+                        } else {
+                            locationPermissionsState.launchMultiplePermissionRequest()
                         }
-                    }
-                },
-                onAddressChange = { viewModel.queryAddress(it) },
-                onTerritoryClick = { viewModel.onTerritoryClick() },
-                onLatitudeChange = { viewModel.queryLatitude(it) },
-                onLongitudeChange = { viewModel.queryLongitude(it) }
-            )
+                    },
+                    onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
+                    renderGoogleMaps = renderGoogleMaps,
+                    mapProperties = viewModel.mapProperties,
+                    onExternalMapAppClick = { viewModel.onExternalMapsAppClick() },
+                    onShareMapcodeClick = { viewModel.shareMapcode() }
+                )
+
+                InfoArea(
+                    Modifier
+                        .wrapContentHeight()
+                        .padding(8.dp),
+                    uiState,
+                    onMapcodeClick = {
+                        val copied = viewModel.copyMapcode()
+                        if (copied) {
+                            scope.launch {
+                                //dismiss current snack bar so they aren't queued up
+                                scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                                scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
+                            }
+                        }
+                    },
+                    onAddressChange = { viewModel.queryAddress(it) },
+                    onTerritoryClick = { viewModel.onTerritoryClick() },
+                    onLatitudeChange = { viewModel.queryLatitude(it) },
+                    onLongitudeChange = { viewModel.queryLongitude(it) }
+                )
+            }
         }
     }
 }

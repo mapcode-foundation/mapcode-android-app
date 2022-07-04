@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         MapsInitializer.initialize(this)
         viewModel.isGoogleMapsSdkLoaded = true
 
@@ -41,6 +41,9 @@ class MainActivity : ComponentActivity() {
 fun MapcodeApp(viewModel: MapViewModel) {
     MapcodeTheme {
         val navController = rememberNavController()
-        MapcodeNavHost(navController = navController, viewModel = viewModel)
+        MapcodeNavHost(
+            navController = navController,
+            viewModel = viewModel
+        )
     }
 }
