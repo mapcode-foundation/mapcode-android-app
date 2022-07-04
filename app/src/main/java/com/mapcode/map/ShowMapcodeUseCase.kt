@@ -135,6 +135,20 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
             return false
         }
     }
+
+    override fun shareText(text: String, description: String) {
+        val sendIntent: Intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_TITLE, description)
+        }
+
+        val shareIntent = Intent.createChooser(sendIntent, null).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        ctx.startActivity(shareIntent)
+    }
 }
 
 /**
@@ -183,4 +197,6 @@ interface ShowMapcodeUseCase {
      * Open the [location] in an external maps app. Returns whether a map app was found and opened.
      */
     fun openLocationExternally(location: Location, zoom: Float): Boolean
+
+    fun shareText(text: String, description: String)
 }
