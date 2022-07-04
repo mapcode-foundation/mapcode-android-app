@@ -544,7 +544,7 @@ fun InfoArea(
     onLatitudeChange: (String) -> Unit = {},
     onLongitudeChange: (String) -> Unit = {}
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier) {
         AddressArea(
             modifier = Modifier.fillMaxWidth(),
             address = state.addressUi.address,
@@ -680,9 +680,12 @@ fun MapScreen(
     }
 
     Scaffold(scaffoldState = scaffoldState) {
-        Column {
+        Column(
+            Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom
+        ) {
             MapBox(
-                Modifier.weight(0.65f),
+                Modifier.weight(1f),
                 onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
                 cameraPositionState = viewModel.cameraPositionState,
                 onMyLocationClick = {
@@ -700,7 +703,7 @@ fun MapScreen(
 
             InfoArea(
                 Modifier
-                    .weight(0.35f)
+                    .wrapContentHeight()
                     .padding(8.dp),
                 uiState,
                 onMapcodeClick = {
