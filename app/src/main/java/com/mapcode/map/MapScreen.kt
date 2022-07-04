@@ -587,23 +587,22 @@ fun InfoArea(
             error = state.addressUi.error
         )
         Row(Modifier.padding(top = 8.dp)) {
-            MapcodeBox(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .padding(end = 8.dp)
-                    .clickable { onMapcodeClick() },
-                code = state.mapcodeUi.code,
-                territory = state.mapcodeUi.territoryShortName
-            )
-
             TerritoryBox(
                 modifier = Modifier
                     .weight(0.5f)
-                    .padding(start = 8.dp)
+                    .padding(end = 8.dp)
                     .clickable { onTerritoryClick() },
                 index = state.mapcodeUi.number,
                 count = state.mapcodeUi.count,
                 territoryName = state.mapcodeUi.territoryFullName
+            )
+            MapcodeBox(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .padding(start = 8.dp)
+                    .clickable { onMapcodeClick() },
+                code = state.mapcodeUi.code,
+                territory = state.mapcodeUi.territoryShortName
             )
         }
 
