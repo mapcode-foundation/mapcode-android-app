@@ -127,10 +127,11 @@ fun MapControls(
     onExternalMapAppClick: () -> Unit = {},
     onShareMapcodeClick: () -> Unit = {}
 ) {
+    val greenButtonColors = ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
     } else {
-        ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
+        greenButtonColors
     }
 
     val satelliteButtonIcon: Painter = if (isSatelliteModeEnabled) {
@@ -160,10 +161,10 @@ fun MapControls(
                 .align(Alignment.Bottom),
             onClick = onExternalMapAppClick,
             contentPadding = PaddingValues(8.dp),
-            colors = greyButtonColors()
+            colors = greenButtonColors
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_outline_open_in_new_24),
+                painter = painterResource(R.drawable.ic_outline_directions_24),
                 contentDescription = stringResource(R.string.open_external_maps_app_content_description)
             )
         }

@@ -122,13 +122,13 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
         }
     }
 
-    override fun openLocationExternally(location: Location, zoom: Float): Boolean {
+    override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         try {
-            val gmmIntentUri: Uri = Uri.parse("geo:${location.latitude},${location.longitude}?z=$zoom")
+            val gmmIntentUri: Uri = Uri.parse("google.navigation:q=${location.latitude},${location.longitude}")
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-//        mapIntent.setPackage("com.google.android.apps.maps")
+
             ctx.startActivity(mapIntent)
             return true
         } catch (e: ActivityNotFoundException) {
@@ -194,9 +194,9 @@ interface ShowMapcodeUseCase {
     suspend fun getLastLocation(): Location?
 
     /**
-     * Open the [location] in an external maps app. Returns whether a map app was found and opened.
+     * Open the directions to the [location] in an external maps app. Returns whether a map app was found and opened.
      */
-    fun openLocationExternally(location: Location, zoom: Float): Boolean
+    fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean
 
     fun shareText(text: String, description: String)
 }

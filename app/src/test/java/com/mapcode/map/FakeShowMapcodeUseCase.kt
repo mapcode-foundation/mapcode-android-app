@@ -76,7 +76,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return currentLocation
     }
 
-    override fun openLocationExternally(location: Location, zoom: Float): Boolean {
+    override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return true
     }
 

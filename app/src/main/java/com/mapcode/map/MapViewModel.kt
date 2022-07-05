@@ -221,7 +221,7 @@ class MapViewModel @Inject constructor(
     }
 
     fun onExternalMapsAppClick() {
-        val success = useCase.openLocationExternally(location.value, zoom.value)
+        val success = useCase.launchDirectionsToLocation(location.value, zoom.value)
 
         showCantFindMapsAppSnackBar = !success
     }
