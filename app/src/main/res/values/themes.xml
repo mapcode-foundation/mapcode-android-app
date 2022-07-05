@@ -7,5 +7,5 @@
         <item name="postSplashScreenTheme">@style/Theme.Mapcode</item>
     </style>
 
-    <style name="Theme.Mapcode" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.Mapcode" parent="Theme.MaterialComponents.DayNight.NoActionBar"/>
 </resources>
