@@ -4,15 +4,17 @@ import android.Manifest
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -21,8 +23,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -30,12 +35,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import com.mapcode.BuildConfig
 import com.mapcode.R
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
@@ -65,6 +72,11 @@ fun MapBox(
 ) {
     val scope: CoroutineScope = rememberCoroutineScope()
     val isSatelliteModeEnabled by derivedStateOf { mapProperties.mapType == MapType.HYBRID }
+    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
 
     Box(modifier) {
         if (renderGoogleMaps) {
@@ -106,8 +118,153 @@ fun MapBox(
             },
             onMyLocationClick = onMyLocationClick,
             onExternalMapAppClick = onExternalMapAppClick,
-            onShareMapcodeClick = onShareMapcodeClick
+            onShareMapcodeClick = onShareMapcodeClick,
+            onAboutClick = { showAboutDialog = true }
         )
+    }
+}
+
+@Composable
+fun ScrollableDialog(onDismiss: () -> Unit, title: String, buttonText: String, content: @Composable () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium) {
+            Column(verticalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .height(64.dp)
+                        .wrapContentSize()
+                        .padding(start = 24.dp, end = 24.dp),
+                    text = title,
+                    style = MaterialTheme.typography.h6
+                )
+                Divider(Modifier.height(1.dp))
+                Box(
+                    Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)
+                ) {
+                    content()
+                }
+                Divider(Modifier.height(1.dp))
+                TextButton(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(8.dp),
+                    onClick = onDismiss
+                ) {
+                    Text(buttonText)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AboutDialog(onDismiss: () -> Unit = {}) {
+    val uriHandler = LocalUriHandler.current
+    val websiteUrl = stringResource(R.string.website_url)
+    val sourceCodeUrl = stringResource(R.string.source_code_url)
+
+    ScrollableDialog(
+        onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
+        buttonText = stringResource(R.string.close_dialog_button)
+    ) {
+        Column {
+            val dialogTextStyle = MaterialTheme.typography.body1
+            val inlineContent = mapOf(
+                "share_icon" to InlineTextContent(
+                    Placeholder(
+                        width = dialogTextStyle.fontSize,
+                        height = dialogTextStyle.fontSize,
+                        placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                    )
+                ) {
+                    Icon(Icons.Outlined.Share, "")
+                },
+                "directions_icon" to InlineTextContent(
+                    Placeholder(
+                        width = dialogTextStyle.fontSize,
+                        height = dialogTextStyle.fontSize,
+                        placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_outline_directions_24),
+                        contentDescription = ""
+                    )
+                },
+            )
+
+            val aboutString = buildAnnotatedString {
+                pushStyle(dialogTextStyle.toSpanStyle())
+
+                append(stringResource(R.string.copyright_welcome))
+                append("\n\n")
+
+                pushStyle(MaterialTheme.typography.subtitle2.toSpanStyle())
+                append(stringResource(R.string.how_to_use_header))
+                pop()
+
+                append("\n\n")
+                append(stringResource(R.string.how_to_use_address))
+                append("\n\n")
+                append(stringResource(R.string.how_to_use_territory))
+
+                append("\n\n")
+                append(stringResource(R.string.how_to_use_share_1))
+                appendInlineContent("share_icon")
+                append(stringResource(R.string.how_to_use_share_2))
+
+                append("\n\n")
+                append(stringResource(R.string.how_to_use_directions_1))
+                appendInlineContent("directions_icon")
+                append(stringResource(R.string.how_to_use_directions_2))
+
+                append("\n\n")
+                append(stringResource(R.string.visit_website_notice))
+
+                pop()
+            }
+
+            Text(text = aboutString, inlineContent = inlineContent)
+            Spacer(Modifier.height(8.dp))
+            DialogContentButton(
+                icon = painterResource(R.drawable.web),
+                text = stringResource(R.string.website_button)
+            ) {
+                uriHandler.openUri(websiteUrl)
+            }
+            DialogContentButton(
+                icon = painterResource(R.drawable.ic_outline_article_24),
+                text = stringResource(R.string.changelog_button)
+            ) {
+            }
+            DialogContentButton(
+                icon = painterResource(R.drawable.ic_outline_code_24),
+                text = stringResource(R.string.source_code_button)
+            ) {
+                uriHandler.openUri(sourceCodeUrl)
+            }
+        }
+    }
+}
+
+@Composable
+fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick) {
+        Icon(icon, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text)
+    }
+}
+
+@Preview(heightDp = 500)
+@Composable
+fun AboutDialogPreview() {
+    MapcodeTheme {
+        AboutDialog()
     }
 }
 
@@ -125,7 +282,8 @@ fun MapControls(
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
     onExternalMapAppClick: () -> Unit = {},
-    onShareMapcodeClick: () -> Unit = {}
+    onShareMapcodeClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {}
 ) {
     val greenButtonColors = ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
@@ -141,6 +299,20 @@ fun MapControls(
     }
 
     Row(modifier) {
+        Button(
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.Bottom),
+            onClick = onAboutClick,
+            contentPadding = PaddingValues(8.dp),
+            colors = greyButtonColors()
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = stringResource(R.string.about_content_description)
+            )
+        }
+        Spacer(Modifier.width(8.dp))
         Button(
             modifier = Modifier
                 .size(48.dp)
