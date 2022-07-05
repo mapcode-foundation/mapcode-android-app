@@ -20,15 +20,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
+        
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        MapsInitializer.initialize(this)
-        viewModel.isGoogleMapsSdkLoaded = true
 
         setContent {
             MapcodeApp(viewModel)
         }
+
+        MapsInitializer.initialize(this)
+        viewModel.isGoogleMapsSdkLoaded = true
     }
 
     override fun onPause() {
