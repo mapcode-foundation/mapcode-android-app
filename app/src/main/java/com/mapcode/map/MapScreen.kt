@@ -4,12 +4,10 @@ import android.Manifest
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -35,7 +33,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -47,6 +44,7 @@ import com.mapcode.R
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
+import com.mapcode.util.ScrollableDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -121,43 +119,6 @@ fun MapBox(
             onShareMapcodeClick = onShareMapcodeClick,
             onAboutClick = { showAboutDialog = true }
         )
-    }
-}
-
-@Composable
-fun ScrollableDialog(onDismiss: () -> Unit, title: String, buttonText: String, content: @Composable () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium) {
-            Column(verticalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    modifier = Modifier
-                        .align(Alignment.Start)
-                        .height(64.dp)
-                        .wrapContentSize()
-                        .padding(start = 24.dp, end = 24.dp),
-                    text = title,
-                    style = MaterialTheme.typography.h6
-                )
-                Divider(Modifier.height(1.dp))
-                Box(
-                    Modifier
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)
-                ) {
-                    content()
-                }
-                Divider(Modifier.height(1.dp))
-                TextButton(
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(8.dp),
-                    onClick = onDismiss
-                ) {
-                    Text(buttonText)
-                }
-            }
-        }
     }
 }
 
