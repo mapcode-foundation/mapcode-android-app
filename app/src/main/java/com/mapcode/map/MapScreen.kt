@@ -2,7 +2,6 @@ package com.mapcode.map
 
 import android.Manifest
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.KeyboardActions
@@ -163,6 +162,72 @@ fun greyButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun MapControls(
+    modifier: Modifier,
+    viewModel: MapViewModel
+) {
+    val scope = rememberCoroutineScope()
+    val isSatelliteModeEnabled by derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID }
+
+    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    val locationPermissionsState = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    )
+
+    val isLocationPermissionGranted by remember {
+        derivedStateOf {
+            val coarseLocationPermission = locationPermissionsState.permissions
+                .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
+
+            coarseLocationPermission.status == PermissionStatus.Granted
+        }
+    }
+
+    viewModel.setMyLocationEnabled(isLocationPermissionGranted)
+
+    MapControls(
+        modifier = modifier,
+        onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
+        isSatelliteModeEnabled = isSatelliteModeEnabled,
+        onZoomInClick = {
+            scope.launch {
+                viewModel.cameraPositionState.animate(
+                    CameraUpdateFactory.zoomIn(),
+                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                )
+            }
+        },
+        onZoomOutClick = {
+            scope.launch {
+                viewModel.cameraPositionState.animate(
+                    CameraUpdateFactory.zoomOut(),
+                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                )
+            }
+        },
+        onMyLocationClick = {
+            if (isLocationPermissionGranted) {
+                viewModel.goToMyLocation()
+            } else {
+                locationPermissionsState.launchMultiplePermissionRequest()
+            }
+        },
+        onDirectionsClick = { viewModel.onDirectionsClick() },
+        onShareMapcodeClick = { viewModel.shareMapcode() },
+        onAboutClick = { showAboutDialog = true }
+    )
+}
+
 @Composable
 fun MapControls(
     modifier: Modifier = Modifier,
@@ -292,6 +357,30 @@ fun ZoomControls(
 
 private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
 
+@Composable
+fun MapWithCrossHairs(
+    modifier: Modifier,
+    viewModel: MapViewModel,
+    renderGoogleMaps: Boolean = true
+) {
+    Box(modifier) {
+        if (renderGoogleMaps) {
+            Map(
+                properties = viewModel.mapProperties,
+                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                cameraPositionState = viewModel.cameraPositionState
+            )
+        }
+
+        Icon(
+            modifier = Modifier.align(Alignment.Center),
+            painter = painterResource(R.drawable.crosshairs),
+            contentDescription = null,
+            tint = Color.Black
+        )
+    }
+}
+
 /**
  * This handles the Google Map component.
  */
@@ -358,43 +447,6 @@ fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     }
 }
 
-@Composable
-fun AddressArea(
-    modifier: Modifier = Modifier,
-    address: String,
-    onChange: (String) -> Unit,
-    helper: AddressHelper,
-    error: AddressError
-) {
-    Column(modifier) {
-        ClearableTextField(
-            modifier = Modifier.fillMaxWidth(),
-            text = address,
-            onChange = onChange,
-            label = stringResource(R.string.address_bar_label),
-            clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
-        )
-
-        val extraTextHeight = 20.dp
-
-        //to prevent the layout jumping up and down fill with empty space if no helper or error
-        if (helper == AddressHelper.None && error == AddressError.None) {
-            Spacer(Modifier.height(extraTextHeight))
-        } else {
-            AddressHelper(
-                Modifier
-                    .height(extraTextHeight)
-                    .padding(start = 4.dp), helper = helper
-            )
-            AddressError(
-                Modifier
-                    .height(extraTextHeight)
-                    .padding(start = 4.dp), error = error
-            )
-        }
-    }
-}
-
 /**
  * A text field that has a clear button and handles refilling the text if it is cleared.
  */
@@ -454,60 +506,6 @@ fun ClearableTextField(
                 }
             }
         })
-}
-
-/**
- * Create the correct components for the helper message state.
- */
-@Composable
-fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) {
-    val helperMessage = when (helper) {
-        AddressHelper.NoInternet -> stringResource(R.string.no_internet_error)
-        AddressHelper.NoAddress -> stringResource(R.string.no_address_error)
-        is AddressHelper.Location -> helper.location
-        AddressHelper.None -> null
-    }
-
-    if (helperMessage != null) {
-        HelperText(modifier, message = helperMessage)
-    }
-}
-
-/**
- * Create the correct components for the error message state.
- */
-@Composable
-fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
-    val errorMessage = when (error) {
-        is AddressError.UnknownAddress -> stringResource(R.string.cant_find_address_error, error.addressQuery)
-        AddressError.None -> null
-    }
-
-    if (errorMessage != null) {
-        ErrorText(modifier, message = errorMessage)
-    }
-}
-
-/**
- * This creates a Text styled as an error.
- */
-@Composable
-fun ErrorText(modifier: Modifier = Modifier, message: String) {
-    Text(
-        modifier = modifier,
-        text = message,
-        color = MaterialTheme.colors.error,
-        style = MaterialTheme.typography.body1,
-        fontWeight = FontWeight.Bold
-    )
-}
-
-/**
- * This creates a Text styled for the helper messages.
- */
-@Composable
-fun HelperText(modifier: Modifier = Modifier, message: String) {
-    Text(modifier = modifier, text = message, style = MaterialTheme.typography.body1, fontWeight = FontWeight.Bold)
 }
 
 @Composable
@@ -631,68 +629,6 @@ fun LongitudeTextBox(
     )
 }
 
-/**
- * The bottom portion of the screen containing all the mapcode and
- * address information.
- */
-@Composable
-fun InfoArea(
-    modifier: Modifier = Modifier,
-    state: UiState,
-    onMapcodeClick: () -> Unit = {},
-    onAddressChange: (String) -> Unit = {},
-    onTerritoryClick: () -> Unit = {},
-    onLatitudeChange: (String) -> Unit = {},
-    onLongitudeChange: (String) -> Unit = {}
-) {
-    Column(modifier = modifier) {
-        AddressArea(
-            modifier = Modifier.fillMaxWidth(),
-            address = state.addressUi.address,
-            onChange = onAddressChange,
-            helper = state.addressUi.helper,
-            error = state.addressUi.error
-        )
-        Row(Modifier.padding(top = 8.dp)) {
-            TerritoryBox(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .padding(end = 8.dp)
-                    .clickable { onTerritoryClick() },
-                index = state.mapcodeUi.number,
-                count = state.mapcodeUi.count,
-                territoryName = state.mapcodeUi.territoryFullName
-            )
-            MapcodeBox(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .padding(start = 8.dp)
-                    .clickable { onMapcodeClick() },
-                code = state.mapcodeUi.code,
-                territory = state.mapcodeUi.territoryShortName
-            )
-        }
-
-        Row(Modifier.padding(top = 8.dp)) {
-            LatitudeTextBox(
-                Modifier
-                    .weight(0.5f)
-                    .padding(end = 8.dp),
-                latitude = state.latitude,
-                onChange = onLatitudeChange
-            )
-
-            LongitudeTextBox(
-                Modifier
-                    .weight(0.5f)
-                    .padding(start = 8.dp),
-                longitude = state.longitude,
-                onChange = onLongitudeChange
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun MapControlsPreview() {
@@ -719,11 +655,10 @@ fun MapcodeInfoBoxPreview() {
             "1.0",
             "2.0"
         )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state)
+        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -731,29 +666,11 @@ fun MapScreen(
      * This option makes instrumentation tests much quicker and easier to implement.
      */
     renderGoogleMaps: Boolean = true,
-    isExpandedScreen: Boolean = false
+    layoutType: LayoutType = LayoutType.HorizontalInfoArea
 ) {
     val scaffoldState = rememberScaffoldState()
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-
-    val locationPermissionsState = rememberMultiplePermissionsState(
-        listOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    )
-
-    val isLocationPermissionGranted by remember {
-        derivedStateOf {
-            val coarseLocationPermission = locationPermissionsState.permissions
-                .single { it.permission == Manifest.permission.ACCESS_COARSE_LOCATION }
-
-            coarseLocationPermission.status == PermissionStatus.Granted
-        }
-    }
-
-    viewModel.setMyLocationEnabled(isLocationPermissionGranted)
 
     if (viewModel.showCantFindLocationSnackBar) {
         LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
@@ -777,137 +694,72 @@ fun MapScreen(
         }
     }
 
-    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
-
-    if (showAboutDialog) {
-        AboutDialog(onDismiss = { showAboutDialog = false })
-    }
-
-    val uiState by viewModel.uiState.collectAsState()
-    val scope = rememberCoroutineScope()
-
-    val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
-
-    val map = @Composable { modifier: Modifier ->
-        Box(modifier) {
-            if (renderGoogleMaps) {
-                Map(
-                    properties = viewModel.mapProperties,
-                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                    cameraPositionState = viewModel.cameraPositionState
-                )
-            }
-
-            Icon(
-                modifier = Modifier.align(Alignment.Center),
-                painter = painterResource(R.drawable.crosshairs),
-                contentDescription = null,
-                tint = Color.Black
-            )
-        }
-    }
-
-    val isSatelliteModeEnabled by derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID }
-
-    val mapControls = @Composable { modifier: Modifier ->
-        MapControls(
-            modifier = modifier,
-            onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
-            isSatelliteModeEnabled = isSatelliteModeEnabled,
-            onZoomInClick = {
-                scope.launch {
-                    viewModel.cameraPositionState.animate(
-                        CameraUpdateFactory.zoomIn(),
-                        ANIMATE_CAMERA_UPDATE_DURATION_MS
-                    )
-                }
-            },
-            onZoomOutClick = {
-                scope.launch {
-                    viewModel.cameraPositionState.animate(
-                        CameraUpdateFactory.zoomOut(),
-                        ANIMATE_CAMERA_UPDATE_DURATION_MS
-                    )
-                }
-            },
-            onMyLocationClick = {
-                if (isLocationPermissionGranted) {
-                    viewModel.goToMyLocation()
-                } else {
-                    locationPermissionsState.launchMultiplePermissionRequest()
-                }
-            },
-            onDirectionsClick = { viewModel.onDirectionsClick() },
-            onShareMapcodeClick = { viewModel.shareMapcode() },
-            onAboutClick = { showAboutDialog = true }
-        )
-    }
-
-    val infoArea = @Composable { modifier: Modifier ->
-        InfoArea(
-            modifier,
-            uiState,
-            onMapcodeClick = {
-                val copied = viewModel.copyMapcode()
-                if (copied) {
-                    scope.launch {
-                        //dismiss current snack bar so they aren't queued up
-                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                        scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
-                    }
-                }
-            },
-            onAddressChange = { viewModel.queryAddress(it) },
-            onTerritoryClick = { viewModel.onTerritoryClick() },
-            onLatitudeChange = { viewModel.queryLatitude(it) },
-            onLongitudeChange = { viewModel.queryLongitude(it) }
-        )
-    }
-
     Surface {
         Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
-            if (isExpandedScreen) {
-                ExpandedMapScreen(map = map, mapControls = mapControls, infoArea = infoArea)
-            } else {
-                CompactMapScreen(map = map, mapControls = mapControls, infoArea = infoArea)
+            when (layoutType) {
+                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
             }
         }
     }
 }
 
 @Composable
-fun CompactMapScreen(
-    map: @Composable (Modifier) -> Unit,
-    mapControls: @Composable (Modifier) -> Unit,
-    infoArea: @Composable (Modifier) -> Unit
-) {
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
-            map(Modifier.fillMaxSize())
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel)
 
-            mapControls(
+            MapControls(
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(8.dp)
+                    .padding(8.dp),
+                viewModel
             )
         }
 
-        infoArea(
+        InfoArea(
             Modifier
-                .wrapContentHeight()
-                .padding(8.dp)
+                .width(300.dp)
+                .align(Alignment.Bottom)
+                .padding(8.dp),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = true
         )
     }
 }
 
 @Composable
-fun ExpandedMapScreen(
-    map: @Composable (Modifier) -> Unit,
-    mapControls: @Composable (Modifier) -> Unit,
-    infoArea: @Composable (Modifier) -> Unit
-) {
+fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+        Box(Modifier.weight(1f)) {
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
+
+            MapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                viewModel
+            )
+        }
+
+        InfoArea(
+            Modifier
+                .wrapContentHeight()
+                .padding(8.dp),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = false
+        )
+    }
+}
+
+@Composable
+fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
     Box {
-        map(Modifier.fillMaxSize())
+        MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
         Row(
             Modifier
@@ -915,14 +767,14 @@ fun ExpandedMapScreen(
                 .padding(8.dp)
         ) {
 
-            mapControls(Modifier.align(Alignment.Bottom))
+            MapControls(Modifier.align(Alignment.Bottom), viewModel)
             Spacer(Modifier.width(8.dp))
 
             Card(
                 Modifier.width(400.dp),
                 elevation = 4.dp
             ) {
-                infoArea(Modifier.padding(8.dp))
+                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
             }
         }
     }

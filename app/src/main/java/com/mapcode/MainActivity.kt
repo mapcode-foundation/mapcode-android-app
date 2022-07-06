@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -15,7 +15,6 @@ import com.google.android.gms.maps.MapsInitializer
 import com.mapcode.map.MapViewModel
 import com.mapcode.theme.MapcodeTheme
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -29,9 +28,8 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
-            Timber.e(widthSizeClass.toString())
-            MapcodeApp(viewModel, widthSizeClass)
+            val windowSizeClass = calculateWindowSizeClass(this)
+            MapcodeApp(viewModel, windowSizeClass)
         }
 
         MapsInitializer.initialize(this)
@@ -45,13 +43,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MapcodeApp(viewModel: MapViewModel, widthSizeClass: WindowWidthSizeClass) {
+fun MapcodeApp(viewModel: MapViewModel, windowSizeClass: WindowSizeClass) {
     MapcodeTheme {
         val navController = rememberNavController()
         MapcodeNavHost(
             navController = navController,
             viewModel = viewModel,
-            isExpandedScreen = widthSizeClass == WindowWidthSizeClass.Expanded
+            windowSizeClass = windowSizeClass
         )
     }
 }
