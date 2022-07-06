@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
@@ -17,14 +20,16 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MapViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            MapcodeApp(viewModel)
+            val windowSizeClass = calculateWindowSizeClass(this)
+            MapcodeApp(viewModel, windowSizeClass)
         }
 
         MapsInitializer.initialize(this)
@@ -38,12 +43,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MapcodeApp(viewModel: MapViewModel) {
+fun MapcodeApp(viewModel: MapViewModel, windowSizeClass: WindowSizeClass) {
     MapcodeTheme {
         val navController = rememberNavController()
         MapcodeNavHost(
             navController = navController,
-            viewModel = viewModel
+            viewModel = viewModel,
+            windowSizeClass = windowSizeClass
         )
     }
 }
