@@ -45,82 +45,11 @@ import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
 import com.mapcode.util.ScrollableDialog
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
  * Created by sds100 on 31/05/2022.
  */
-
-/**
- * The top portion of the screen containing the map and
- * the button to request location.
- */
-@Composable
-fun MapBox(
-    modifier: Modifier = Modifier,
-    onCameraMoved: (Double, Double, Float) -> Unit,
-    cameraPositionState: CameraPositionState,
-    mapProperties: MapProperties,
-    onMyLocationClick: () -> Unit,
-    onSatelliteButtonClick: () -> Unit,
-    onExternalMapAppClick: () -> Unit,
-    onShareMapcodeClick: () -> Unit,
-    renderGoogleMaps: Boolean
-) {
-    val scope: CoroutineScope = rememberCoroutineScope()
-    val isSatelliteModeEnabled by derivedStateOf { mapProperties.mapType == MapType.HYBRID }
-    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
-
-    if (showAboutDialog) {
-        AboutDialog(onDismiss = { showAboutDialog = false })
-    }
-
-    Box(modifier) {
-        if (renderGoogleMaps) {
-            Map(
-                properties = mapProperties,
-                onCameraFinishedMoving = onCameraMoved,
-                cameraPositionState = cameraPositionState
-            )
-        }
-
-        Icon(
-            modifier = Modifier.align(Alignment.Center),
-            painter = painterResource(R.drawable.crosshairs),
-            contentDescription = null,
-            tint = Color.Black
-        )
-
-        MapControls(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp),
-            onSatelliteButtonClick = onSatelliteButtonClick,
-            isSatelliteModeEnabled = isSatelliteModeEnabled,
-            onZoomInClick = {
-                scope.launch {
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.zoomIn(),
-                        ANIMATE_CAMERA_UPDATE_DURATION_MS
-                    )
-                }
-            },
-            onZoomOutClick = {
-                scope.launch {
-                    cameraPositionState.animate(
-                        CameraUpdateFactory.zoomOut(),
-                        ANIMATE_CAMERA_UPDATE_DURATION_MS
-                    )
-                }
-            },
-            onMyLocationClick = onMyLocationClick,
-            onExternalMapAppClick = onExternalMapAppClick,
-            onShareMapcodeClick = onShareMapcodeClick,
-            onAboutClick = { showAboutDialog = true }
-        )
-    }
-}
 
 @Composable
 fun AboutDialog(onDismiss: () -> Unit = {}) {
@@ -242,7 +171,7 @@ fun MapControls(
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
-    onExternalMapAppClick: () -> Unit = {},
+    onDirectionsClick: () -> Unit = {},
     onShareMapcodeClick: () -> Unit = {},
     onAboutClick: () -> Unit = {}
 ) {
@@ -292,7 +221,7 @@ fun MapControls(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Bottom),
-            onClick = onExternalMapAppClick,
+            onClick = onDirectionsClick,
             contentPadding = PaddingValues(8.dp),
             colors = greenButtonColors
         ) {
@@ -370,12 +299,12 @@ private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
 fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
-    onCameraFinishedMoving: (Double, Double, Float) -> Unit,
+    onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState
 ) {
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
-            onCameraFinishedMoving(
+            onCameraMoved(
                 cameraPositionState.position.target.latitude,
                 cameraPositionState.position.target.longitude,
                 cameraPositionState.position.zoom
@@ -388,8 +317,8 @@ fun Map(
     val uiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
 
     GoogleMap(
+        modifier = modifier,
         cameraPositionState = cameraPositionState,
-        modifier = modifier.fillMaxSize(),
         uiSettings = uiSettings,
         properties = properties,
         onMapClick = { position ->
@@ -439,6 +368,7 @@ fun AddressArea(
 ) {
     Column(modifier) {
         ClearableTextField(
+            modifier = Modifier.fillMaxWidth(),
             text = address,
             onChange = onChange,
             label = stringResource(R.string.address_bar_label),
@@ -493,7 +423,6 @@ fun ClearableTextField(
 
     OutlinedTextField(
         modifier = modifier
-            .fillMaxWidth()
             .onFocusChanged {
                 isFocussed = it.isFocused
             }
@@ -510,7 +439,7 @@ fun ClearableTextField(
             focusManager.clearFocus()
             onChange(query)
         }),
-        placeholder = { Text(text) },
+        placeholder = { Text(text, maxLines = 1) },
         trailingIcon = {
             if (text.isNotEmpty()) {
                 IconButton(
@@ -649,12 +578,16 @@ fun TerritoryBox(
     Card(modifier = modifier) {
         Column(Modifier.padding(8.dp)) {
             val headerText = stringResource(R.string.territory_header_button, index, count)
-            HeaderWithIcon(modifier = Modifier.fillMaxWidth(), headerText, R.drawable.ic_outline_fast_forward_24)
+            HeaderWithIcon(
+                modifier = Modifier.fillMaxWidth(),
+                headerText,
+                R.drawable.ic_outline_fast_forward_24
+            )
 
             Text(
                 text = territoryName,
                 style = MaterialTheme.typography.body1,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
             )
         }
     }
@@ -797,12 +730,10 @@ fun MapScreen(
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
-    renderGoogleMaps: Boolean = true
+    renderGoogleMaps: Boolean = true,
+    isExpandedScreen: Boolean = false
 ) {
     val scaffoldState = rememberScaffoldState()
-    val uiState by viewModel.uiState.collectAsState()
-    val scope = rememberCoroutineScope()
-    val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
 
@@ -846,50 +777,152 @@ fun MapScreen(
         }
     }
 
+    var showAboutDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
+
+    val map = @Composable { modifier: Modifier ->
+        Box(modifier) {
+            if (renderGoogleMaps) {
+                Map(
+                    properties = viewModel.mapProperties,
+                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                    cameraPositionState = viewModel.cameraPositionState
+                )
+            }
+
+            Icon(
+                modifier = Modifier.align(Alignment.Center),
+                painter = painterResource(R.drawable.crosshairs),
+                contentDescription = null,
+                tint = Color.Black
+            )
+        }
+    }
+
+    val isSatelliteModeEnabled by derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID }
+
+    val mapControls = @Composable { modifier: Modifier ->
+        MapControls(
+            modifier = modifier,
+            onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onZoomInClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomIn(),
+                        ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onZoomOutClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomOut(),
+                        ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onMyLocationClick = {
+                if (isLocationPermissionGranted) {
+                    viewModel.goToMyLocation()
+                } else {
+                    locationPermissionsState.launchMultiplePermissionRequest()
+                }
+            },
+            onDirectionsClick = { viewModel.onDirectionsClick() },
+            onShareMapcodeClick = { viewModel.shareMapcode() },
+            onAboutClick = { showAboutDialog = true }
+        )
+    }
+
+    val infoArea = @Composable { modifier: Modifier ->
+        InfoArea(
+            modifier,
+            uiState,
+            onMapcodeClick = {
+                val copied = viewModel.copyMapcode()
+                if (copied) {
+                    scope.launch {
+                        //dismiss current snack bar so they aren't queued up
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                        scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
+                    }
+                }
+            },
+            onAddressChange = { viewModel.queryAddress(it) },
+            onTerritoryClick = { viewModel.onTerritoryClick() },
+            onLatitudeChange = { viewModel.queryLatitude(it) },
+            onLongitudeChange = { viewModel.queryLongitude(it) }
+        )
+    }
+
     Surface {
         Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
-            Column(
-                Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                MapBox(
-                    Modifier.weight(1f),
-                    onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
-                    cameraPositionState = viewModel.cameraPositionState,
-                    onMyLocationClick = {
-                        if (isLocationPermissionGranted) {
-                            viewModel.goToMyLocation()
-                        } else {
-                            locationPermissionsState.launchMultiplePermissionRequest()
-                        }
-                    },
-                    onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
-                    renderGoogleMaps = renderGoogleMaps,
-                    mapProperties = viewModel.mapProperties,
-                    onExternalMapAppClick = { viewModel.onExternalMapsAppClick() },
-                    onShareMapcodeClick = { viewModel.shareMapcode() }
-                )
+            if (isExpandedScreen) {
+                ExpandedMapScreen(map = map, mapControls = mapControls, infoArea = infoArea)
+            } else {
+                CompactMapScreen(map = map, mapControls = mapControls, infoArea = infoArea)
+            }
+        }
+    }
+}
 
-                InfoArea(
-                    Modifier
-                        .wrapContentHeight()
-                        .padding(8.dp),
-                    uiState,
-                    onMapcodeClick = {
-                        val copied = viewModel.copyMapcode()
-                        if (copied) {
-                            scope.launch {
-                                //dismiss current snack bar so they aren't queued up
-                                scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                                scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
-                            }
-                        }
-                    },
-                    onAddressChange = { viewModel.queryAddress(it) },
-                    onTerritoryClick = { viewModel.onTerritoryClick() },
-                    onLatitudeChange = { viewModel.queryLatitude(it) },
-                    onLongitudeChange = { viewModel.queryLongitude(it) }
-                )
+@Composable
+fun CompactMapScreen(
+    map: @Composable (Modifier) -> Unit,
+    mapControls: @Composable (Modifier) -> Unit,
+    infoArea: @Composable (Modifier) -> Unit
+) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+        Box(Modifier.weight(1f)) {
+            map(Modifier.fillMaxSize())
+
+            mapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+            )
+        }
+
+        infoArea(
+            Modifier
+                .wrapContentHeight()
+                .padding(8.dp)
+        )
+    }
+}
+
+@Composable
+fun ExpandedMapScreen(
+    map: @Composable (Modifier) -> Unit,
+    mapControls: @Composable (Modifier) -> Unit,
+    infoArea: @Composable (Modifier) -> Unit
+) {
+    Box {
+        map(Modifier.fillMaxSize())
+
+        Row(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(8.dp)
+        ) {
+
+            mapControls(Modifier.align(Alignment.Bottom))
+            Spacer(Modifier.width(8.dp))
+
+            Card(
+                Modifier.width(400.dp),
+                elevation = 4.dp
+            ) {
+                infoArea(Modifier.padding(8.dp))
             }
         }
     }

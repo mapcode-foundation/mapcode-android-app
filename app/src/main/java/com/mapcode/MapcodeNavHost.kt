@@ -16,7 +16,8 @@ import com.mapcode.map.MapViewModel
 fun MapcodeNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: MapViewModel
+    viewModel: MapViewModel,
+    isExpandedScreen: Boolean
 ) {
     NavHost(
         navController = navController,
@@ -24,7 +25,7 @@ fun MapcodeNavHost(
         modifier = modifier
     ) {
         composable(MapcodeDestination.Map.name) {
-            MapScreen(viewModel)
+            MapScreen(viewModel, isExpandedScreen = isExpandedScreen)
         }
     }
 }
