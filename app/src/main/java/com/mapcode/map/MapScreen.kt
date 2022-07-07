@@ -197,7 +197,7 @@ fun MapControls(
 
     MapControls(
         modifier = modifier,
-        onSatelliteButtonClick = { viewModel.onSatelliteButtonClick() },
+        onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
         isSatelliteModeEnabled = isSatelliteModeEnabled,
         onZoomInClick = {
             scope.launch {
@@ -222,8 +222,8 @@ fun MapControls(
                 locationPermissionsState.launchMultiplePermissionRequest()
             }
         },
-        onDirectionsClick = { viewModel.onDirectionsClick() },
-        onShareMapcodeClick = { viewModel.shareMapcode() },
+        onDirectionsClick = viewModel::onDirectionsClick,
+        onShareMapcodeClick = viewModel::shareMapcode,
         onAboutClick = { showAboutDialog = true }
     )
 }
@@ -367,7 +367,7 @@ fun MapWithCrossHairs(
         if (renderGoogleMaps) {
             Map(
                 properties = viewModel.mapProperties,
-                onCameraMoved = { lat, long, zoom -> viewModel.onCameraMoved(lat, long, zoom) },
+                onCameraMoved = viewModel::onCameraMoved,
                 cameraPositionState = viewModel.cameraPositionState
             )
         }

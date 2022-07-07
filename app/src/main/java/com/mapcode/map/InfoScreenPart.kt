@@ -3,10 +3,7 @@ package com.mapcode.map
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.ScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -147,11 +144,8 @@ fun InfoArea(
     val uiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
-
-    InfoArea(
-        modifier,
-        uiState,
-        onMapcodeClick = {
+    val onMapcodeClick = remember {
+        {
             val copied = viewModel.copyMapcode()
             if (copied) {
                 scope.launch {
@@ -160,11 +154,17 @@ fun InfoArea(
                     scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
                 }
             }
-        },
-        onAddressChange = { viewModel.queryAddress(it) },
-        onTerritoryClick = { viewModel.onTerritoryClick() },
-        onLatitudeChange = { viewModel.queryLatitude(it) },
-        onLongitudeChange = { viewModel.queryLongitude(it) },
+        }
+    }
+
+    InfoArea(
+        modifier,
+        uiState,
+        onMapcodeClick = onMapcodeClick,
+        onAddressChange = viewModel::queryAddress,
+        onTerritoryClick = viewModel::onTerritoryClick,
+        onLatitudeChange = viewModel::queryLatitude,
+        onLongitudeChange = viewModel::queryLongitude,
         isVerticalLayout = isVerticalLayout
     )
 }
