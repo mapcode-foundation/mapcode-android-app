@@ -426,6 +426,14 @@ fun Map(
                     ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
+        },
+        onPOIClick = { poi ->
+            scope.launch {
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLng(poi.latLng),
+                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                )
+            }
         }
     )
 }
