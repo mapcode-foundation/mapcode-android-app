@@ -36,6 +36,7 @@ class MapViewModel @Inject constructor(
 
     companion object {
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
+        const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
     }
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
@@ -107,11 +108,16 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    private fun moveCamera(lat: Double, long: Double, zoom: Float) {
+    private fun moveCamera(lat: Double, long: Double, zoom: Float, animate: Boolean = false) {
         viewModelScope.launch(dispatchers.main) {
             if (isGoogleMapsSdkLoaded) {
                 val cameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(lat, long), zoom)
-                cameraPositionState.move(cameraUpdate)
+
+                if (animate) {
+                    cameraPositionState.animate(cameraUpdate, ANIMATE_CAMERA_UPDATE_DURATION_MS)
+                } else {
+                    cameraPositionState.move(cameraUpdate)
+                }
             }
 
             onCameraMoved(lat, long, zoom)
@@ -126,7 +132,7 @@ class MapViewModel @Inject constructor(
                 showCantFindLocationSnackBar = true
             } else {
                 showCantFindLocationSnackBar = false
-                moveCamera(myLocation.latitude, myLocation.longitude, 16f)
+                moveCamera(myLocation.latitude, myLocation.longitude, 16f, animate = true)
             }
         }
     }

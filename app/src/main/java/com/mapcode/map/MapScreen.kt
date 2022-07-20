@@ -203,7 +203,7 @@ fun MapControls(
             scope.launch {
                 viewModel.cameraPositionState.animate(
                     CameraUpdateFactory.zoomIn(),
-                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -211,7 +211,7 @@ fun MapControls(
             scope.launch {
                 viewModel.cameraPositionState.animate(
                     CameraUpdateFactory.zoomOut(),
-                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -355,8 +355,6 @@ fun ZoomControls(
     }
 }
 
-private const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
-
 @Composable
 fun MapWithCrossHairs(
     modifier: Modifier,
@@ -420,7 +418,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(position),
-                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -429,7 +427,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)),
-                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.    ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -437,7 +435,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(poi.latLng),
-                    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.   ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
