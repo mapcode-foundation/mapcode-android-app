@@ -593,7 +593,6 @@ internal class MapViewModelTest {
                 addresses = listOf("Street, City, Country"),
                 mapcodes = listOf(
                     Mapcode("AB.CD", Territory.NLD),
-                    Mapcode("VX.YZ", Territory.NLD)
                 )
             )
         )
@@ -603,7 +602,7 @@ internal class MapViewModelTest {
 
         assertThat(viewModel.zoom.value).isEqualTo(17f)
     }
-    
+
     @Test
     fun `zoom into street level after searching a latitude`() = runTest {
         viewModel.queryLatitude("1.0")
@@ -618,5 +617,42 @@ internal class MapViewModelTest {
         runCurrent()
 
         assertThat(viewModel.zoom.value).isEqualTo(17f)
+    }
+
+    @Test
+    fun `use current territory if no mapcode territory specified when searching for mapcode`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("1 Street, City, Country"),
+                mapcodes = listOf(
+                    Mapcode("XY.ZA", Territory.NLD),
+                    Mapcode("XYZ.ABC", Territory.AAA),
+                )
+            )
+        )
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("2 Street, City, Country"),
+                mapcodes = listOf(
+                    Mapcode("AB.CD", Territory.NLD),
+                    Mapcode("FGH.JKL", Territory.AAA),
+                )
+            )
+        )
+
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+        runCurrent()
+
+        viewModel.onTerritoryClick() // check that it uses the user's chosen territory
+        runCurrent()
+
+        viewModel.queryAddress("FGH.JKL")
+        runCurrent()
+
+        assertThat(viewModel.location.value).isEqualTo(Location(1.0, 1.0))
     }
 }
