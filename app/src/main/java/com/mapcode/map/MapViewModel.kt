@@ -190,7 +190,7 @@ class MapViewModel @Inject constructor(
         }
 
         val cleansedLatitude = LocationUtils.cleanseLatitude(query.toDouble())
-        moveCamera(cleansedLatitude, location.value.longitude, 0f)
+        moveCamera(cleansedLatitude, location.value.longitude, 17f)
     }
 
     fun queryLongitude(query: String) {
@@ -199,7 +199,7 @@ class MapViewModel @Inject constructor(
         }
 
         val cleansedLongitude = LocationUtils.cleanseLongitude(query.toDouble())
-        moveCamera(location.value.latitude, cleansedLongitude, 0f)
+        moveCamera(location.value.latitude, cleansedLongitude, 17f)
     }
 
     fun onTerritoryClick() {
@@ -250,7 +250,7 @@ class MapViewModel @Inject constructor(
      */
     private fun onResolveAddressQuery(query: String, result: Result<Location>) {
         result.onSuccess { newLocation ->
-            moveCamera(newLocation.latitude, newLocation.longitude, 0f)
+            moveCamera(newLocation.latitude, newLocation.longitude, 17f)
         }.onFailure { error ->
             val addressHelper: AddressHelper
             val addressError: AddressError

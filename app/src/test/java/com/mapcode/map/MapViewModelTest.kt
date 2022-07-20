@@ -583,4 +583,40 @@ internal class MapViewModelTest {
 
         assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
     }
+
+    @Test
+    fun `zoom into street level after searching an address`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("Street, City, Country"),
+                mapcodes = listOf(
+                    Mapcode("AB.CD", Territory.NLD),
+                    Mapcode("VX.YZ", Territory.NLD)
+                )
+            )
+        )
+
+        viewModel.queryAddress("Street, City, Country")
+        runCurrent()
+
+        assertThat(viewModel.zoom.value).isEqualTo(17f)
+    }
+    
+    @Test
+    fun `zoom into street level after searching a latitude`() = runTest {
+        viewModel.queryLatitude("1.0")
+        runCurrent()
+
+        assertThat(viewModel.zoom.value).isEqualTo(17f)
+    }
+
+    @Test
+    fun `zoom into street level after searching a longitude`() = runTest {
+        viewModel.queryLongitude("1.0")
+        runCurrent()
+
+        assertThat(viewModel.zoom.value).isEqualTo(17f)
+    }
 }
