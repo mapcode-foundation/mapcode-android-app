@@ -363,17 +363,22 @@ fun MapWithCrossHairs(
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
 ) {
+    val contentPadding = WindowInsets.statusBars.asPaddingValues()
+
     Box(modifier) {
         if (renderGoogleMaps) {
             Map(
                 properties = viewModel.mapProperties,
                 onCameraMoved = viewModel::onCameraMoved,
-                cameraPositionState = viewModel.cameraPositionState
+                cameraPositionState = viewModel.cameraPositionState,
+                contentPadding = contentPadding
             )
         }
 
         Icon(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(contentPadding),
             painter = painterResource(R.drawable.crosshairs),
             contentDescription = null,
             tint = Color.Black
@@ -389,7 +394,8 @@ fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
     onCameraMoved: (Double, Double, Float) -> Unit,
-    cameraPositionState: CameraPositionState
+    cameraPositionState: CameraPositionState,
+    contentPadding: PaddingValues
 ) {
     LaunchedEffect(cameraPositionState.isMoving) {
         if (!cameraPositionState.isMoving) {
@@ -435,7 +441,7 @@ fun Map(
                 )
             }
         },
-        contentPadding = WindowInsets.statusBars.asPaddingValues()
+        contentPadding = contentPadding
     )
 }
 
@@ -718,7 +724,7 @@ fun MapScreen(
 fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel)
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
 
             MapControls(
                 Modifier
