@@ -170,15 +170,17 @@ class MapViewModel @Inject constructor(
 
         //first try to decode it as a mapcode, if that fails then try to geocode it as an address
         viewModelScope.launch(dispatchers.io) {
-            val resolveAddressResult: Result<Location>
+            val resolveAddressResult: Result<Location> =
+                useCase.decodeMapcode(query).recoverCatching {
+                    val mapcode = mapcodes.value[mapcodeIndex.value]
+                    val queryWithTerritory = "${mapcode.territory.name} $query"
 
-            val decodeMapcodeResult = useCase.decodeMapcode(query)
+                    val decodeQueryWithCurrentTerritoryResult = useCase.decodeMapcode(queryWithTerritory)
 
-            if (decodeMapcodeResult.isSuccess) {
-                resolveAddressResult = decodeMapcodeResult
-            } else {
-                resolveAddressResult = useCase.geocode(query)
-            }
+                    decodeQueryWithCurrentTerritoryResult.getOrThrow()
+                }.recoverCatching {
+                    useCase.geocode(query).getOrThrow()
+                }
 
             onResolveAddressQuery(query, resolveAddressResult)
         }
