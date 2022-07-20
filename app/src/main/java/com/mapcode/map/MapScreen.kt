@@ -434,7 +434,8 @@ fun Map(
                     ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
-        }
+        },
+        contentPadding = WindowInsets.statusBars.asPaddingValues()
     )
 }
 
