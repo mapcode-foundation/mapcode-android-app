@@ -55,6 +55,7 @@ fun AboutDialog(onDismiss: () -> Unit = {}) {
     val uriHandler = LocalUriHandler.current
     val websiteUrl = stringResource(R.string.website_url)
     val sourceCodeUrl = stringResource(R.string.source_code_url)
+    val changelogUrl = stringResource(R.string.changelog_url)
 
     ScrollableDialog(
         onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
@@ -129,6 +130,7 @@ fun AboutDialog(onDismiss: () -> Unit = {}) {
                 icon = painterResource(R.drawable.ic_outline_article_24),
                 text = stringResource(R.string.changelog_button)
             ) {
+                uriHandler.openUri(changelogUrl)
             }
             DialogContentButton(
                 icon = painterResource(R.drawable.ic_outline_code_24),

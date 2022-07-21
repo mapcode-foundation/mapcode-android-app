@@ -44,5 +44,6 @@
     <string name="visit_website_notice">For questions, or more info in general, please visit our website.</string>
     <string name="website_url" translatable="false">https://mapcode.com</string>
     <string name="source_code_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app</string>
+    <string name="changelog_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app/blob/main/CHANGELOG.md</string>
     <!--  Map screen  -->
 </resources>
