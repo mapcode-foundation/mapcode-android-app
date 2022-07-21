@@ -1,3 +1,48 @@
 <resources>
     <string name="app_name">Mapcode</string>
+
+    <!--  Map screen  -->
+    <string name="google_maps_content_description">Google map</string>
+    <string name="mapcode_header_button">Mapcode</string>
+    <string name="copied_to_clipboard_snackbar_text">Copied to clipboard.</string>
+    <string name="address_bar_label">Enter address or mapcode</string>
+    <string name="no_internet_error">No internet?</string>
+    <string name="cant_find_address_error">Cannot find: %s</string>
+    <string name="no_address_error">No address found</string>
+    <string name="clear_address_content_description">Clear address</string>
+    <string name="territory_header_button">Territory %d of %d</string>
+    <string name="next_territory_content_description">Next territory</string>
+    <string name="latitude_text_field_label">Latitude (Y)</string>
+    <string name="clear_latitude_content_description">Clear latitude</string>
+    <string name="longitude_text_field_label">Longitude (X)</string>
+    <string name="clear_longitude_content_description">Clear longitude</string>
+    <string name="satellite_mode_button_content_description">Toggle satellite mode</string>
+    <string name="open_external_maps_app_content_description">View location in maps app</string>
+    <string name="zoom_in_button_content_description">Zoom in</string>
+    <string name="zoom_out_button_content_description">Zoom out</string>
+    <string name="my_location_button_content_description">Go to my location</string>
+    <string name="cant_find_my_location_snackbar">Can\'t find location. Is your GPS turned on?</string>
+    <string name="no_map_app_installed_error">You have no map app installed to open this in.</string>
+    <string name="share_mapcode_content_description">Share mapcode</string>
+    <string name="about_content_description">About this app</string>
+    <string name="about_dialog_title">About Mapcode %s</string>
+    <string name="close_dialog_button">Close</string>
+    <string name="website_button">Website</string>
+    <string name="changelog_button">Changelog</string>
+    <string name="source_code_button">Source code</string>
+
+    <string name="copyright_welcome">Copyright © 2022, Mapcode Foundation\n\nWelcome to the official Mapcode app from the Mapcode Foundation!</string>
+    <string name="how_to_use_header">How to use the app</string>
+    <string name="how_to_use_address">Enter an address or coordinate to get a mapcode, or move the map around.\n\nEnter a mapcode into the address field to show its location on the map.</string>
+    <string name="how_to_use_territory">Tap the territory to cycle through the mapcode territories.</string>
+    <string name="how_to_use_share_1">Tap the mapcode to copy it to the clipboard or tap the share\u0020</string>
+    <string name="how_to_use_share_2">\u0020button to quickly share it in another app.</string>
+    <string name="how_to_use_directions_1">Tap on the directions\u0020</string>
+    <string name="how_to_use_directions_2">\u0020button to navigate to the location in another maps app.</string>
+
+    <string name="contact_header">Contact the developer</string>
+    <string name="visit_website_notice">For questions, or more info in general, please visit our website.</string>
+    <string name="website_url" translatable="false">https://mapcode.com</string>
+    <string name="source_code_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app</string>
+    <!--  Map screen  -->
 </resources>

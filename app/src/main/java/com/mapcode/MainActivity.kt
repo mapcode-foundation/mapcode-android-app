@@ -3,31 +3,53 @@ package com.mapcode
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.activity.viewModels
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.mapcode.ui.theme.MapcodeTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
+import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.MapsInitializer
+import com.mapcode.map.MapViewModel
+import com.mapcode.theme.MapcodeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MapcodeTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+    private val viewModel: MapViewModel by viewModels()
 
-                }
-            }
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+        super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
+            MapcodeApp(viewModel, windowSizeClass)
         }
+
+        MapsInitializer.initialize(this)
+        viewModel.isGoogleMapsSdkLoaded = true
+    }
+
+    override fun onPause() {
+        viewModel.saveLocation()
+        super.onPause()
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
+fun MapcodeApp(viewModel: MapViewModel, windowSizeClass: WindowSizeClass) {
     MapcodeTheme {
-
+        val navController = rememberNavController()
+        MapcodeNavHost(
+            navController = navController,
+            viewModel = viewModel,
+            windowSizeClass = windowSizeClass
+        )
     }
 }
