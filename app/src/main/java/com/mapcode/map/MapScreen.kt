@@ -1,35 +1,29 @@
 package com.mapcode.map
 
 import android.Manifest
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -51,11 +45,168 @@ import kotlinx.coroutines.launch
  */
 
 @Composable
-fun AboutDialog(onDismiss: () -> Unit = {}) {
+fun MapScreen(
+    viewModel: MapViewModel,
+    /**
+     * This option makes instrumentation tests much quicker and easier to implement.
+     */
+    renderGoogleMaps: Boolean = true,
+    layoutType: LayoutType = LayoutType.HorizontalInfoArea
+) {
+    val scaffoldState = rememberScaffoldState()
+    val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
+    val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
+
+    if (viewModel.showCantFindLocationSnackBar) {
+        LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindLocationMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindLocationSnackBar = false
+            }
+        }
+    }
+
+    if (viewModel.showCantFindMapsAppSnackBar) {
+        LaunchedEffect(viewModel.showCantFindMapsAppSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindMapsAppMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindMapsAppSnackBar = false
+            }
+        }
+    }
+
+    Surface {
+        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) { padding ->
+            when (layoutType) {
+                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
+                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
+                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
+                    Modifier.padding(padding),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VerticalInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Row(modifier, horizontalArrangement = Arrangement.End) {
+        Box(Modifier.weight(1f)) {
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
+
+            MapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                viewModel
+            )
+        }
+
+        InfoArea(
+            Modifier
+                .width(300.dp)
+                .align(Alignment.Bottom)
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = true
+        )
+    }
+}
+
+@Composable
+private fun HorizontalInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Column(modifier, verticalArrangement = Arrangement.Bottom) {
+        Box(Modifier.weight(1f)) {
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
+
+            MapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                viewModel
+            )
+        }
+
+        InfoArea(
+            Modifier
+                .wrapContentHeight()
+                .padding(8.dp),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = false
+        )
+    }
+}
+
+@Composable
+private fun FloatingInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Box(modifier) {
+        MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
+
+        Row(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(8.dp)
+        ) {
+
+            MapControls(Modifier.align(Alignment.Bottom), viewModel)
+            Spacer(Modifier.width(8.dp))
+
+            Card(
+                Modifier.width(400.dp),
+                elevation = 4.dp
+            ) {
+                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit = {}) {
     val uriHandler = LocalUriHandler.current
     val websiteUrl = stringResource(R.string.website_url)
-    val sourceCodeUrl = stringResource(R.string.source_code_url)
-    val changelogUrl = stringResource(R.string.changelog_url)
+//    val sourceCodeUrl = stringResource(R.string.source_code_url)
+//    val changelogUrl = stringResource(R.string.changelog_url)
 
     ScrollableDialog(
         onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
@@ -126,24 +277,33 @@ fun AboutDialog(onDismiss: () -> Unit = {}) {
             ) {
                 uriHandler.openUri(websiteUrl)
             }
-            DialogContentButton(
-                icon = painterResource(R.drawable.ic_outline_article_24),
-                text = stringResource(R.string.changelog_button)
-            ) {
-                uriHandler.openUri(changelogUrl)
-            }
-            DialogContentButton(
-                icon = painterResource(R.drawable.ic_outline_code_24),
-                text = stringResource(R.string.source_code_button)
-            ) {
-                uriHandler.openUri(sourceCodeUrl)
-            }
+            // HIDE THESE UNTIL REPO IS MADE PUBLIC
+//            DialogContentButton(
+//                icon = painterResource(R.drawable.ic_outline_article_24),
+//                text = stringResource(R.string.changelog_button)
+//            ) {
+//                uriHandler.openUri(changelogUrl)
+//            }
+//            DialogContentButton(
+//                icon = painterResource(R.drawable.ic_outline_code_24),
+//                text = stringResource(R.string.source_code_button)
+//            ) {
+//                uriHandler.openUri(sourceCodeUrl)
+//            }
         }
     }
 }
 
+@Preview(heightDp = 500)
 @Composable
-fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
+private fun AboutDialogPreview() {
+    MapcodeTheme {
+        AboutDialog()
+    }
+}
+
+@Composable
+private fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
     OutlinedButton(onClick = onClick) {
         Icon(icon, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
@@ -151,27 +311,19 @@ fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
     }
 }
 
-@Preview(heightDp = 500)
 @Composable
-fun AboutDialogPreview() {
-    MapcodeTheme {
-        AboutDialog()
-    }
-}
-
-@Composable
-fun greyButtonColors(): ButtonColors {
+private fun greyButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapControls(
+private fun MapControls(
     modifier: Modifier,
     viewModel: MapViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val isSatelliteModeEnabled by derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID }
+    val isSatelliteModeEnabled by remember { derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID } }
 
     var showAboutDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -213,7 +365,7 @@ fun MapControls(
             scope.launch {
                 viewModel.cameraPositionState.animate(
                     CameraUpdateFactory.zoomOut(),
-                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -231,7 +383,7 @@ fun MapControls(
 }
 
 @Composable
-fun MapControls(
+private fun MapControls(
     modifier: Modifier = Modifier,
     onSatelliteButtonClick: () -> Unit = {},
     isSatelliteModeEnabled: Boolean,
@@ -324,8 +476,20 @@ fun MapControls(
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun ZoomControls(
+private fun MapControlsPreview() {
+    var isSatelliteModeEnabled by remember { mutableStateOf(false) }
+    MapcodeTheme {
+        MapControls(
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
+        )
+    }
+}
+
+@Composable
+private fun ZoomControls(
     modifier: Modifier = Modifier,
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit
@@ -358,7 +522,7 @@ fun ZoomControls(
 }
 
 @Composable
-fun MapWithCrossHairs(
+private fun MapWithCrossHairs(
     modifier: Modifier,
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
@@ -390,7 +554,7 @@ fun MapWithCrossHairs(
  * This handles the Google Map component.
  */
 @Composable
-fun Map(
+private fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
     onCameraMoved: (Double, Double, Float) -> Unit,
@@ -420,7 +584,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(position),
-                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -429,7 +593,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)),
-                    MapViewModel.    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -437,7 +601,7 @@ fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(poi.latLng),
-                    MapViewModel.   ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -449,7 +613,7 @@ fun Map(
  * This is the button to request location permission.
  */
 @Composable
-fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+private fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Button(
         modifier = modifier,
         onClick = onClick,
@@ -459,338 +623,5 @@ fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
             imageVector = Icons.Outlined.LocationOn,
             contentDescription = stringResource(R.string.my_location_button_content_description)
         )
-    }
-}
-
-/**
- * A text field that has a clear button and handles refilling the text if it is cleared.
- */
-@Composable
-fun ClearableTextField(
-    modifier: Modifier = Modifier,
-    text: String,
-    label: String,
-    clearButtonContentDescription: String,
-    onChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    val focusManager = LocalFocusManager.current
-    var isFocussed by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
-
-    val textFieldValue: String
-
-    if (isFocussed) {
-        textFieldValue = query
-    } else {
-        textFieldValue = text
-        query = text
-    }
-
-    OutlinedTextField(
-        modifier = modifier
-            .onFocusChanged {
-                isFocussed = it.isFocused
-            }
-            .focusRequester(focusRequester),
-        value = textFieldValue,
-        singleLine = true,
-        label = { Text(label, maxLines = 1) },
-        onValueChange = { query = it },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Go,
-            keyboardType = keyboardType
-        ),
-        keyboardActions = KeyboardActions(onGo = {
-            focusManager.clearFocus()
-            onChange(query)
-        }),
-        placeholder = { Text(text, maxLines = 1) },
-        trailingIcon = {
-            if (text.isNotEmpty()) {
-                IconButton(
-                    onClick = {
-                        focusRequester.requestFocus()
-                        query = ""
-                    }) {
-                    Icon(
-                        Icons.Outlined.Clear,
-                        contentDescription = clearButtonContentDescription
-                    )
-                }
-            }
-        })
-}
-
-@Composable
-fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @DrawableRes icon: Int) {
-    Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            modifier = Modifier.fillMaxHeight(),
-            text = text,
-            style = MaterialTheme.typography.subtitle2
-        )
-
-        Icon(
-            modifier = Modifier.height(20.dp),
-            painter = painterResource(icon),
-            contentDescription = ""
-        )
-    }
-}
-
-/**
- * The box that shows the mapcode.
- */
-@Composable
-fun MapcodeBox(
-    modifier: Modifier = Modifier,
-    code: String,
-    territory: String
-) {
-    Card(
-        modifier = modifier,
-        backgroundColor = MaterialTheme.colors.primary
-    ) {
-        Column(Modifier.padding(8.dp)) {
-            HeaderWithIcon(
-                Modifier.fillMaxWidth(),
-                stringResource(R.string.mapcode_header_button),
-                R.drawable.ic_outline_content_copy_24
-            )
-
-            val codeSpanStyle: SpanStyle =
-                MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold).toSpanStyle()
-
-            val styledString = buildAnnotatedString {
-                pushStyle(MaterialTheme.typography.body2.toSpanStyle())
-                append(territory)
-                pop()
-                append(" ")
-                pushStyle(codeSpanStyle)
-                append(code)
-                pop()
-            }
-
-            Text(text = styledString)
-        }
-    }
-}
-
-/**
- * The box that shows the territory.
- */
-@Composable
-fun TerritoryBox(
-    modifier: Modifier = Modifier,
-    index: Int,
-    count: Int,
-    territoryName: String
-) {
-    Card(modifier = modifier) {
-        Column(Modifier.padding(8.dp)) {
-            val headerText = stringResource(R.string.territory_header_button, index, count)
-            HeaderWithIcon(
-                modifier = Modifier.fillMaxWidth(),
-                headerText,
-                R.drawable.ic_outline_fast_forward_24
-            )
-
-            Text(
-                text = territoryName,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier
-            )
-        }
-    }
-}
-
-/**
- * The box that shows the latitude.
- */
-@Composable
-fun LatitudeTextBox(
-    modifier: Modifier = Modifier,
-    latitude: String,
-    onChange: (String) -> Unit
-) {
-    ClearableTextField(
-        modifier = modifier,
-        text = latitude,
-        onChange = onChange,
-        label = stringResource(R.string.latitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
-        keyboardType = KeyboardType.Decimal
-    )
-}
-
-/**
- * The box that shows the longitude.
- */
-@Composable
-fun LongitudeTextBox(
-    modifier: Modifier = Modifier,
-    longitude: String,
-    onChange: (String) -> Unit
-) {
-    ClearableTextField(
-        modifier = modifier,
-        text = longitude,
-        onChange = onChange,
-        label = stringResource(R.string.longitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
-        keyboardType = KeyboardType.Decimal
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MapControlsPreview() {
-    var isSatelliteModeEnabled by remember { mutableStateOf(false) }
-    MapcodeTheme {
-        MapControls(
-            isSatelliteModeEnabled = isSatelliteModeEnabled,
-            onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 300)
-@Composable
-fun MapcodeInfoBoxPreview() {
-    MapcodeTheme {
-        val state = UiState(
-            mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
-            addressUi = AddressUi(
-                "I am a very very very very very very extremely long address",
-                AddressError.UnknownAddress("Street, City"),
-                AddressHelper.NoInternet,
-            ),
-            "1.0",
-            "2.0"
-        )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
-    }
-}
-
-@Composable
-fun MapScreen(
-    viewModel: MapViewModel,
-    /**
-     * This option makes instrumentation tests much quicker and easier to implement.
-     */
-    renderGoogleMaps: Boolean = true,
-    layoutType: LayoutType = LayoutType.HorizontalInfoArea
-) {
-    val scaffoldState = rememberScaffoldState()
-    val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
-    val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-
-    if (viewModel.showCantFindLocationSnackBar) {
-        LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindLocationMessage)
-
-            if (result == SnackbarResult.Dismissed) {
-                viewModel.showCantFindLocationSnackBar = false
-            }
-        }
-    }
-
-    if (viewModel.showCantFindMapsAppSnackBar) {
-        LaunchedEffect(viewModel.showCantFindMapsAppSnackBar) {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindMapsAppMessage)
-
-            if (result == SnackbarResult.Dismissed) {
-                viewModel.showCantFindMapsAppSnackBar = false
-            }
-        }
-    }
-
-    Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
-            when (layoutType) {
-                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-            }
-        }
-    }
-}
-
-@Composable
-fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
-        Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
-
-            MapControls(
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp),
-                viewModel
-            )
-        }
-
-        InfoArea(
-            Modifier
-                .width(300.dp)
-                .align(Alignment.Bottom)
-                .padding(8.dp),
-            viewModel,
-            scaffoldState,
-            isVerticalLayout = true
-        )
-    }
-}
-
-@Composable
-fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
-        Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
-
-            MapControls(
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp),
-                viewModel
-            )
-        }
-
-        InfoArea(
-            Modifier
-                .wrapContentHeight()
-                .padding(8.dp),
-            viewModel,
-            scaffoldState,
-            isVerticalLayout = false
-        )
-    }
-}
-
-@Composable
-fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Box {
-        MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
-
-        Row(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp)
-        ) {
-
-            MapControls(Modifier.align(Alignment.Bottom), viewModel)
-            Spacer(Modifier.width(8.dp))
-
-            Card(
-                Modifier.width(400.dp),
-                elevation = 4.dp
-            ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
-            }
-        }
     }
 }

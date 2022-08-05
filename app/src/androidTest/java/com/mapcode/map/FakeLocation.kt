@@ -1,4 +1,6 @@
-package com.mapcode
+package com.mapcode.map
+
+import com.mapcode.Mapcode
 
 /**
  * Created by sds100 on 02/06/2022.

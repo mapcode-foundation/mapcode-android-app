@@ -15,8 +15,8 @@ android {
         minSdk 21
         //noinspection OldTargetApi wait for sources to be released before upgrading
         targetSdk 32
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 2
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -51,7 +51,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.1.1'
+        kotlinCompilerExtensionVersion '1.2.0'
     }
     packagingOptions {
         resources {
@@ -63,7 +63,7 @@ android {
 dependencies {
     //google
     implementation 'com.google.maps.android:maps-compose:2.2.0'
-    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
     implementation "com.google.dagger:hilt-android:2.42"
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     implementation 'com.google.android.gms:play-services-location:20.0.0'
@@ -72,21 +72,20 @@ dependencies {
 
     //android
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0"
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'
-    implementation 'androidx.activity:activity-compose:1.5.0'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.activity:activity-compose:1.5.1'
     //noinspection GradleDependency
-    implementation "androidx.compose.ui:ui:$compose_ui_version"
-    implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
-    implementation 'androidx.compose.material:material:1.1.1'
-    implementation "androidx.navigation:navigation-compose:2.5.0"
-    implementation "androidx.compose.foundation:foundation:1.3.0-alpha01"
+    implementation "androidx.compose.ui:ui:1.2.0"
+    implementation "androidx.compose.ui:ui-tooling-preview:1.2.0"
+    implementation 'androidx.compose.material:material:1.2.0'
+    implementation "androidx.navigation:navigation-compose:2.5.1"
+    implementation "androidx.compose.foundation:foundation:1.3.0-alpha02"
     implementation 'com.google.accompanist:accompanist-permissions:0.24.10-beta'
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
-    implementation "com.google.accompanist:accompanist-insets:0.23.1"
     implementation "androidx.datastore:datastore-preferences:1.0.0"
-    implementation "androidx.core:core-splashscreen:1.0.0-rc01"
-    implementation "androidx.compose.material3:material3-window-size-class:1.0.0-alpha14"
+    implementation "androidx.core:core-splashscreen:1.0.0"
+    implementation "androidx.compose.material3:material3-window-size-class:1.0.0-alpha15"
 
     //other
     implementation 'com.jakewharton.timber:timber:5.0.1'
@@ -94,7 +93,8 @@ dependencies {
     implementation 'com.mapcode:mapcode:2.4.14'
 
     //debug
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
+    debugImplementation "androidx.compose.ui:ui-tooling:1.2.0"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:1.2.0"
 
     //testing
     testImplementation 'junit:junit:4.13.2'
@@ -104,13 +104,13 @@ dependencies {
     testImplementation 'org.mockito:mockito-inline:4.6.1'
     testImplementation "androidx.arch.core:core-testing:2.1.0"
     testImplementation "androidx.test:core-ktx:1.4.0"
-    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.2'
-    testImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.3'
 
     androidTestImplementation 'com.willowtreeapps.assertk:assertk-jvm:0.25'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:1.2.0"
     androidTestImplementation 'org.mockito.kotlin:mockito-kotlin:4.0.0'
     androidTestImplementation 'org.mockito:mockito-android:4.6.1'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
 }

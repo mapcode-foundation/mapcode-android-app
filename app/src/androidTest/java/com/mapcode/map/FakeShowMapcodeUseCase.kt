@@ -1,6 +1,7 @@
-package com.mapcode
+package com.mapcode.map
 
-import com.mapcode.map.ShowMapcodeUseCase
+import com.mapcode.Mapcode
+import com.mapcode.UnknownMapcodeException
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
