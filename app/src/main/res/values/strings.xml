@@ -30,6 +30,7 @@
     <string name="website_button">Website</string>
     <string name="changelog_button">Changelog</string>
     <string name="source_code_button">Source code</string>
+    <string name="invalid_latlng_error">Must be a number!</string>
 
     <string name="copyright_welcome">Copyright © 2022, Mapcode Foundation\n\nWelcome to the official Mapcode app from the Mapcode Foundation!</string>
     <string name="how_to_use_header">How to use the app</string>

@@ -147,8 +147,14 @@ internal class MapViewModelTest {
         val uiState = viewModel.uiState.value
         val expectedUiState = UiState(
             mapcodeUi = MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 1),
-            latitude = "2.0000000",
-            longitude = "3.0000000",
+            locationUi = LocationUi(
+                latitudeText = "2.0000000",
+                latitudePlaceholder = "2.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "3.0000000",
+                longitudePlaceholder = "3.0000000",
+                showLongitudeInvalidError = false,
+            ),
             addressUi = AddressUi(
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
@@ -176,8 +182,14 @@ internal class MapViewModelTest {
         val uiState = viewModel.uiState.value
         val expectedUiState = UiState(
             mapcodeUi = MapcodeUi("AB.CD", "NLD", "Netherlands", 1, 1),
-            latitude = "2.0000000",
-            longitude = "3.0000000",
+            locationUi = LocationUi(
+                latitudeText = "2.0000000",
+                latitudePlaceholder = "2.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "3.0000000",
+                longitudePlaceholder = "3.0000000",
+                showLongitudeInvalidError = false,
+            ),
             addressUi = AddressUi(
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
@@ -260,12 +272,20 @@ internal class MapViewModelTest {
 
     @Test
     fun `update location state when moving camera`() = runTest {
-        viewModel.onCameraMoved(3.0, 2.0, 0f)
+        viewModel.onCameraMoved(2.0, 3.0, 0f)
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("3.0000000")
-        assertThat(uiState.longitude).isEqualTo("2.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "2.0000000",
+                latitudePlaceholder = "2.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "3.0000000",
+                longitudePlaceholder = "3.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
@@ -455,86 +475,160 @@ internal class MapViewModelTest {
 
     @Test
     fun `searching latitude should update location`() = runTest {
-        viewModel.queryLatitude("1.0")
+        viewModel.onLatitudeTextChanged("1.0")
+        viewModel.onSubmitLatitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("1.0000000")
-        assertThat(uiState.longitude).isEqualTo("0.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.0000000",
+                latitudePlaceholder = "1.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "0.0000000",
+                longitudePlaceholder = "0.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching too large latitude should go to 90`() = runTest {
-        viewModel.queryLatitude("91.0")
+        viewModel.onLatitudeTextChanged("91.0")
+        viewModel.onSubmitLatitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("90.0000000")
-        assertThat(uiState.longitude).isEqualTo("0.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "90.0000000",
+                latitudePlaceholder = "90.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "0.0000000",
+                longitudePlaceholder = "0.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching too small latitude should go to -90`() = runTest {
-        viewModel.queryLatitude("-91.0")
+        viewModel.onLatitudeTextChanged("-91.0")
+        viewModel.onSubmitLatitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("-90.0000000")
-        assertThat(uiState.longitude).isEqualTo("0.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "-90.0000000",
+                latitudePlaceholder = "-90.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "0.0000000",
+                longitudePlaceholder = "0.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching empty latitude should keep current location`() = runTest {
         viewModel.onCameraMoved(1.0, 1.0, 0f)
 
-        viewModel.queryLatitude("")
+        viewModel.onLatitudeTextChanged("")
+        viewModel.onSubmitLatitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("1.0000000")
-        assertThat(uiState.longitude).isEqualTo("1.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.0000000",
+                latitudePlaceholder = "1.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "1.0000000",
+                longitudePlaceholder = "1.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching longitude should update location`() = runTest {
-        viewModel.queryLongitude("1.0")
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+
+        viewModel.onLongitudeTextChanged("1.0")
+        viewModel.onSubmitLongitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("0.0000000")
-        assertThat(uiState.longitude).isEqualTo("1.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "0.0000000",
+                latitudePlaceholder = "0.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "1.0000000",
+                longitudePlaceholder = "1.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching too large longitude should go to 180`() = runTest {
-        viewModel.queryLongitude("181.0")
+        viewModel.onLongitudeTextChanged("181.0")
+        viewModel.onSubmitLongitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("0.0000000")
-        assertThat(uiState.longitude).isEqualTo("180.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "0.0000000",
+                latitudePlaceholder = "0.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "180.0000000",
+                longitudePlaceholder = "180.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching too small longitude should go to -180`() = runTest {
-        viewModel.queryLongitude("-180.0")
+        viewModel.onLongitudeTextChanged("-180.0")
+        viewModel.onSubmitLongitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("0.0000000")
-        assertThat(uiState.longitude).isEqualTo("-180.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "0.0000000",
+                latitudePlaceholder = "0.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "-180.0000000",
+                longitudePlaceholder = "-180.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
     fun `searching empty longitude should keep current location`() = runTest {
         viewModel.onCameraMoved(1.0, 1.0, 0f)
 
-        viewModel.queryLongitude("")
+        viewModel.onLongitudeTextChanged("")
+        viewModel.onSubmitLongitude()
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("1.0000000")
-        assertThat(uiState.longitude).isEqualTo("1.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.0000000",
+                latitudePlaceholder = "1.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "1.0000000",
+                longitudePlaceholder = "1.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
@@ -543,8 +637,16 @@ internal class MapViewModelTest {
         runCurrent()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("1.1234568")
-        assertThat(uiState.longitude).isEqualTo("0.1234568")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.1234568",
+                latitudePlaceholder = "1.1234568",
+                showLatitudeInvalidError = false,
+                longitudeText = "0.1234568",
+                longitudePlaceholder = "0.1234568",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
@@ -567,8 +669,16 @@ internal class MapViewModelTest {
         assertThat(viewModel.showCantFindLocationSnackBar).isFalse()
 
         val uiState = viewModel.uiState.value
-        assertThat(uiState.latitude).isEqualTo("1.0000000")
-        assertThat(uiState.longitude).isEqualTo("2.0000000")
+        assertThat(uiState.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.0000000",
+                latitudePlaceholder = "1.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "2.0000000",
+                longitudePlaceholder = "2.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
     }
 
     @Test
@@ -605,7 +715,8 @@ internal class MapViewModelTest {
 
     @Test
     fun `zoom into street level after searching a latitude`() = runTest {
-        viewModel.queryLatitude("1.0")
+        viewModel.onLatitudeTextChanged("1.0")
+        viewModel.onSubmitLatitude()
         runCurrent()
 
         assertThat(viewModel.zoom.value).isEqualTo(17f)
@@ -613,7 +724,8 @@ internal class MapViewModelTest {
 
     @Test
     fun `zoom into street level after searching a longitude`() = runTest {
-        viewModel.queryLongitude("1.0")
+        viewModel.onLongitudeTextChanged("1.0")
+        viewModel.onSubmitLongitude()
         runCurrent()
 
         assertThat(viewModel.zoom.value).isEqualTo(17f)
@@ -653,6 +765,105 @@ internal class MapViewModelTest {
         viewModel.queryAddress("FGH.JKL")
         runCurrent()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(1.0, 1.0))
+        assertThat(viewModel.uiState.value.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "1.0000000",
+                latitudePlaceholder = "1.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "1.0000000",
+                longitudePlaceholder = "1.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
+    }
+
+    @Test
+    fun `do nothing if submitting invalid latitude`() = runTest {
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+
+        viewModel.onLatitudeTextChanged("a")
+        viewModel.onSubmitLatitude()
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "a",
+                latitudePlaceholder = "0.0000000",
+                showLatitudeInvalidError = true,
+                longitudeText = "0.0000000",
+                longitudePlaceholder = "0.0000000",
+                showLongitudeInvalidError = false,
+            )
+        )
+    }
+
+    @Test
+    fun `do nothing if submitting invalid longitude`() = runTest {
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+
+        viewModel.onLongitudeTextChanged("a")
+        viewModel.onSubmitLongitude()
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi).isEqualTo(
+            LocationUi(
+                latitudeText = "0.0000000",
+                latitudePlaceholder = "0.0000000",
+                showLatitudeInvalidError = false,
+                longitudeText = "a",
+                longitudePlaceholder = "0.0000000",
+                showLongitudeInvalidError = true,
+            )
+        )
+    }
+
+    @Test
+    fun `show error if latitude is not a number`() = runTest {
+        viewModel.onLatitudeTextChanged("a")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLatitudeInvalidError).isTrue()
+    }
+
+    @Test
+    fun `show error if longitude is not a number`() = runTest {
+        viewModel.onLongitudeTextChanged("a")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLongitudeInvalidError).isTrue()
+    }
+
+    @Test
+    fun `do not show error if latitude is empty`() = runTest {
+        viewModel.onLatitudeTextChanged("")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLatitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `do not show error if longitude is empty`() = runTest {
+        viewModel.onLongitudeTextChanged("")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLongitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `latitude placeholder should show previous value while editing`() = runTest {
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        viewModel.onLatitudeTextChanged("2")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.latitudePlaceholder).isEqualTo("1.0000000")
+    }
+
+    @Test
+    fun `longitude placeholder should show previous value while editing`() = runTest {
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        viewModel.onLongitudeTextChanged("2")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.longitudePlaceholder).isEqualTo("1.0000000")
     }
 }
