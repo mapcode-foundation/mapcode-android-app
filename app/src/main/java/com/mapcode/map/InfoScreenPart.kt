@@ -6,8 +6,10 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
+import com.mapcode.theme.MapcodeTheme
 import kotlinx.coroutines.launch
 
 @Composable
@@ -167,4 +169,22 @@ fun InfoArea(
         onLongitudeChange = viewModel::queryLongitude,
         isVerticalLayout = isVerticalLayout
     )
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 300)
+@Composable
+fun InfoAreaPreview() {
+    MapcodeTheme {
+        val state = UiState(
+            mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
+            addressUi = AddressUi(
+                "I am a very very very very very very extremely long address",
+                AddressError.UnknownAddress("Street, City"),
+                AddressHelper.NoInternet,
+            ),
+            "1.0",
+            "2.0"
+        )
+        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
+    }
 }

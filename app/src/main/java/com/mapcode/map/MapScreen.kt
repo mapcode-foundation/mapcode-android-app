@@ -51,6 +51,127 @@ import kotlinx.coroutines.launch
  */
 
 @Composable
+fun MapScreen(
+    viewModel: MapViewModel,
+    /**
+     * This option makes instrumentation tests much quicker and easier to implement.
+     */
+    renderGoogleMaps: Boolean = true,
+    layoutType: LayoutType = LayoutType.HorizontalInfoArea
+) {
+    val scaffoldState = rememberScaffoldState()
+    val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
+    val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
+
+    if (viewModel.showCantFindLocationSnackBar) {
+        LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindLocationMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindLocationSnackBar = false
+            }
+        }
+    }
+
+    if (viewModel.showCantFindMapsAppSnackBar) {
+        LaunchedEffect(viewModel.showCantFindMapsAppSnackBar) {
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindMapsAppMessage)
+
+            if (result == SnackbarResult.Dismissed) {
+                viewModel.showCantFindMapsAppSnackBar = false
+            }
+        }
+    }
+
+    Surface {
+        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
+            when (layoutType) {
+                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+            }
+        }
+    }
+}
+
+@Composable
+fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
+        Box(Modifier.weight(1f)) {
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
+
+            MapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                viewModel
+            )
+        }
+
+        InfoArea(
+            Modifier
+                .width(300.dp)
+                .align(Alignment.Bottom)
+                .padding(8.dp),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = true
+        )
+    }
+}
+
+@Composable
+fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+        Box(Modifier.weight(1f)) {
+            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
+
+            MapControls(
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                viewModel
+            )
+        }
+
+        InfoArea(
+            Modifier
+                .wrapContentHeight()
+                .padding(8.dp),
+            viewModel,
+            scaffoldState,
+            isVerticalLayout = false
+        )
+    }
+}
+
+@Composable
+fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+    Box {
+        MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
+
+        Row(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(8.dp)
+        ) {
+
+            MapControls(Modifier.align(Alignment.Bottom), viewModel)
+            Spacer(Modifier.width(8.dp))
+
+            Card(
+                Modifier.width(400.dp),
+                elevation = 4.dp
+            ) {
+                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
+            }
+        }
+    }
+}
+
+@Composable
 fun AboutDialog(onDismiss: () -> Unit = {}) {
     val uriHandler = LocalUriHandler.current
     val websiteUrl = stringResource(R.string.website_url)
@@ -321,6 +442,18 @@ fun MapControls(
 
         Spacer(Modifier.width(8.dp))
         ZoomControls(onZoomInClick = onZoomInClick, onZoomOutClick = onZoomOutClick)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MapControlsPreview() {
+    var isSatelliteModeEnabled by remember { mutableStateOf(false) }
+    MapcodeTheme {
+        MapControls(
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
+        )
     }
 }
 
@@ -642,155 +775,4 @@ fun LongitudeTextBox(
         clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
         keyboardType = KeyboardType.Decimal
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MapControlsPreview() {
-    var isSatelliteModeEnabled by remember { mutableStateOf(false) }
-    MapcodeTheme {
-        MapControls(
-            isSatelliteModeEnabled = isSatelliteModeEnabled,
-            onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 300)
-@Composable
-fun MapcodeInfoBoxPreview() {
-    MapcodeTheme {
-        val state = UiState(
-            mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
-            addressUi = AddressUi(
-                "I am a very very very very very very extremely long address",
-                AddressError.UnknownAddress("Street, City"),
-                AddressHelper.NoInternet,
-            ),
-            "1.0",
-            "2.0"
-        )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
-    }
-}
-
-@Composable
-fun MapScreen(
-    viewModel: MapViewModel,
-    /**
-     * This option makes instrumentation tests much quicker and easier to implement.
-     */
-    renderGoogleMaps: Boolean = true,
-    layoutType: LayoutType = LayoutType.HorizontalInfoArea
-) {
-    val scaffoldState = rememberScaffoldState()
-    val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
-    val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-
-    if (viewModel.showCantFindLocationSnackBar) {
-        LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindLocationMessage)
-
-            if (result == SnackbarResult.Dismissed) {
-                viewModel.showCantFindLocationSnackBar = false
-            }
-        }
-    }
-
-    if (viewModel.showCantFindMapsAppSnackBar) {
-        LaunchedEffect(viewModel.showCantFindMapsAppSnackBar) {
-            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-            val result = scaffoldState.snackbarHostState.showSnackbar(cantFindMapsAppMessage)
-
-            if (result == SnackbarResult.Dismissed) {
-                viewModel.showCantFindMapsAppSnackBar = false
-            }
-        }
-    }
-
-    Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
-            when (layoutType) {
-                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-            }
-        }
-    }
-}
-
-@Composable
-fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
-        Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
-
-            MapControls(
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp),
-                viewModel
-            )
-        }
-
-        InfoArea(
-            Modifier
-                .width(300.dp)
-                .align(Alignment.Bottom)
-                .padding(8.dp),
-            viewModel,
-            scaffoldState,
-            isVerticalLayout = true
-        )
-    }
-}
-
-@Composable
-fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
-        Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
-
-            MapControls(
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp),
-                viewModel
-            )
-        }
-
-        InfoArea(
-            Modifier
-                .wrapContentHeight()
-                .padding(8.dp),
-            viewModel,
-            scaffoldState,
-            isVerticalLayout = false
-        )
-    }
-}
-
-@Composable
-fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Box {
-        MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
-
-        Row(
-            Modifier
-                .align(Alignment.BottomEnd)
-                .padding(8.dp)
-        ) {
-
-            MapControls(Modifier.align(Alignment.Bottom), viewModel)
-            Spacer(Modifier.width(8.dp))
-
-            Card(
-                Modifier.width(400.dp),
-                elevation = 4.dp
-            ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
-            }
-        }
-    }
 }
