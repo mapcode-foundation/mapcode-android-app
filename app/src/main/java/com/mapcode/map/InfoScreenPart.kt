@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.mapcode.map
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -133,7 +136,13 @@ private fun VerticalInfoArea(
     onMapcodeClick: () -> Unit
 ) {
     Column(modifier) {
-        AddressArea(Modifier, state.addressUi.address, onAddressChange, state.addressUi.helper, state.addressUi.error)
+        AddressArea(
+            Modifier,
+            state.addressUi.address,
+            onAddressChange,
+            state.addressUi.helper,
+            state.addressUi.error
+        )
         Spacer(Modifier.height(8.dp))
         TerritoryBox(
             modifier = Modifier
@@ -217,7 +226,8 @@ private fun HorizontalInfoArea(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(end = 8.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .imePadding(),
                 text = state.locationUi.latitudeText,
                 placeHolder = state.locationUi.latitudePlaceholder,
                 showInvalidError = state.locationUi.showLatitudeInvalidError,
@@ -227,7 +237,8 @@ private fun HorizontalInfoArea(
             LongitudeTextBox(
                 modifier = Modifier
                     .weight(0.5f)
-                    .padding(start = 8.dp),
+                    .padding(start = 8.dp)
+                    .imePadding(),
                 text = state.locationUi.longitudeText,
                 placeHolder = state.locationUi.longitudePlaceholder,
                 showInvalidError = state.locationUi.showLongitudeInvalidError,
@@ -279,7 +290,7 @@ private fun LatitudeTextBox(
     onChange: (String) -> Unit
 ) {
     LatLngTextField(
-        modifier = modifier.imePadding(),
+        modifier = modifier,
         text = text,
         placeholder = placeHolder,
         showInvalidError = showInvalidError,
@@ -303,7 +314,7 @@ private fun LongitudeTextBox(
     onChange: (String) -> Unit
 ) {
     LatLngTextField(
-        modifier = modifier.imePadding(),
+        modifier = modifier,
         text = text,
         placeholder = placeHolder,
         showInvalidError = showInvalidError,

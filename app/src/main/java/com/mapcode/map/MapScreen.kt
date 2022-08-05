@@ -2,8 +2,10 @@ package com.mapcode.map
 
 import android.Manifest
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -106,7 +108,9 @@ private fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: Scaff
             Modifier
                 .width(300.dp)
                 .align(Alignment.Bottom)
-                .padding(8.dp),
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
             viewModel,
             scaffoldState,
             isVerticalLayout = true
