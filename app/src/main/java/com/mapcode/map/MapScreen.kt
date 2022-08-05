@@ -1,35 +1,27 @@
 package com.mapcode.map
 
 import android.Manifest
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -97,7 +89,7 @@ fun MapScreen(
 }
 
 @Composable
-fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+private fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
@@ -123,7 +115,7 @@ fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState
 }
 
 @Composable
-fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+private fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
         Box(Modifier.weight(1f)) {
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
@@ -148,7 +140,7 @@ fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldSta
 }
 
 @Composable
-fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
+private fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
     Box {
         MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
@@ -172,7 +164,7 @@ fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState
 }
 
 @Composable
-fun AboutDialog(onDismiss: () -> Unit = {}) {
+private fun AboutDialog(onDismiss: () -> Unit = {}) {
     val uriHandler = LocalUriHandler.current
     val websiteUrl = stringResource(R.string.website_url)
     val sourceCodeUrl = stringResource(R.string.source_code_url)
@@ -263,8 +255,16 @@ fun AboutDialog(onDismiss: () -> Unit = {}) {
     }
 }
 
+@Preview(heightDp = 500)
 @Composable
-fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
+private fun AboutDialogPreview() {
+    MapcodeTheme {
+        AboutDialog()
+    }
+}
+
+@Composable
+private fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
     OutlinedButton(onClick = onClick) {
         Icon(icon, contentDescription = null)
         Spacer(modifier = Modifier.width(8.dp))
@@ -272,22 +272,14 @@ fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit) {
     }
 }
 
-@Preview(heightDp = 500)
 @Composable
-fun AboutDialogPreview() {
-    MapcodeTheme {
-        AboutDialog()
-    }
-}
-
-@Composable
-fun greyButtonColors(): ButtonColors {
+private fun greyButtonColors(): ButtonColors {
     return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapControls(
+private fun MapControls(
     modifier: Modifier,
     viewModel: MapViewModel
 ) {
@@ -352,7 +344,7 @@ fun MapControls(
 }
 
 @Composable
-fun MapControls(
+private fun MapControls(
     modifier: Modifier = Modifier,
     onSatelliteButtonClick: () -> Unit = {},
     isSatelliteModeEnabled: Boolean,
@@ -447,7 +439,7 @@ fun MapControls(
 
 @Preview(showBackground = true)
 @Composable
-fun MapControlsPreview() {
+private fun MapControlsPreview() {
     var isSatelliteModeEnabled by remember { mutableStateOf(false) }
     MapcodeTheme {
         MapControls(
@@ -458,7 +450,7 @@ fun MapControlsPreview() {
 }
 
 @Composable
-fun ZoomControls(
+private fun ZoomControls(
     modifier: Modifier = Modifier,
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit
@@ -491,7 +483,7 @@ fun ZoomControls(
 }
 
 @Composable
-fun MapWithCrossHairs(
+private fun MapWithCrossHairs(
     modifier: Modifier,
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
@@ -523,7 +515,7 @@ fun MapWithCrossHairs(
  * This handles the Google Map component.
  */
 @Composable
-fun Map(
+private fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
     onCameraMoved: (Double, Double, Float) -> Unit,
@@ -582,7 +574,7 @@ fun Map(
  * This is the button to request location permission.
  */
 @Composable
-fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+private fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Button(
         modifier = modifier,
         onClick = onClick,
@@ -593,186 +585,4 @@ fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
             contentDescription = stringResource(R.string.my_location_button_content_description)
         )
     }
-}
-
-/**
- * A text field that has a clear button and handles refilling the text if it is cleared.
- */
-@Composable
-fun ClearableTextField(
-    modifier: Modifier = Modifier,
-    text: String,
-    label: String,
-    clearButtonContentDescription: String,
-    onChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    val focusManager = LocalFocusManager.current
-    var isFocussed by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
-
-    val textFieldValue: String
-
-    if (isFocussed) {
-        textFieldValue = query
-    } else {
-        textFieldValue = text
-        query = text
-    }
-
-    OutlinedTextField(
-        modifier = modifier
-            .onFocusChanged {
-                isFocussed = it.isFocused
-            }
-            .focusRequester(focusRequester),
-        value = textFieldValue,
-        singleLine = true,
-        label = { Text(label, maxLines = 1) },
-        onValueChange = { query = it },
-        keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Go,
-            keyboardType = keyboardType
-        ),
-        keyboardActions = KeyboardActions(onGo = {
-            focusManager.clearFocus()
-            onChange(query)
-        }),
-        placeholder = { Text(text, maxLines = 1) },
-        trailingIcon = {
-            if (text.isNotEmpty()) {
-                IconButton(
-                    onClick = {
-                        focusRequester.requestFocus()
-                        query = ""
-                    }) {
-                    Icon(
-                        Icons.Outlined.Clear,
-                        contentDescription = clearButtonContentDescription
-                    )
-                }
-            }
-        })
-}
-
-@Composable
-fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @DrawableRes icon: Int) {
-    Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            modifier = Modifier.fillMaxHeight(),
-            text = text,
-            style = MaterialTheme.typography.subtitle2
-        )
-
-        Icon(
-            modifier = Modifier.height(20.dp),
-            painter = painterResource(icon),
-            contentDescription = ""
-        )
-    }
-}
-
-/**
- * The box that shows the mapcode.
- */
-@Composable
-fun MapcodeBox(
-    modifier: Modifier = Modifier,
-    code: String,
-    territory: String
-) {
-    Card(
-        modifier = modifier,
-        backgroundColor = MaterialTheme.colors.primary
-    ) {
-        Column(Modifier.padding(8.dp)) {
-            HeaderWithIcon(
-                Modifier.fillMaxWidth(),
-                stringResource(R.string.mapcode_header_button),
-                R.drawable.ic_outline_content_copy_24
-            )
-
-            val codeSpanStyle: SpanStyle =
-                MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold).toSpanStyle()
-
-            val styledString = buildAnnotatedString {
-                pushStyle(MaterialTheme.typography.body2.toSpanStyle())
-                append(territory)
-                pop()
-                append(" ")
-                pushStyle(codeSpanStyle)
-                append(code)
-                pop()
-            }
-
-            Text(text = styledString)
-        }
-    }
-}
-
-/**
- * The box that shows the territory.
- */
-@Composable
-fun TerritoryBox(
-    modifier: Modifier = Modifier,
-    index: Int,
-    count: Int,
-    territoryName: String
-) {
-    Card(modifier = modifier) {
-        Column(Modifier.padding(8.dp)) {
-            val headerText = stringResource(R.string.territory_header_button, index, count)
-            HeaderWithIcon(
-                modifier = Modifier.fillMaxWidth(),
-                headerText,
-                R.drawable.ic_outline_fast_forward_24
-            )
-
-            Text(
-                text = territoryName,
-                style = MaterialTheme.typography.body1,
-                modifier = Modifier
-            )
-        }
-    }
-}
-
-/**
- * The box that shows the latitude.
- */
-@Composable
-fun LatitudeTextBox(
-    modifier: Modifier = Modifier,
-    latitude: String,
-    onChange: (String) -> Unit
-) {
-    ClearableTextField(
-        modifier = modifier,
-        text = latitude,
-        onChange = onChange,
-        label = stringResource(R.string.latitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
-        keyboardType = KeyboardType.Decimal
-    )
-}
-
-/**
- * The box that shows the longitude.
- */
-@Composable
-fun LongitudeTextBox(
-    modifier: Modifier = Modifier,
-    longitude: String,
-    onChange: (String) -> Unit
-) {
-    ClearableTextField(
-        modifier = modifier,
-        text = longitude,
-        onChange = onChange,
-        label = stringResource(R.string.longitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
-        keyboardType = KeyboardType.Decimal
-    )
 }

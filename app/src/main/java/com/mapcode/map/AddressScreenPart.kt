@@ -51,7 +51,7 @@ fun AddressArea(
  * Create the correct components for the helper message state.
  */
 @Composable
-fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) {
+private fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) {
     val helperMessage = when (helper) {
         AddressHelper.NoInternet -> stringResource(R.string.no_internet_error)
         AddressHelper.NoAddress -> stringResource(R.string.no_address_error)
@@ -68,7 +68,7 @@ fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) {
  * Create the correct components for the error message state.
  */
 @Composable
-fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
+private fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
     val errorMessage = when (error) {
         is AddressError.UnknownAddress -> stringResource(R.string.cant_find_address_error, error.addressQuery)
         AddressError.None -> null
@@ -83,7 +83,7 @@ fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
  * This creates a Text styled as an error.
  */
 @Composable
-fun ErrorText(modifier: Modifier = Modifier, message: String) {
+private fun ErrorText(modifier: Modifier = Modifier, message: String) {
     Text(
         modifier = modifier,
         text = message,
@@ -97,6 +97,6 @@ fun ErrorText(modifier: Modifier = Modifier, message: String) {
  * This creates a Text styled for the helper messages.
  */
 @Composable
-fun HelperText(modifier: Modifier = Modifier, message: String) {
+private fun HelperText(modifier: Modifier = Modifier, message: String) {
     Text(modifier = modifier, text = message, style = MaterialTheme.typography.body1, fontWeight = FontWeight.Bold)
 }
