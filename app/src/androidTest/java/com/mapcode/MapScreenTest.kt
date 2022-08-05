@@ -7,7 +7,6 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
-import com.mapcode.util.Location
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -164,7 +163,8 @@ class MapScreenTest {
 
         composeTestRule.waitForIdle()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(3.0, 2.0))
+        assertThat(viewModel.uiState.value.latitude).isEqualTo("3.0000000")
+        assertThat(viewModel.uiState.value.longitude).isEqualTo("2.0000000")
     }
 
     @Test
@@ -389,16 +389,16 @@ class MapScreenTest {
 
         setMapScreenAsContent()
 
-        composeTestRule
-            .onNodeWithText("Latitude (Y)").apply {
-                performTextClearance()
-                performTextInput("3.0")
-                performImeAction()
-            }
+        composeTestRule.onNodeWithText("Latitude (Y)").apply {
+            performTextClearance()
+            performTextInput("3.0")
+            performImeAction()
+        }
 
         composeTestRule.waitForIdle()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(3.0, 0.0))
+        composeTestRule.onNodeWithText("3.0000000").assertExists()
+        composeTestRule.onNodeWithText("0.0000000").assertExists()
     }
 
     @Test
@@ -423,7 +423,8 @@ class MapScreenTest {
 
         composeTestRule.waitForIdle()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(0.0, 2.0))
+        composeTestRule.onNodeWithText("0.0000000").assertExists()
+        composeTestRule.onNodeWithText("2.0000000").assertExists()
     }
 
     @Test

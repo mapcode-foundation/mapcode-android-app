@@ -1,5 +1,6 @@
 package com.mapcode.map
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -60,8 +61,9 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
-    val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
+    private val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
     private val locationStringFormat = "%.7f"
 
     val uiState: StateFlow<UiState> =

@@ -653,6 +653,7 @@ internal class MapViewModelTest {
         viewModel.queryAddress("FGH.JKL")
         runCurrent()
 
-        assertThat(viewModel.location.value).isEqualTo(Location(1.0, 1.0))
+        assertThat(viewModel.uiState.value.latitude).isEqualTo("1.0000000")
+        assertThat(viewModel.uiState.value.longitude).isEqualTo("1.0000000")
     }
 }
