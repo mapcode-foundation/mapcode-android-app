@@ -22,7 +22,7 @@ fun AddressArea(
         ClearableTextField(
             modifier = Modifier.fillMaxWidth(),
             text = address,
-            onChange = onChange,
+            onSubmit = onChange,
             label = stringResource(R.string.address_bar_label),
             clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
         )

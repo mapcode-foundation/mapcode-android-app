@@ -26,7 +26,14 @@ fun ClearableTextField(
     text: String,
     label: String,
     clearButtonContentDescription: String,
-    onChange: (String) -> Unit,
+    /**
+     * When the user presses the "go" keyboard action and submits the text.
+     */
+    onSubmit: (String) -> Unit,
+    /**
+     * When the user is typing and the text changes.
+     */
+    onChange: (String) -> Unit = {},
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     val focusManager = LocalFocusManager.current
@@ -52,14 +59,17 @@ fun ClearableTextField(
         value = textFieldValue,
         singleLine = true,
         label = { Text(label, maxLines = 1) },
-        onValueChange = { query = it },
+        onValueChange = {
+            query = it
+            onChange(it)
+        },
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Go,
             keyboardType = keyboardType
         ),
         keyboardActions = KeyboardActions(onGo = {
             focusManager.clearFocus()
-            onChange(query)
+            onSubmit(query)
         }),
         placeholder = { Text(text, maxLines = 1) },
         trailingIcon = {

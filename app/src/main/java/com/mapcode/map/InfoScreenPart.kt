@@ -3,14 +3,22 @@ package com.mapcode.map
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,8 +55,10 @@ fun InfoArea(
         onMapcodeClick = onMapcodeClick,
         onAddressChange = viewModel::queryAddress,
         onTerritoryClick = viewModel::onTerritoryClick,
-        onLatitudeChange = viewModel::queryLatitude,
-        onLongitudeChange = viewModel::queryLongitude,
+        onChangeLatitude = viewModel::onLatitudeTextChanged,
+        onSubmitLatitude = viewModel::onSubmitLatitude,
+        onChangeLongitude = viewModel::onLongitudeTextChanged,
+        onSubmitLongitude = viewModel::onSubmitLongitude,
         isVerticalLayout = isVerticalLayout
     )
 }
@@ -58,8 +68,10 @@ private fun InfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit = {},
-    onLatitudeChange: (String) -> Unit = {},
-    onLongitudeChange: (String) -> Unit = {},
+    onChangeLatitude: (String) -> Unit = {},
+    onSubmitLatitude: () -> Unit = {},
+    onChangeLongitude: (String) -> Unit = {},
+    onSubmitLongitude: () -> Unit = {},
     onTerritoryClick: () -> Unit = {},
     onMapcodeClick: () -> Unit = {},
     isVerticalLayout: Boolean
@@ -69,8 +81,10 @@ private fun InfoArea(
             modifier,
             state,
             onAddressChange,
-            onLatitudeChange,
-            onLongitudeChange,
+            onChangeLatitude,
+            onSubmitLatitude,
+            onChangeLongitude,
+            onSubmitLongitude,
             onTerritoryClick,
             onMapcodeClick
         )
@@ -79,8 +93,10 @@ private fun InfoArea(
             modifier,
             state,
             onAddressChange,
-            onLatitudeChange,
-            onLongitudeChange,
+            onChangeLatitude,
+            onSubmitLatitude,
+            onChangeLongitude,
+            onSubmitLongitude,
             onTerritoryClick,
             onMapcodeClick
         )
@@ -98,8 +114,7 @@ private fun InfoAreaPreview() {
                 AddressError.UnknownAddress("Street, City"),
                 AddressHelper.NoInternet,
             ),
-            "1.0",
-            "2.0"
+            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
         )
         InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
     }
@@ -110,8 +125,10 @@ private fun VerticalInfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit,
-    onLatitudeChange: (String) -> Unit,
-    onLongitudeChange: (String) -> Unit,
+    onChangeLatitude: (String) -> Unit,
+    onSubmitLatitude: () -> Unit,
+    onChangeLongitude: (String) -> Unit,
+    onSubmitLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
     onMapcodeClick: () -> Unit
 ) {
@@ -135,9 +152,23 @@ private fun VerticalInfoArea(
             state.mapcodeUi.territoryShortName
         )
         Spacer(Modifier.height(8.dp))
-        LatitudeTextBox(Modifier.fillMaxWidth(), state.latitude, onLatitudeChange)
+        LatitudeTextBox(
+            modifier = Modifier.fillMaxWidth(),
+            text = state.locationUi.latitudeText,
+            placeHolder = state.locationUi.latitudePlaceholder,
+            showInvalidError = state.locationUi.showLatitudeInvalidError,
+            onSubmit = onSubmitLatitude,
+            onChange = onChangeLatitude,
+        )
         Spacer(Modifier.height(8.dp))
-        LongitudeTextBox(Modifier.fillMaxWidth(), state.longitude, onLongitudeChange)
+        LongitudeTextBox(
+            modifier = Modifier.fillMaxWidth(),
+            text = state.locationUi.longitudeText,
+            placeHolder = state.locationUi.longitudePlaceholder,
+            showInvalidError = state.locationUi.showLongitudeInvalidError,
+            onSubmit = onSubmitLongitude,
+            onChange = onChangeLongitude,
+        )
     }
 }
 
@@ -146,8 +177,10 @@ private fun HorizontalInfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit,
-    onLatitudeChange: (String) -> Unit,
-    onLongitudeChange: (String) -> Unit,
+    onChangeLatitude: (String) -> Unit,
+    onSubmitLatitude: () -> Unit,
+    onChangeLongitude: (String) -> Unit,
+    onSubmitLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
     onMapcodeClick: () -> Unit
 ) {
@@ -181,15 +214,25 @@ private fun HorizontalInfoArea(
 
         Row(Modifier.padding(top = 8.dp)) {
             LatitudeTextBox(
-                Modifier
+                modifier = Modifier
                     .weight(0.5f)
                     .padding(end = 8.dp)
-                    .fillMaxWidth(), state.latitude, onLatitudeChange
+                    .fillMaxWidth(),
+                text = state.locationUi.latitudeText,
+                placeHolder = state.locationUi.latitudePlaceholder,
+                showInvalidError = state.locationUi.showLatitudeInvalidError,
+                onSubmit = onSubmitLatitude,
+                onChange = onChangeLatitude,
             )
             LongitudeTextBox(
-                Modifier
+                modifier = Modifier
                     .weight(0.5f)
-                    .padding(start = 8.dp), state.longitude, onLongitudeChange
+                    .padding(start = 8.dp),
+                text = state.locationUi.longitudeText,
+                placeHolder = state.locationUi.longitudePlaceholder,
+                showInvalidError = state.locationUi.showLongitudeInvalidError,
+                onSubmit = onSubmitLongitude,
+                onChange = onChangeLongitude,
             )
         }
     }
@@ -229,16 +272,21 @@ private fun TerritoryBox(
 @Composable
 private fun LatitudeTextBox(
     modifier: Modifier = Modifier,
-    latitude: String,
+    text: String,
+    placeHolder: String,
+    showInvalidError: Boolean,
+    onSubmit: () -> Unit,
     onChange: (String) -> Unit
 ) {
-    ClearableTextField(
-        modifier = modifier,
-        text = latitude,
-        onChange = onChange,
+    LatLngTextField(
+        modifier = modifier.imePadding(),
+        text = text,
+        placeholder = placeHolder,
+        showInvalidError = showInvalidError,
         label = stringResource(R.string.latitude_text_field_label),
         clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
-        keyboardType = KeyboardType.Decimal
+        onSubmit = onSubmit,
+        onChange = onChange
     )
 }
 
@@ -248,17 +296,81 @@ private fun LatitudeTextBox(
 @Composable
 private fun LongitudeTextBox(
     modifier: Modifier = Modifier,
-    longitude: String,
+    text: String,
+    placeHolder: String,
+    showInvalidError: Boolean,
+    onSubmit: () -> Unit,
     onChange: (String) -> Unit
 ) {
-    ClearableTextField(
-        modifier = modifier,
-        text = longitude,
-        onChange = onChange,
+    LatLngTextField(
+        modifier = modifier.imePadding(),
+        text = text,
+        placeholder = placeHolder,
+        showInvalidError = showInvalidError,
         label = stringResource(R.string.longitude_text_field_label),
         clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
-        keyboardType = KeyboardType.Decimal
+        onSubmit = onSubmit,
+        onChange = onChange
     )
+}
+
+@Composable
+private fun LatLngTextField(
+    modifier: Modifier = Modifier,
+    text: String,
+    placeholder: String,
+    showInvalidError: Boolean,
+    label: String,
+    clearButtonContentDescription: String,
+    onSubmit: () -> Unit,
+    onChange: (String) -> Unit
+) {
+    Column(modifier) {
+        val focusManager = LocalFocusManager.current
+        val focusRequester = remember { FocusRequester() }
+
+        OutlinedTextField(
+            modifier = Modifier.focusRequester(focusRequester),
+            value = text,
+            singleLine = true,
+            label = { Text(label, maxLines = 1) },
+            onValueChange = onChange,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Go,
+                keyboardType = KeyboardType.Decimal
+            ),
+            keyboardActions = KeyboardActions(onGo = {
+                if (!showInvalidError) {
+                    focusManager.clearFocus()
+                    onSubmit()
+                }
+            }),
+            placeholder = { Text(placeholder, maxLines = 1) },
+            trailingIcon = {
+                if (text.isNotEmpty()) {
+                    IconButton(onClick = {
+                        focusRequester.requestFocus()
+                        onChange("")
+                    }) {
+                        Icon(
+                            Icons.Outlined.Clear,
+                            contentDescription = clearButtonContentDescription
+                        )
+                    }
+                }
+            })
+
+        if (showInvalidError) {
+            ErrorText(
+                modifier = Modifier
+                    .height(20.dp)
+                    .padding(start = 16.dp, top = 4.dp),
+                text = stringResource(R.string.invalid_latlng_error)
+            )
+        } else {
+            Spacer(Modifier.height(20.dp))
+        }
+    }
 }
 
 @Composable
@@ -314,4 +426,14 @@ private fun MapcodeBox(
             Text(text = styledString)
         }
     }
+}
+
+@Composable
+private fun ErrorText(modifier: Modifier = Modifier, text: String) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = MaterialTheme.colors.error,
+        style = MaterialTheme.typography.body2
+    )
 }

@@ -326,7 +326,7 @@ private fun MapControls(
             scope.launch {
                 viewModel.cameraPositionState.animate(
                     CameraUpdateFactory.zoomOut(),
-                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -545,7 +545,7 @@ private fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(position),
-                    MapViewModel. ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -554,7 +554,7 @@ private fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)),
-                    MapViewModel.    ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },
@@ -562,7 +562,7 @@ private fun Map(
             scope.launch {
                 cameraPositionState.animate(
                     CameraUpdateFactory.newLatLng(poi.latLng),
-                    MapViewModel.   ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
                 )
             }
         },

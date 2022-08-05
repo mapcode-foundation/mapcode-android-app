@@ -65,18 +65,18 @@ class MapViewModel @Inject constructor(
     val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
     private val location: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
     private val locationStringFormat = "%.7f"
+    private val locationUi: MutableStateFlow<LocationUi> = MutableStateFlow(LocationUi.EMPTY)
 
     val uiState: StateFlow<UiState> =
         combine(
             addressUi,
             mapcodeUi,
-            location
-        ) { addressUi, mapcodeUi, location ->
+            locationUi
+        ) { addressUi, mapcodeUi, locationUi ->
             UiState(
                 addressUi = addressUi,
                 mapcodeUi = mapcodeUi,
-                latitude = String.format(locationStringFormat, location.latitude),
-                longitude = String.format(locationStringFormat, location.longitude)
+                locationUi = locationUi
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
@@ -98,6 +98,19 @@ class MapViewModel @Inject constructor(
      */
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
         location.value = Location(lat, long)
+        locationUi.update {
+            val latitudeText = String.format(locationStringFormat, lat)
+            val longitudeText = String.format(locationStringFormat, long)
+
+            LocationUi(
+                latitudeText = latitudeText,
+                latitudePlaceholder = latitudeText,
+                showLatitudeInvalidError = false,
+                longitudeText = longitudeText,
+                longitudePlaceholder = longitudeText,
+                showLongitudeInvalidError = false
+            )
+        }
         this.zoom.value = zoom
 
         //update the mapcode when the map moves
@@ -194,22 +207,64 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun queryLatitude(query: String) {
-        if (query.isEmpty()) {
-            return
-        }
+    fun onLatitudeTextChanged(text: String) {
+        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
 
-        val cleansedLatitude = LocationUtils.cleanseLatitude(query.toDouble())
-        moveCamera(cleansedLatitude, location.value.longitude, 17f)
+        locationUi.update {
+            it.copy(latitudeText = text, showLatitudeInvalidError = !isValid)
+        }
     }
 
-    fun queryLongitude(query: String) {
-        if (query.isEmpty()) {
+    fun onSubmitLatitude() {
+        val text = locationUi.value.latitudeText
+
+        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
             return
         }
 
-        val cleansedLongitude = LocationUtils.cleanseLongitude(query.toDouble())
-        moveCamera(location.value.latitude, cleansedLongitude, 17f)
+        if (text.isEmpty()) {
+            val latitudeText = String.format(locationStringFormat, location.value.latitude)
+            locationUi.update {
+                it.copy(
+                    latitudeText = latitudeText,
+                    latitudePlaceholder = latitudeText,
+                    showLatitudeInvalidError = false
+                )
+            }
+        } else {
+            val cleansedLatitude = LocationUtils.cleanseLatitude(text.toDouble())
+            moveCamera(cleansedLatitude, location.value.longitude, 17f)
+        }
+    }
+
+    fun onLongitudeTextChanged(text: String) {
+        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
+
+        locationUi.update {
+            it.copy(longitudeText = text, showLongitudeInvalidError = !isValid)
+        }
+    }
+
+    fun onSubmitLongitude() {
+        val text = locationUi.value.longitudeText
+
+        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
+            return
+        }
+
+        if (text.isEmpty()) {
+            val longitudeText = String.format(locationStringFormat, location.value.longitude)
+            locationUi.update {
+                it.copy(
+                    longitudeText = longitudeText,
+                    longitudePlaceholder = longitudeText,
+                    showLongitudeInvalidError = false
+                )
+            }
+        } else {
+            val cleansedLongitude = LocationUtils.cleanseLongitude(text.toDouble())
+            moveCamera(location.value.latitude, cleansedLongitude, 17f)
+        }
     }
 
     fun onTerritoryClick() {
@@ -349,15 +404,13 @@ class MapViewModel @Inject constructor(
 data class UiState(
     val mapcodeUi: MapcodeUi,
     val addressUi: AddressUi,
-    val latitude: String,
-    val longitude: String
+    val locationUi: LocationUi
 ) {
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
             addressUi = AddressUi("", AddressError.None, AddressHelper.None),
-            latitude = "",
-            longitude = ""
+            locationUi = LocationUi.EMPTY
         )
     }
 }
