@@ -15,8 +15,14 @@ import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.Result.Companion.failure
@@ -27,12 +33,15 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Created by sds100 on 01/06/2022.
  */
-
-class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val ctx: Context) : ShowMapcodeUseCase {
+class ShowMapcodeUseCaseImpl @Inject constructor(
+    @ApplicationContext private val ctx: Context,
+    private val coroutineScope: CoroutineScope
+) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(ctx)
+    private val okHttpClient: OkHttpClient = OkHttpClient()
 
     /**
      * Save the last location because on Google Maps it can still show the blue my location dot
@@ -41,6 +50,27 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
     private var cachedLastLocation: Location? = null
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val url = HttpUrl.Builder()
+                    .scheme("https")
+                    .host("api.mapcode.com")
+                    .addPathSegment("mapcode")
+                    .addPathSegment("codes")
+                    .addPathSegment("$lat,$long")
+                    .addQueryParameter("client", "android")
+                    .build()
+
+                val request: Request = Request.Builder()
+                    .url(url)
+                    .build()
+
+                okHttpClient.newCall(request).execute()
+            } catch (_: Exception) {
+                Timber.e("Failed to call mapcode API.")
+            }
+        }
+
         return MapcodeCodec.encode(lat, long)
     }
 
