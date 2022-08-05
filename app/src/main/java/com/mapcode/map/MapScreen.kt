@@ -80,19 +80,43 @@ fun MapScreen(
     }
 
     Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) {
+        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) { padding ->
             when (layoutType) {
-                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
-                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(viewModel, scaffoldState, renderGoogleMaps)
+                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
+                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
+                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
+                    Modifier.padding(padding),
+                    viewModel,
+                    scaffoldState,
+                    renderGoogleMaps
+                )
             }
         }
     }
 }
 
 @Composable
-private fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.End) {
+private fun VerticalInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Row(modifier, horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
 
@@ -119,8 +143,13 @@ private fun VerticalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: Scaff
 }
 
 @Composable
-private fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+private fun HorizontalInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Column(modifier, verticalArrangement = Arrangement.Bottom) {
         Box(Modifier.weight(1f)) {
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
@@ -144,8 +173,13 @@ private fun HorizontalInfoAreaLayout(viewModel: MapViewModel, scaffoldState: Sca
 }
 
 @Composable
-private fun FloatingInfoAreaLayout(viewModel: MapViewModel, scaffoldState: ScaffoldState, renderGoogleMaps: Boolean) {
-    Box {
+private fun FloatingInfoAreaLayout(
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel,
+    scaffoldState: ScaffoldState,
+    renderGoogleMaps: Boolean
+) {
+    Box(modifier) {
         MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
         Row(
@@ -288,7 +322,7 @@ private fun MapControls(
     viewModel: MapViewModel
 ) {
     val scope = rememberCoroutineScope()
-    val isSatelliteModeEnabled by derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID }
+    val isSatelliteModeEnabled by remember { derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID } }
 
     var showAboutDialog by rememberSaveable { mutableStateOf(false) }
 
