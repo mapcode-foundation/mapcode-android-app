@@ -91,6 +91,7 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
     //noinspection GradleDependency. Issue with R8 on Android 8.0 or lower
     implementation 'com.mapcode:mapcode:2.4.14'
+    implementation "com.squareup.okhttp3:okhttp:4.10.0"
 
     //debug
     debugImplementation "androidx.compose.ui:ui-tooling:1.2.0"
