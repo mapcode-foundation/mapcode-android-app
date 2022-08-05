@@ -226,7 +226,6 @@ private fun HorizontalInfoArea(
                 modifier = Modifier
                     .weight(0.5f)
                     .padding(end = 8.dp)
-                    .fillMaxWidth()
                     .imePadding(),
                 text = state.locationUi.latitudeText,
                 placeHolder = state.locationUi.latitudePlaceholder,
@@ -341,7 +340,9 @@ private fun LatLngTextField(
         val focusRequester = remember { FocusRequester() }
 
         OutlinedTextField(
-            modifier = Modifier.focusRequester(focusRequester),
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .fillMaxWidth(),
             value = text,
             singleLine = true,
             label = { Text(label, maxLines = 1) },
