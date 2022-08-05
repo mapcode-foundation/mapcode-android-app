@@ -1,8 +1,10 @@
 package com.mapcode.map
 
+import android.Manifest
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.mapcode.FakePreferenceRepository
@@ -19,6 +21,12 @@ class MapScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @get:Rule
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
 
     private lateinit var useCase: FakeShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
@@ -353,7 +361,7 @@ class MapScreenTest {
         setMapScreenAsContent()
 
         composeTestRule.onNodeWithContentDescription("Go to my location").performClick()
-        
+
         composeTestRule.onNodeWithText("Can't find location. Is your GPS turned on?").assertIsDisplayed()
     }
 
