@@ -21,6 +21,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var currentLocation: Location? = null
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
+    val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -81,4 +82,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     }
 
     override fun shareText(text: String, description: String) {}
+    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
+        return success(matchingAddresses[query] ?: emptyList())
+    }
 }

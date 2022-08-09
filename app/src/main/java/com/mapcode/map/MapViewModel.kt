@@ -43,7 +43,7 @@ class MapViewModel @Inject constructor(
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
     private val addressUi: MutableStateFlow<AddressUi> =
-        MutableStateFlow(AddressUi("", AddressError.None, AddressHelper.None))
+        MutableStateFlow(AddressUi("", emptyList(), AddressError.None, AddressHelper.None))
 
     private val mapcodeUi: Flow<MapcodeUi> = combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
         val mapcode = mapcodes.getOrNull(mapcodeIndex)
@@ -81,6 +81,7 @@ class MapViewModel @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
     private var clearUnknownAddressErrorJob: Job? = null
+    private var getMatchingAddressesJob: Job? = null
 
     var isGoogleMapsSdkLoaded: Boolean = false
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
@@ -181,29 +182,43 @@ class MapViewModel @Inject constructor(
         return true
     }
 
+    fun onAddressTextChange(text: String) {
+        addressUi.update { it.copy(address = text) }
+
+        getMatchingAddressesJob?.cancel()
+        getMatchingAddressesJob = viewModelScope.launch {
+            useCase.getMatchingAddresses(text).onSuccess { result ->
+                addressUi.update { it.copy(matchingAddresses = result) }
+            }
+        }
+    }
+
     /**
      * Find the address or mapcode and move to that location on the map.
      */
-    fun queryAddress(query: String) {
-        if (query.isEmpty()) {
+    fun onSubmitAddress() {
+        val addressText = addressUi.value.address
+        if (addressText.isEmpty()) {
             return
         }
+
+        getMatchingAddressesJob?.cancel()
 
         //first try to decode it as a mapcode, if that fails then try to geocode it as an address
         viewModelScope.launch(dispatchers.io) {
             val resolveAddressResult: Result<Location> =
-                useCase.decodeMapcode(query).recoverCatching {
+                useCase.decodeMapcode(addressText).recoverCatching {
                     val mapcode = mapcodes.value[mapcodeIndex.value]
-                    val queryWithTerritory = "${mapcode.territory.name} $query"
+                    val queryWithTerritory = "${mapcode.territory.name} $addressText"
 
                     val decodeQueryWithCurrentTerritoryResult = useCase.decodeMapcode(queryWithTerritory)
 
                     decodeQueryWithCurrentTerritoryResult.getOrThrow()
                 }.recoverCatching {
-                    useCase.geocode(query).getOrThrow()
+                    useCase.geocode(addressText).getOrThrow()
                 }
 
-            onResolveAddressQuery(query, resolveAddressResult)
+            onResolveAddressQuery(addressText, resolveAddressResult)
         }
     }
 
@@ -341,7 +356,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = "",//clear address if error
                 helper = addressHelper,
-                error = addressError
+                error = addressError,
+                matchingAddresses = emptyList()
             )
         }
     }
@@ -359,7 +375,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = newAddress,
                 helper = addressHelper,
-                error = AddressError.None
+                error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         }.onFailure { error ->
             val addressHelper: AddressHelper = when (error) {
@@ -371,7 +388,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = "",
                 helper = addressHelper,
-                error = AddressError.None
+                error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         }
     }
@@ -409,7 +427,7 @@ data class UiState(
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
-            addressUi = AddressUi("", AddressError.None, AddressHelper.None),
+            addressUi = AddressUi("", emptyList(), AddressError.None, AddressHelper.None),
             locationUi = LocationUi.EMPTY
         )
     }

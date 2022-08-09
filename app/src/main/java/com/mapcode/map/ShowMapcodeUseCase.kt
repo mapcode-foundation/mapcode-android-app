@@ -90,7 +90,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(address, 1).firstOrNull()
+                geocoder.getFromLocationName(address, 10).firstOrNull()
             }
 
             if (matchingAddress == null) {
@@ -179,6 +179,26 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
         ctx.startActivity(shareIntent)
     }
+
+    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
+        try {
+            val addressList = withContext(Dispatchers.Default) {
+                geocoder.getFromLocationName(query, 3)
+            }
+
+            val addressStringList = addressList.map { address ->
+                buildString {
+                    for (i in 0..address.maxAddressLineIndex) {
+                        append(address.getAddressLine(i))
+                    }
+                }
+            }
+
+            return success(addressStringList)
+        } catch (e: IOException) {
+            return failure(e)
+        }
+    }
 }
 
 /**
@@ -228,5 +248,13 @@ interface ShowMapcodeUseCase {
      */
     fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean
 
+    /**
+     * Open the share sheet to share some text.
+     */
     fun shareText(text: String, description: String)
+
+    /**
+     * Get a list of addresses that might correspond to the [query].
+     */
+    suspend fun getMatchingAddresses(query: String): Result<List<String>>
 }

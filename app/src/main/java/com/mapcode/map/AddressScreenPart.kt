@@ -1,31 +1,99 @@
 package com.mapcode.map
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
+import com.mapcode.theme.MapcodeTheme
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddressArea(
     modifier: Modifier = Modifier,
     address: String,
-    onChange: (String) -> Unit,
+    matchingAddresses: List<String>,
+    onChange: (String) -> Unit = {},
+    onSubmit: () -> Unit = {},
     helper: AddressHelper,
     error: AddressError
 ) {
     Column(modifier) {
-        ClearableTextField(
-            modifier = Modifier.fillMaxWidth(),
-            text = address,
-            onSubmit = onChange,
-            label = stringResource(R.string.address_bar_label),
-            clearButtonContentDescription = stringResource(R.string.clear_address_content_description)
-        )
+        var menuExpanded by remember { mutableStateOf(false) }
+        val focusRequester = FocusRequester()
+        val focusManager = LocalFocusManager.current
+
+        ExposedDropdownMenuBox(expanded = menuExpanded, onExpandedChange = { menuExpanded = it }) {
+            OutlinedTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                value = address,
+                onValueChange = {
+                    onChange(it)
+                    if (!menuExpanded) {
+                        menuExpanded = true
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search,
+                    keyboardType = KeyboardType.Text
+                ),
+                keyboardActions = KeyboardActions(onSearch = {
+                    menuExpanded = false
+                    focusManager.clearFocus()
+                    onSubmit()
+                }),
+                label = { Text(stringResource(R.string.address_bar_label), maxLines = 1) },
+                placeholder = { Text(address, maxLines = 1) },
+                trailingIcon = {
+                    if (address.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                focusRequester.requestFocus()
+                                onChange("")
+                            }) {
+                            Icon(
+                                Icons.Outlined.Clear,
+                                contentDescription = stringResource(R.string.clear_address_content_description)
+                            )
+                        }
+                    }
+                }
+            )
+
+            if (matchingAddresses.isNotEmpty()) {
+                ExposedDropdownMenu(
+                    modifier = Modifier.testTag("address_dropdown"),
+                    expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                    matchingAddresses.forEach { address ->
+                        DropdownMenuItem(onClick = {
+                            menuExpanded = false
+                            focusManager.clearFocus()
+                            onChange(address)
+                            onSubmit()
+                        }) {
+                            Text(address)
+                        }
+                    }
+                }
+            }
+        }
 
         val extraTextHeight = 20.dp
 
@@ -42,6 +110,21 @@ fun AddressArea(
                 Modifier
                     .height(extraTextHeight)
                     .padding(start = 4.dp), error = error
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun AddressAreaPreview() {
+    MapcodeTheme {
+        Surface {
+            AddressArea(
+                address = "10 Street, City, Country",
+                helper = AddressHelper.None,
+                error = AddressError.None,
+                matchingAddresses = listOf("Address 1", "VERY VERY VERY VERY VERY LONG ADDRESS"),
             )
         }
     }
