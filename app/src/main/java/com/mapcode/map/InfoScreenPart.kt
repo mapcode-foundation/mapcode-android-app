@@ -56,7 +56,8 @@ fun InfoArea(
         modifier,
         uiState,
         onMapcodeClick = onMapcodeClick,
-        onAddressChange = viewModel::queryAddress,
+        onAddressChange = viewModel::onAddressTextChange,
+        onSubmitAddress = viewModel::onSubmitAddress,
         onTerritoryClick = viewModel::onTerritoryClick,
         onChangeLatitude = viewModel::onLatitudeTextChanged,
         onSubmitLatitude = viewModel::onSubmitLatitude,
@@ -71,6 +72,7 @@ private fun InfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit = {},
+    onSubmitAddress: () -> Unit = {},
     onChangeLatitude: (String) -> Unit = {},
     onSubmitLatitude: () -> Unit = {},
     onChangeLongitude: (String) -> Unit = {},
@@ -84,6 +86,7 @@ private fun InfoArea(
             modifier,
             state,
             onAddressChange,
+            onSubmitAddress,
             onChangeLatitude,
             onSubmitLatitude,
             onChangeLongitude,
@@ -96,6 +99,7 @@ private fun InfoArea(
             modifier,
             state,
             onAddressChange,
+            onSubmitAddress,
             onChangeLatitude,
             onSubmitLatitude,
             onChangeLongitude,
@@ -114,6 +118,7 @@ private fun InfoAreaPreview() {
             mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
             addressUi = AddressUi(
                 "I am a very very very very very very extremely long address",
+                emptyList(),
                 AddressError.UnknownAddress("Street, City"),
                 AddressHelper.NoInternet,
             ),
@@ -128,6 +133,7 @@ private fun VerticalInfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit,
+    onSubmitAddress: () -> Unit,
     onChangeLatitude: (String) -> Unit,
     onSubmitLatitude: () -> Unit,
     onChangeLongitude: (String) -> Unit,
@@ -137,11 +143,13 @@ private fun VerticalInfoArea(
 ) {
     Column(modifier) {
         AddressArea(
-            Modifier,
-            state.addressUi.address,
-            onAddressChange,
-            state.addressUi.helper,
-            state.addressUi.error
+            modifier = Modifier,
+            address = state.addressUi.address,
+            matchingAddresses = state.addressUi.matchingAddresses,
+            onChange = onAddressChange,
+            onSubmit = onSubmitAddress,
+            helper = state.addressUi.helper,
+            error = state.addressUi.error
         )
         Spacer(Modifier.height(8.dp))
         TerritoryBox(
@@ -186,6 +194,7 @@ private fun HorizontalInfoArea(
     modifier: Modifier = Modifier,
     state: UiState,
     onAddressChange: (String) -> Unit,
+    onSubmitAddress: () -> Unit,
     onChangeLatitude: (String) -> Unit,
     onSubmitLatitude: () -> Unit,
     onChangeLongitude: (String) -> Unit,
@@ -195,11 +204,13 @@ private fun HorizontalInfoArea(
 ) {
     Column(modifier) {
         AddressArea(
-            Modifier.fillMaxWidth(),
-            state.addressUi.address,
-            onAddressChange,
-            state.addressUi.helper,
-            state.addressUi.error
+            modifier = Modifier.fillMaxWidth(),
+            address = state.addressUi.address,
+            matchingAddresses = state.addressUi.matchingAddresses,
+            onChange = onAddressChange,
+            onSubmit = onSubmitAddress,
+            helper = state.addressUi.helper,
+            error = state.addressUi.error
         )
         Row(Modifier.padding(top = 8.dp)) {
             TerritoryBox(

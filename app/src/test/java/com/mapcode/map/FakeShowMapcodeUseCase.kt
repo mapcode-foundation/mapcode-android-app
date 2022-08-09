@@ -81,4 +81,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     }
 
     override fun shareText(text: String, description: String) {}
+    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
+        return success(emptyList())
+    }
 }
