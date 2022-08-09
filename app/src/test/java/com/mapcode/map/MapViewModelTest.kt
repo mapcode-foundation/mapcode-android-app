@@ -928,4 +928,22 @@ internal class MapViewModelTest {
 
         assertThat(useCase.sharedText).isEqualTo("AB.CD")
     }
+
+    @Test
+    fun `copy latitude and longitude to clipboard`() = runTest {
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+        runCurrent()
+        viewModel.copyLocation()
+
+        assertThat(useCase.clipboard).isEqualTo("1,2")
+    }
+
+    @Test
+    fun `only copy 7 decimal places of latitude and longitude to clipboard`() = runTest {
+        viewModel.onCameraMoved(0.123456789, 1.0, 1f)
+        runCurrent()
+        viewModel.copyLocation()
+
+        assertThat(useCase.clipboard).isEqualTo("0.1234568,1")
+    }
 }

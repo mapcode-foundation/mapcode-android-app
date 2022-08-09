@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import javax.inject.Inject
 
 /**
@@ -293,6 +295,22 @@ class MapViewModel @Inject constructor(
         } else {
             val cleansedLongitude = LocationUtils.cleanseLongitude(text.toDouble())
             moveCamera(location.value.latitude, cleansedLongitude, 17f)
+        }
+    }
+
+    /**
+     * Copy the latitude and longitude to the clipboard: <lat>.<long>
+     */
+    fun copyLocation() {
+        location.value.also { location ->
+            val decimalFormat = DecimalFormat("0.#######").apply {
+                roundingMode = RoundingMode.HALF_DOWN
+            }
+
+            val latitudeText = decimalFormat.format(location.latitude).toString()
+            val longitudeText = decimalFormat.format(location.longitude).toString()
+
+            useCase.copyToClipboard("$latitudeText,$longitudeText")
         }
     }
 

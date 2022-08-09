@@ -8,6 +8,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -32,27 +34,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
 import com.mapcode.theme.MapcodeTheme
-import kotlinx.coroutines.launch
 
 @Composable
 fun InfoArea(
     modifier: Modifier,
     viewModel: MapViewModel,
-    scaffoldState: ScaffoldState,
+    showSnackbar: (String) -> Unit,
     isVerticalLayout: Boolean
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val scope = rememberCoroutineScope()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
     val onMapcodeClick = remember {
         {
             val copied = viewModel.copyMapcode()
             if (copied && Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                scope.launch {
-                    //dismiss current snack bar so they aren't queued up
-                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    scaffoldState.snackbarHostState.showSnackbar(copiedMessageStr)
-                }
+                showSnackbar(copiedMessageStr)
+            }
+        }
+    }
+    val onLocationClick = remember {
+        {
+            viewModel.copyLocation()
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                showSnackbar(copiedMessageStr)
             }
         }
     }
@@ -66,8 +70,10 @@ fun InfoArea(
         onTerritoryClick = viewModel::onTerritoryClick,
         onChangeLatitude = viewModel::onLatitudeTextChanged,
         onSubmitLatitude = viewModel::onSubmitLatitude,
+        onCopyLatitude = onLocationClick,
         onChangeLongitude = viewModel::onLongitudeTextChanged,
         onSubmitLongitude = viewModel::onSubmitLongitude,
+        onCopyLongitude = onLocationClick,
         isVerticalLayout = isVerticalLayout
     )
 }
@@ -80,8 +86,10 @@ private fun InfoArea(
     onSubmitAddress: () -> Unit = {},
     onChangeLatitude: (String) -> Unit = {},
     onSubmitLatitude: () -> Unit = {},
+    onCopyLatitude: () -> Unit = {},
     onChangeLongitude: (String) -> Unit = {},
     onSubmitLongitude: () -> Unit = {},
+    onCopyLongitude: () -> Unit = {},
     onTerritoryClick: () -> Unit = {},
     onMapcodeClick: () -> Unit = {},
     isVerticalLayout: Boolean
@@ -94,8 +102,10 @@ private fun InfoArea(
             onSubmitAddress,
             onChangeLatitude,
             onSubmitLatitude,
+            onCopyLatitude,
             onChangeLongitude,
             onSubmitLongitude,
+            onCopyLongitude,
             onTerritoryClick,
             onMapcodeClick
         )
@@ -107,8 +117,10 @@ private fun InfoArea(
             onSubmitAddress,
             onChangeLatitude,
             onSubmitLatitude,
+            onCopyLatitude,
             onChangeLongitude,
             onSubmitLongitude,
+            onCopyLongitude,
             onTerritoryClick,
             onMapcodeClick
         )
@@ -141,8 +153,10 @@ private fun VerticalInfoArea(
     onSubmitAddress: () -> Unit,
     onChangeLatitude: (String) -> Unit,
     onSubmitLatitude: () -> Unit,
+    onCopyLatitude: () -> Unit,
     onChangeLongitude: (String) -> Unit,
     onSubmitLongitude: () -> Unit,
+    onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
     onMapcodeClick: () -> Unit
 ) {
@@ -181,6 +195,7 @@ private fun VerticalInfoArea(
             showInvalidError = state.locationUi.showLatitudeInvalidError,
             onSubmit = onSubmitLatitude,
             onChange = onChangeLatitude,
+            onCopy = onCopyLatitude
         )
         Spacer(Modifier.height(8.dp))
         LongitudeTextBox(
@@ -190,6 +205,7 @@ private fun VerticalInfoArea(
             showInvalidError = state.locationUi.showLongitudeInvalidError,
             onSubmit = onSubmitLongitude,
             onChange = onChangeLongitude,
+            onCopy = onCopyLongitude
         )
     }
 }
@@ -202,8 +218,10 @@ private fun HorizontalInfoArea(
     onSubmitAddress: () -> Unit,
     onChangeLatitude: (String) -> Unit,
     onSubmitLatitude: () -> Unit,
+    onCopyLatitude: () -> Unit,
     onChangeLongitude: (String) -> Unit,
     onSubmitLongitude: () -> Unit,
+    onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
     onMapcodeClick: () -> Unit
 ) {
@@ -248,6 +266,7 @@ private fun HorizontalInfoArea(
                 showInvalidError = state.locationUi.showLatitudeInvalidError,
                 onSubmit = onSubmitLatitude,
                 onChange = onChangeLatitude,
+                onCopy = onCopyLatitude
             )
             LongitudeTextBox(
                 modifier = Modifier
@@ -259,6 +278,7 @@ private fun HorizontalInfoArea(
                 showInvalidError = state.locationUi.showLongitudeInvalidError,
                 onSubmit = onSubmitLongitude,
                 onChange = onChangeLongitude,
+                onCopy = onCopyLongitude
             )
         }
     }
@@ -302,7 +322,8 @@ private fun LatitudeTextBox(
     placeHolder: String,
     showInvalidError: Boolean,
     onSubmit: () -> Unit,
-    onChange: (String) -> Unit
+    onChange: (String) -> Unit,
+    onCopy: () -> Unit
 ) {
     LatLngTextField(
         modifier = modifier,
@@ -312,7 +333,8 @@ private fun LatitudeTextBox(
         label = stringResource(R.string.latitude_text_field_label),
         clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
         onSubmit = onSubmit,
-        onChange = onChange
+        onChange = onChange,
+        onCopy = onCopy
     )
 }
 
@@ -326,7 +348,8 @@ private fun LongitudeTextBox(
     placeHolder: String,
     showInvalidError: Boolean,
     onSubmit: () -> Unit,
-    onChange: (String) -> Unit
+    onChange: (String) -> Unit,
+    onCopy: () -> Unit
 ) {
     LatLngTextField(
         modifier = modifier,
@@ -336,7 +359,8 @@ private fun LongitudeTextBox(
         label = stringResource(R.string.longitude_text_field_label),
         clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
         onSubmit = onSubmit,
-        onChange = onChange
+        onChange = onChange,
+        onCopy = onCopy
     )
 }
 
@@ -350,7 +374,8 @@ private fun LatLngTextField(
     label: String,
     clearButtonContentDescription: String,
     onSubmit: () -> Unit,
-    onChange: (String) -> Unit
+    onChange: (String) -> Unit,
+    onCopy: () -> Unit
 ) {
     Column(modifier) {
         val focusManager = LocalFocusManager.current
@@ -379,7 +404,14 @@ private fun LatLngTextField(
                 .fillMaxWidth(),
             value = textValue,
             singleLine = true,
-            label = { Text(label, maxLines = 1) },
+            label = {
+                ClickableText(
+                    modifier = Modifier.testTag("latlngtextfield"),
+                    text = buildAnnotatedString { append(label) },
+                    maxLines = 1,
+                    onClick = { onCopy() }
+                )
+            },
             onValueChange = { value ->
                 textSelection = value.selection
                 onChange(value.text)

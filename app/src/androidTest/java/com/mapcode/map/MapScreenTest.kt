@@ -72,7 +72,7 @@ class MapScreenTest {
     }
 
     @Test
-    fun show_snack_bar_when_copying_mapcode() {
+    fun show_snackbar_when_copying_mapcode() {
         useCase.knownLocations.add(
             FakeLocation(
                 0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
@@ -358,7 +358,7 @@ class MapScreenTest {
     }
 
     @Test
-    fun show_snack_bar_if_fail_to_get_current_location() {
+    fun show_snackbar_if_fail_to_get_current_location() {
         useCase.currentLocation = null
         setMapScreenAsContent()
 
@@ -597,6 +597,30 @@ class MapScreenTest {
             performClick()
             assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
         }
+    }
+
+    @Test
+    fun copy_location_to_clipboard_when_tapping_latitude_header() {
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+
+        composeTestRule.onNode(
+            hasText("Latitude (Y)").and(hasTestTag("latlngtextfield")),
+            useUnmergedTree = true
+        ).performClick()
+        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+    }
+
+    @Test
+    fun copy_location_to_clipboard_when_tapping_longitude_header() {
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+
+        composeTestRule.onNode(
+            hasText("Longitude (X)").and(hasTestTag("latlngtextfield")),
+            useUnmergedTree = true
+        ).performClick()
+        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
     }
 
     private fun setMapScreenAsContent() {
