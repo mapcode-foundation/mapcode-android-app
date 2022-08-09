@@ -134,7 +134,8 @@ private fun VerticalInfoAreaLayout(
                 .align(Alignment.Bottom)
                 .padding(8.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding(),
+                .imePadding()
+                .systemBarsPadding(),
             viewModel,
             scaffoldState,
             isVerticalLayout = true
