@@ -17,6 +17,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
         private set
 
+    var sharedText: String? = null
+        private set
+
     var hasInternetConnection: Boolean = true
     var currentLocation: Location? = null
 
@@ -81,7 +84,10 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return true
     }
 
-    override fun shareText(text: String, description: String) {}
+    override fun shareText(text: String, description: String) {
+        sharedText = text
+    }
+    
     override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
         return success(matchingAddresses[query] ?: emptyList())
     }

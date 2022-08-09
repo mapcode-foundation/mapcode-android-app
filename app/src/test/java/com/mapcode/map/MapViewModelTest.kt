@@ -69,14 +69,14 @@ internal class MapViewModelTest {
                 1.0,
                 1.0,
                 addresses = emptyList(),
-                mapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
+                mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD))
             )
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 0f)
         viewModel.copyMapcode()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA 1AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("NLD 1AB.XY")
     }
 
     @Test
@@ -443,7 +443,7 @@ internal class MapViewModelTest {
         runCurrent()
 
         val uiState2 = viewModel.uiState.value
-        assertThat(uiState2.mapcodeUi).isEqualTo(MapcodeUi("HHH.HHH", "AAA", "International", 2, 3))
+        assertThat(uiState2.mapcodeUi).isEqualTo(MapcodeUi("HHH.HHH", null, "International", 2, 3))
 
         viewModel.onTerritoryClick()
         runCurrent()
@@ -889,5 +889,43 @@ internal class MapViewModelTest {
         runCurrent()
 
         assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
+    }
+
+    @Test
+    fun `do not show AAA for international mapcode`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isNull()
+    }
+
+    @Test
+    fun `do not copy AAA when copying international mapcodes`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+        viewModel.copyMapcode()
+
+        assertThat(useCase.clipboard).isEqualTo("AB.CD")
+    }
+
+    @Test
+    fun `do not copy AAA when sharing international mapcodes`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+        viewModel.shareMapcode()
+
+        assertThat(useCase.sharedText).isEqualTo("AB.CD")
     }
 }

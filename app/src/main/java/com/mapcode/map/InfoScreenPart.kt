@@ -421,7 +421,7 @@ private fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @Drawabl
 private fun MapcodeBox(
     modifier: Modifier = Modifier,
     code: String,
-    territory: String
+    territory: String?
 ) {
     Card(
         modifier = modifier,
@@ -438,10 +438,12 @@ private fun MapcodeBox(
                 MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold).toSpanStyle()
 
             val styledString = buildAnnotatedString {
-                pushStyle(MaterialTheme.typography.body2.toSpanStyle())
-                append(territory)
-                pop()
-                append(" ")
+                if (territory != null) {
+                    pushStyle(MaterialTheme.typography.body2.toSpanStyle())
+                    append(territory)
+                    pop()
+                    append(" ")
+                }
                 pushStyle(codeSpanStyle)
                 append(code)
                 pop()

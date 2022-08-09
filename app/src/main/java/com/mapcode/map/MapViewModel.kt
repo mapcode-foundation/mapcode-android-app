@@ -13,6 +13,7 @@ import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
+import com.mapcode.Territory
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
@@ -51,9 +52,15 @@ class MapViewModel @Inject constructor(
         if (mapcode == null) {
             MapcodeUi("", "", "", 0, 0)
         } else {
+            val territoryName = if (mapcode.territory == Territory.AAA) {
+                null
+            } else {
+                mapcode.territory.name
+            }
+
             MapcodeUi(
                 mapcode.code,
-                mapcode.territory.name,
+                territoryName,
                 mapcode.territory.fullName,
                 mapcodeIndex + 1,
                 mapcodes.size
@@ -178,7 +185,14 @@ class MapViewModel @Inject constructor(
         }
 
         val mapcode = mapcodes.value[mapcodeIndex.value]
-        useCase.copyToClipboard("${mapcode.territory.name} ${mapcode.code}")
+
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            "${mapcode.territory.name} ${mapcode.code}"
+        }
+
+        useCase.copyToClipboard(text)
         return true
     }
 
@@ -415,7 +429,13 @@ class MapViewModel @Inject constructor(
 
     fun shareMapcode() {
         val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
-        useCase.shareText(text = "$mapcode", description = "Mapcode: $mapcode")
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
+        }
+
+        useCase.shareText(text = text, description = "Mapcode: $text")
     }
 }
 

@@ -8,7 +8,7 @@ data class MapcodeUi(
     /**
      * The short name of the territory. E.g NLD.
      */
-    val territoryShortName: String,
+    val territoryShortName: String?,
 
     /**
      * The full name of the territory. E.g Netherlands.
