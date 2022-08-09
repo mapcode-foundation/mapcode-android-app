@@ -2,6 +2,7 @@
 
 package com.mapcode.map
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -16,14 +17,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
@@ -336,6 +340,7 @@ private fun LongitudeTextBox(
     )
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 private fun LatLngTextField(
     modifier: Modifier = Modifier,
@@ -350,15 +355,35 @@ private fun LatLngTextField(
     Column(modifier) {
         val focusManager = LocalFocusManager.current
         val focusRequester = remember { FocusRequester() }
+        var textSelection: TextRange by remember { mutableStateOf(TextRange.Zero) }
+
+        val textValue: TextFieldValue by derivedStateOf { TextFieldValue(text, textSelection) }
+
+        var selectAllText: Boolean by remember { mutableStateOf(false) }
+
+        if (selectAllText) {
+            SideEffect {
+                textSelection = TextRange(0, text.length)
+                selectAllText = false
+            }
+        }
 
         OutlinedTextField(
             modifier = Modifier
                 .focusRequester(focusRequester)
+                .onFocusChanged { state ->
+                    if (state.isFocused) {
+                        selectAllText = true
+                    }
+                }
                 .fillMaxWidth(),
-            value = text,
+            value = textValue,
             singleLine = true,
             label = { Text(label, maxLines = 1) },
-            onValueChange = onChange,
+            onValueChange = { value ->
+                textSelection = value.selection
+                onChange(value.text)
+            },
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Go,
                 keyboardType = KeyboardType.Decimal

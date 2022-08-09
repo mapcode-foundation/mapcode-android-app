@@ -1,9 +1,11 @@
 package com.mapcode.map
 
 import android.Manifest
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.TextRange
 import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -50,7 +52,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Mapcode").performClick()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AB.XY")
     }
 
     @Test
@@ -64,9 +66,9 @@ class MapScreenTest {
         setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 0f)
 
-        composeTestRule.onNodeWithText("AAA AB.XY").performClick()
+        composeTestRule.onNodeWithText("AB.XY").performClick()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AB.XY")
     }
 
     @Test
@@ -81,7 +83,7 @@ class MapScreenTest {
 
         setMapScreenAsContent()
 
-        composeTestRule.onNodeWithText("AAA AB.XY").performClick()
+        composeTestRule.onNodeWithText("AB.XY").performClick()
 
         composeTestRule.waitForIdle()
 
@@ -388,7 +390,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Share mapcode").performClick()
 
-        assertThat(useCase.sharedText).isEqualTo("AAA AB.XY")
+        assertThat(useCase.sharedText).isEqualTo("AB.XY")
     }
 
     @Test
@@ -567,6 +569,34 @@ class MapScreenTest {
         setMapScreenAsContent()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun select_latitude_text_when_focussing() {
+        useCase.knownLocations.add(
+            FakeLocation(0.0, 0.0, emptyList(), mapcodes = emptyList())
+        )
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Latitude (Y)").apply {
+            performClick()
+            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+        }
+    }
+
+    @Test
+    fun select_longitude_text_when_focussing() {
+        useCase.knownLocations.add(
+            FakeLocation(0.0, 0.0, emptyList(), mapcodes = emptyList())
+        )
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Longitude (X)").apply {
+            performClick()
+            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+        }
     }
 
     private fun setMapScreenAsContent() {
