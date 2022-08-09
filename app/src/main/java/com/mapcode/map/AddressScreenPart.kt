@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -32,7 +33,7 @@ fun AddressArea(
     error: AddressError
 ) {
     Column(modifier) {
-        var menuExpanded by remember { mutableStateOf(true) }
+        var menuExpanded by remember { mutableStateOf(false) }
         val focusRequester = FocusRequester()
         val focusManager = LocalFocusManager.current
 
@@ -50,10 +51,11 @@ fun AddressArea(
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Go,
+                    imeAction = ImeAction.Search,
                     keyboardType = KeyboardType.Text
                 ),
-                keyboardActions = KeyboardActions(onGo = {
+                keyboardActions = KeyboardActions(onSearch = {
+                    menuExpanded = false
                     focusManager.clearFocus()
                     onSubmit()
                 }),
@@ -76,7 +78,9 @@ fun AddressArea(
             )
 
             if (matchingAddresses.isNotEmpty()) {
-                ExposedDropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                ExposedDropdownMenu(
+                    modifier = Modifier.testTag("address_dropdown"),
+                    expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     matchingAddresses.forEach { address ->
                         DropdownMenuItem(onClick = {
                             menuExpanded = false

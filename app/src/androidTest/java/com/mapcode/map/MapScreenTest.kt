@@ -491,6 +491,84 @@ class MapScreenTest {
         composeTestRule.onNodeWithText("Must be a number!").assertDoesNotExist()
     }
 
+    @Test
+    fun hide_dropdown_if_no_matching_addresses() {
+        useCase.matchingAddresses["address"] = emptyList()
+
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertDoesNotExist()
+    }
+
+    @Test
+    fun show_matching_addresses_in_dropdown_when_typing() {
+        useCase.matchingAddresses["address"] = listOf("Street 1", "Street 2")
+
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Street 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Street 2").assertIsDisplayed()
+    }
+
+    @Test
+    fun hide_dropdown_if_not_typing_address() {
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode")
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_address_focus_when_submitting_address_query() {
+        useCase.knownLocations.add(FakeLocation(1.0, 1.0, addresses = listOf("address"), mapcodes = emptyList()))
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+            performImeAction()
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun clear_address_focus_when_choosing_address_in_dropdown() {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Street 1").performClick()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun do_not_focus_address_when_opening_app() {
+        setMapScreenAsContent()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
             MapScreen(viewModel = viewModel, renderGoogleMaps = false)

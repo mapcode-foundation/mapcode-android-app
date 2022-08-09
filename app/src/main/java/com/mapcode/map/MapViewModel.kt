@@ -202,6 +202,8 @@ class MapViewModel @Inject constructor(
             return
         }
 
+        getMatchingAddressesJob?.cancel()
+
         //first try to decode it as a mapcode, if that fails then try to geocode it as an address
         viewModelScope.launch(dispatchers.io) {
             val resolveAddressResult: Result<Location> =

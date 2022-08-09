@@ -880,4 +880,14 @@ internal class MapViewModelTest {
 
         assertThat(viewModel.uiState.value.locationUi.longitudePlaceholder).isEqualTo("1.0000000")
     }
+
+    @Test
+    fun `show address dropdown when typing address`() = runTest {
+        useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
+
+        viewModel.onAddressTextChange("street")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
+    }
 }
