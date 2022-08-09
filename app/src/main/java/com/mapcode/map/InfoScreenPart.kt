@@ -2,6 +2,7 @@
 
 package com.mapcode.map
 
+import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -42,7 +43,7 @@ fun InfoArea(
     val onMapcodeClick = remember {
         {
             val copied = viewModel.copyMapcode()
-            if (copied) {
+            if (copied && Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
                 scope.launch {
                     //dismiss current snack bar so they aren't queued up
                     scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
