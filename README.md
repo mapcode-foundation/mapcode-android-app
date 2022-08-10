@@ -4,7 +4,9 @@
 
 **Copyright (C) 2014-2022 Stichting Mapcode Foundation (http://www.mapcode.com)**
 
-This is Mapcode Finder, the official Android application for mapcodes.
+This is Mapcode Finder, the official Android application for mapcodes. Have fun using it!
+
+Rijn Buve
 
 # License
 
@@ -41,3 +43,8 @@ Normally, one of our developers should be able to comment on them and fix.
 # Release Notes
 
 See [CHANGELOG.md](./CHANGELOG.md) for release notes.xz
+
+# Credits
+
+Special thanks to Seth Schroeder for developing Android version of this app.
+
