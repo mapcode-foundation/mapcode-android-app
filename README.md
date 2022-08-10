@@ -31,7 +31,7 @@ The local `.gitignore` file in the Git repository itself to reflect those file o
 regular compile, build or release commands, such as:
 `target/ out/`
 
-Tip: Use [gitignore.io](http://gitignore.io)] to generate or update the `.gitignore` file.
+Tip: Use [[gitignore.io](http://gitignore.io)] to generate or update the `.gitignore` file.
 
 # Bug Reports and New Feature Requests
 
@@ -40,4 +40,4 @@ Normally, one of our developers should be able to comment on them and fix.
 
 # Release Notes
 
-See [CHANGELOG.md] for release notes.
+See [(CHANGELOG.md)] for release notes.
