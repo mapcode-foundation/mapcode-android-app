@@ -40,4 +40,4 @@ Normally, one of our developers should be able to comment on them and fix.
 
 # Release Notes
 
-See [(CHANGELOG.md)] for release notes.
+See [[CHANGELOG.md](./CHANGELOG.md)] for release notes.
