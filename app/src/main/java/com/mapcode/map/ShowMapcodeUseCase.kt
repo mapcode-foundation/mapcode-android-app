@@ -15,8 +15,14 @@ import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.Result.Companion.failure
@@ -27,12 +33,15 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Created by sds100 on 01/06/2022.
  */
-
-class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val ctx: Context) : ShowMapcodeUseCase {
+class ShowMapcodeUseCaseImpl @Inject constructor(
+    @ApplicationContext private val ctx: Context,
+    private val coroutineScope: CoroutineScope
+) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(ctx)
+    private val okHttpClient: OkHttpClient = OkHttpClient()
 
     /**
      * Save the last location because on Google Maps it can still show the blue my location dot
@@ -41,6 +50,27 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
     private var cachedLastLocation: Location? = null
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val url = HttpUrl.Builder()
+                    .scheme("https")
+                    .host("api.mapcode.com")
+                    .addPathSegment("mapcode")
+                    .addPathSegment("codes")
+                    .addPathSegment("$lat,$long")
+                    .addQueryParameter("client", "android")
+                    .build()
+
+                val request: Request = Request.Builder()
+                    .url(url)
+                    .build()
+
+                okHttpClient.newCall(request).execute()
+            } catch (_: Exception) {
+                Timber.e("Failed to call mapcode API.")
+            }
+        }
+
         return MapcodeCodec.encode(lat, long)
     }
 
@@ -60,7 +90,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(address, 1).firstOrNull()
+                geocoder.getFromLocationName(address, 10).firstOrNull()
             }
 
             if (matchingAddress == null) {
@@ -149,6 +179,26 @@ class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val
 
         ctx.startActivity(shareIntent)
     }
+
+    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
+        try {
+            val addressList = withContext(Dispatchers.Default) {
+                geocoder.getFromLocationName(query, 3)
+            }
+
+            val addressStringList = addressList.map { address ->
+                buildString {
+                    for (i in 0..address.maxAddressLineIndex) {
+                        append(address.getAddressLine(i))
+                    }
+                }
+            }
+
+            return success(addressStringList)
+        } catch (e: IOException) {
+            return failure(e)
+        }
+    }
 }
 
 /**
@@ -198,5 +248,13 @@ interface ShowMapcodeUseCase {
      */
     fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean
 
+    /**
+     * Open the share sheet to share some text.
+     */
     fun shareText(text: String, description: String)
+
+    /**
+     * Get a list of addresses that might correspond to the [query].
+     */
+    suspend fun getMatchingAddresses(query: String): Result<List<String>>
 }

@@ -13,6 +13,7 @@ import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
+import com.mapcode.Territory
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
@@ -23,6 +24,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import javax.inject.Inject
 
 /**
@@ -43,7 +46,7 @@ class MapViewModel @Inject constructor(
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
     private val addressUi: MutableStateFlow<AddressUi> =
-        MutableStateFlow(AddressUi("", AddressError.None, AddressHelper.None))
+        MutableStateFlow(AddressUi("", emptyList(), AddressError.None, AddressHelper.None))
 
     private val mapcodeUi: Flow<MapcodeUi> = combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
         val mapcode = mapcodes.getOrNull(mapcodeIndex)
@@ -51,9 +54,15 @@ class MapViewModel @Inject constructor(
         if (mapcode == null) {
             MapcodeUi("", "", "", 0, 0)
         } else {
+            val territoryName = if (mapcode.territory == Territory.AAA) {
+                null
+            } else {
+                mapcode.territory.name
+            }
+
             MapcodeUi(
                 mapcode.code,
-                mapcode.territory.name,
+                territoryName,
                 mapcode.territory.fullName,
                 mapcodeIndex + 1,
                 mapcodes.size
@@ -81,6 +90,7 @@ class MapViewModel @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
     private var clearUnknownAddressErrorJob: Job? = null
+    private var getMatchingAddressesJob: Job? = null
 
     var isGoogleMapsSdkLoaded: Boolean = false
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
@@ -177,33 +187,54 @@ class MapViewModel @Inject constructor(
         }
 
         val mapcode = mapcodes.value[mapcodeIndex.value]
-        useCase.copyToClipboard("${mapcode.territory.name} ${mapcode.code}")
+
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            "${mapcode.territory.name} ${mapcode.code}"
+        }
+
+        useCase.copyToClipboard(text)
         return true
+    }
+
+    fun onAddressTextChange(text: String) {
+        addressUi.update { it.copy(address = text) }
+
+        getMatchingAddressesJob?.cancel()
+        getMatchingAddressesJob = viewModelScope.launch {
+            useCase.getMatchingAddresses(text).onSuccess { result ->
+                addressUi.update { it.copy(matchingAddresses = result) }
+            }
+        }
     }
 
     /**
      * Find the address or mapcode and move to that location on the map.
      */
-    fun queryAddress(query: String) {
-        if (query.isEmpty()) {
+    fun onSubmitAddress() {
+        val addressText = addressUi.value.address
+        if (addressText.isEmpty()) {
             return
         }
+
+        getMatchingAddressesJob?.cancel()
 
         //first try to decode it as a mapcode, if that fails then try to geocode it as an address
         viewModelScope.launch(dispatchers.io) {
             val resolveAddressResult: Result<Location> =
-                useCase.decodeMapcode(query).recoverCatching {
+                useCase.decodeMapcode(addressText).recoverCatching {
                     val mapcode = mapcodes.value[mapcodeIndex.value]
-                    val queryWithTerritory = "${mapcode.territory.name} $query"
+                    val queryWithTerritory = "${mapcode.territory.name} $addressText"
 
                     val decodeQueryWithCurrentTerritoryResult = useCase.decodeMapcode(queryWithTerritory)
 
                     decodeQueryWithCurrentTerritoryResult.getOrThrow()
                 }.recoverCatching {
-                    useCase.geocode(query).getOrThrow()
+                    useCase.geocode(addressText).getOrThrow()
                 }
 
-            onResolveAddressQuery(query, resolveAddressResult)
+            onResolveAddressQuery(addressText, resolveAddressResult)
         }
     }
 
@@ -264,6 +295,22 @@ class MapViewModel @Inject constructor(
         } else {
             val cleansedLongitude = LocationUtils.cleanseLongitude(text.toDouble())
             moveCamera(location.value.latitude, cleansedLongitude, 17f)
+        }
+    }
+
+    /**
+     * Copy the latitude and longitude to the clipboard: <lat>.<long>
+     */
+    fun copyLocation() {
+        location.value.also { location ->
+            val decimalFormat = DecimalFormat("0.#######").apply {
+                roundingMode = RoundingMode.HALF_DOWN
+            }
+
+            val latitudeText = decimalFormat.format(location.latitude).toString()
+            val longitudeText = decimalFormat.format(location.longitude).toString()
+
+            useCase.copyToClipboard("$latitudeText,$longitudeText")
         }
     }
 
@@ -341,7 +388,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = "",//clear address if error
                 helper = addressHelper,
-                error = addressError
+                error = addressError,
+                matchingAddresses = emptyList()
             )
         }
     }
@@ -359,7 +407,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = newAddress,
                 helper = addressHelper,
-                error = AddressError.None
+                error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         }.onFailure { error ->
             val addressHelper: AddressHelper = when (error) {
@@ -371,7 +420,8 @@ class MapViewModel @Inject constructor(
             addressUi.value = AddressUi(
                 address = "",
                 helper = addressHelper,
-                error = AddressError.None
+                error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         }
     }
@@ -397,7 +447,13 @@ class MapViewModel @Inject constructor(
 
     fun shareMapcode() {
         val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
-        useCase.shareText(text = "$mapcode", description = "Mapcode: $mapcode")
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
+        }
+
+        useCase.shareText(text = text, description = "Mapcode: $text")
     }
 }
 
@@ -409,7 +465,7 @@ data class UiState(
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
-            addressUi = AddressUi("", AddressError.None, AddressHelper.None),
+            addressUi = AddressUi("", emptyList(), AddressError.None, AddressHelper.None),
             locationUi = LocationUi.EMPTY
         )
     }

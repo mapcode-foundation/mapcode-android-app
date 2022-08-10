@@ -56,6 +56,15 @@ fun MapScreen(
     val scaffoldState = rememberScaffoldState()
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
+    val scope = rememberCoroutineScope()
+
+    val showSnackbar: (String) -> Unit = { message ->
+        scope.launch {
+            //dismiss current snack bar so they aren't queued up
+            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+            scaffoldState.snackbarHostState.showSnackbar(message)
+        }
+    }
 
     if (viewModel.showCantFindLocationSnackBar) {
         LaunchedEffect(viewModel.showCantFindLocationSnackBar) {
@@ -87,7 +96,7 @@ fun MapScreen(
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
-                    scaffoldState,
+                    showSnackbar,
                     renderGoogleMaps
                 )
                 LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
@@ -95,13 +104,13 @@ fun MapScreen(
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
-                    scaffoldState,
+                    showSnackbar,
                     renderGoogleMaps
                 )
                 LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
                     Modifier.padding(padding),
                     viewModel,
-                    scaffoldState,
+                    showSnackbar,
                     renderGoogleMaps
                 )
             }
@@ -113,7 +122,7 @@ fun MapScreen(
 private fun VerticalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
-    scaffoldState: ScaffoldState,
+    showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
     Row(modifier, horizontalArrangement = Arrangement.End) {
@@ -134,9 +143,10 @@ private fun VerticalInfoAreaLayout(
                 .align(Alignment.Bottom)
                 .padding(8.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding(),
+                .imePadding()
+                .systemBarsPadding(),
             viewModel,
-            scaffoldState,
+            showSnackbar = showSnackbar,
             isVerticalLayout = true
         )
     }
@@ -146,7 +156,7 @@ private fun VerticalInfoAreaLayout(
 private fun HorizontalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
-    scaffoldState: ScaffoldState,
+    showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
     Column(modifier, verticalArrangement = Arrangement.Bottom) {
@@ -166,7 +176,7 @@ private fun HorizontalInfoAreaLayout(
                 .wrapContentHeight()
                 .padding(8.dp),
             viewModel,
-            scaffoldState,
+            showSnackbar,
             isVerticalLayout = false
         )
     }
@@ -176,7 +186,7 @@ private fun HorizontalInfoAreaLayout(
 private fun FloatingInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
-    scaffoldState: ScaffoldState,
+    showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
     Box(modifier) {
@@ -195,7 +205,7 @@ private fun FloatingInfoAreaLayout(
                 Modifier.width(400.dp),
                 elevation = 4.dp
             ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, scaffoldState, isVerticalLayout = false)
+                InfoArea(Modifier.padding(8.dp), viewModel, showSnackbar, isVerticalLayout = false)
             }
         }
     }
@@ -394,11 +404,10 @@ private fun MapControls(
     onShareMapcodeClick: () -> Unit = {},
     onAboutClick: () -> Unit = {}
 ) {
-    val greenButtonColors = ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
     } else {
-        greenButtonColors
+        ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     }
 
     val satelliteButtonIcon: Painter = if (isSatelliteModeEnabled) {
@@ -442,7 +451,7 @@ private fun MapControls(
                 .align(Alignment.Bottom),
             onClick = onDirectionsClick,
             contentPadding = PaddingValues(8.dp),
-            colors = greenButtonColors
+            colors = greyButtonColors()
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_outline_directions_24),

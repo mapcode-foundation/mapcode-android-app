@@ -1,9 +1,11 @@
 package com.mapcode.map
 
 import android.Manifest
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.text.TextRange
 import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -50,7 +52,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Mapcode").performClick()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AB.XY")
     }
 
     @Test
@@ -64,13 +66,13 @@ class MapScreenTest {
         setMapScreenAsContent()
         viewModel.onCameraMoved(0.0, 0.0, 0f)
 
-        composeTestRule.onNodeWithText("AAA AB.XY").performClick()
+        composeTestRule.onNodeWithText("AB.XY").performClick()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("AB.XY")
     }
 
     @Test
-    fun show_snack_bar_when_copying_mapcode() {
+    fun show_snackbar_when_copying_mapcode() {
         useCase.knownLocations.add(
             FakeLocation(
                 0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
@@ -81,7 +83,7 @@ class MapScreenTest {
 
         setMapScreenAsContent()
 
-        composeTestRule.onNodeWithText("AAA AB.XY").performClick()
+        composeTestRule.onNodeWithText("AB.XY").performClick()
 
         composeTestRule.waitForIdle()
 
@@ -356,7 +358,7 @@ class MapScreenTest {
     }
 
     @Test
-    fun show_snack_bar_if_fail_to_get_current_location() {
+    fun show_snackbar_if_fail_to_get_current_location() {
         useCase.currentLocation = null
         setMapScreenAsContent()
 
@@ -388,7 +390,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Share mapcode").performClick()
 
-        assertThat(useCase.sharedText).isEqualTo("AAA AB.XY")
+        assertThat(useCase.sharedText).isEqualTo("AB.XY")
     }
 
     @Test
@@ -489,6 +491,136 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Longitude (X)").assertIsNotFocused()
         composeTestRule.onNodeWithText("Must be a number!").assertDoesNotExist()
+    }
+
+    @Test
+    fun hide_dropdown_if_no_matching_addresses() {
+        useCase.matchingAddresses["address"] = emptyList()
+
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertDoesNotExist()
+    }
+
+    @Test
+    fun show_matching_addresses_in_dropdown_when_typing() {
+        useCase.matchingAddresses["address"] = listOf("Street 1", "Street 2")
+
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Street 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Street 2").assertIsDisplayed()
+    }
+
+    @Test
+    fun hide_dropdown_if_not_typing_address() {
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode")
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("address_dropdown").assertDoesNotExist()
+    }
+
+    @Test
+    fun clear_address_focus_when_submitting_address_query() {
+        useCase.knownLocations.add(FakeLocation(1.0, 1.0, addresses = listOf("address"), mapcodes = emptyList()))
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+            performImeAction()
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun clear_address_focus_when_choosing_address_in_dropdown() {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+
+        setMapScreenAsContent()
+
+        composeTestRule.onNodeWithText("Enter address or mapcode").apply {
+            performTextClearance()
+            performTextInput("address")
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Street 1").performClick()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun do_not_focus_address_when_opening_app() {
+        setMapScreenAsContent()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
+    }
+
+    @Test
+    fun select_latitude_text_when_focussing() {
+        useCase.knownLocations.add(
+            FakeLocation(0.0, 0.0, emptyList(), mapcodes = emptyList())
+        )
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Latitude (Y)").apply {
+            performClick()
+            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+        }
+    }
+
+    @Test
+    fun select_longitude_text_when_focussing() {
+        useCase.knownLocations.add(
+            FakeLocation(0.0, 0.0, emptyList(), mapcodes = emptyList())
+        )
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Longitude (X)").apply {
+            performClick()
+            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+        }
+    }
+
+    @Test
+    fun copy_location_to_clipboard_when_tapping_latitude_header() {
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+
+        composeTestRule.onNode(
+            hasText("Latitude (Y)").and(hasTestTag("latlngtextfield")),
+            useUnmergedTree = true
+        ).performClick()
+        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+    }
+
+    @Test
+    fun copy_location_to_clipboard_when_tapping_longitude_header() {
+        setMapScreenAsContent()
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+
+        composeTestRule.onNode(
+            hasText("Longitude (X)").and(hasTestTag("latlngtextfield")),
+            useUnmergedTree = true
+        ).performClick()
+        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
     }
 
     private fun setMapScreenAsContent() {

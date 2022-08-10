@@ -69,14 +69,14 @@ internal class MapViewModelTest {
                 1.0,
                 1.0,
                 addresses = emptyList(),
-                mapcodes = listOf(Mapcode("1AB.XY", Territory.AAA))
+                mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD))
             )
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 0f)
         viewModel.copyMapcode()
 
-        assertThat(useCase.clipboard).isEqualTo("AAA 1AB.XY")
+        assertThat(useCase.clipboard).isEqualTo("NLD 1AB.XY")
     }
 
     @Test
@@ -90,7 +90,8 @@ internal class MapViewModelTest {
         useCase.hasInternetConnection = false
         useCase.knownLocations.clear()
 
-        viewModel.queryAddress("address")
+        viewModel.onAddressTextChange("address")
+        viewModel.onSubmitAddress()
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -122,7 +123,8 @@ internal class MapViewModelTest {
     fun `show address not found message and clear address if unable to geocode address`() = runTest {
         useCase.knownLocations.clear()
 
-        viewModel.queryAddress("bad address")
+        viewModel.onAddressTextChange("bad address")
+        viewModel.onSubmitAddress()
         runCurrent()
 
         val uiState = viewModel.uiState.value
@@ -141,7 +143,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.queryAddress("NLD AB.CD")
+        viewModel.onAddressTextChange("NLD AB.CD")
+        viewModel.onSubmitAddress()
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -159,6 +162,7 @@ internal class MapViewModelTest {
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
                 error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         )
 
@@ -176,7 +180,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.queryAddress("street, city")
+        viewModel.onAddressTextChange("street, city")
+        viewModel.onSubmitAddress()
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -194,6 +199,7 @@ internal class MapViewModelTest {
                 "Street, City, 1234AB",
                 helper = AddressHelper.Location("City, 1234AB"),
                 error = AddressError.None,
+                matchingAddresses = emptyList()
             )
         )
 
@@ -204,7 +210,8 @@ internal class MapViewModelTest {
     fun `clear mapcode query if can't decode mapcode`() = runTest {
         useCase.knownLocations.clear()
 
-        viewModel.queryAddress("bad mapcode")
+        viewModel.onAddressTextChange("bad mapcode")
+        viewModel.onSubmitAddress()
         runCurrent()
 
         val uiState = viewModel.uiState.value
@@ -299,8 +306,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.queryAddress("Street, City")
-
+        viewModel.onAddressTextChange("Street, City")
+        viewModel.onSubmitAddress()
         advanceUntilIdle()
 
         assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.None)
@@ -309,7 +316,8 @@ internal class MapViewModelTest {
     @Test
     fun `show unknown address error temporarily`() = runTest {
         useCase.knownLocations.clear()
-        viewModel.queryAddress("bad address")
+        viewModel.onAddressTextChange("bad address")
+        viewModel.onSubmitAddress()
 
         runCurrent() //let the coroutine to update the address run
         assertThat(viewModel.uiState.value.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address"))
@@ -326,10 +334,12 @@ internal class MapViewModelTest {
     @Test
     fun `unknown address error should always clear after same amount of time`() = runTest {
         useCase.knownLocations.clear()
-        viewModel.queryAddress("bad address")
+        viewModel.onAddressTextChange("bad address")
+        viewModel.onSubmitAddress()
 
         advanceTimeBy(500) //wait 500ms before doing another query
-        viewModel.queryAddress("bad address 2")
+        viewModel.onAddressTextChange("bad address 2")
+        viewModel.onSubmitAddress()
 
         runCurrent() //let the coroutine to update the address run
         //the 2nd query should be showing
@@ -343,7 +353,8 @@ internal class MapViewModelTest {
     @Test
     fun `show error if doing an address search and no internet`() = runTest {
         useCase.hasInternetConnection = false
-        viewModel.queryAddress("Street, City")
+        viewModel.onAddressTextChange("Street, City")
+        viewModel.onSubmitAddress()
 
         runCurrent()
         assertThat(viewModel.uiState.value.addressUi.helper).isEqualTo(AddressHelper.NoInternet)
@@ -361,7 +372,8 @@ internal class MapViewModelTest {
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 0f) //fill the address with something
-        viewModel.queryAddress("")
+        viewModel.onAddressTextChange("")
+        viewModel.onSubmitAddress()
 
         runCurrent()
 
@@ -431,7 +443,7 @@ internal class MapViewModelTest {
         runCurrent()
 
         val uiState2 = viewModel.uiState.value
-        assertThat(uiState2.mapcodeUi).isEqualTo(MapcodeUi("HHH.HHH", "AAA", "International", 2, 3))
+        assertThat(uiState2.mapcodeUi).isEqualTo(MapcodeUi("HHH.HHH", null, "International", 2, 3))
 
         viewModel.onTerritoryClick()
         runCurrent()
@@ -707,7 +719,8 @@ internal class MapViewModelTest {
             )
         )
 
-        viewModel.queryAddress("Street, City, Country")
+        viewModel.onAddressTextChange("Street, City, Country")
+        viewModel.onSubmitAddress()
         runCurrent()
 
         assertThat(viewModel.zoom.value).isEqualTo(17f)
@@ -762,7 +775,8 @@ internal class MapViewModelTest {
         viewModel.onTerritoryClick() // check that it uses the user's chosen territory
         runCurrent()
 
-        viewModel.queryAddress("FGH.JKL")
+        viewModel.onAddressTextChange("FGH.JKL")
+        viewModel.onSubmitAddress()
         runCurrent()
 
         assertThat(viewModel.uiState.value.locationUi).isEqualTo(
@@ -865,5 +879,71 @@ internal class MapViewModelTest {
         runCurrent()
 
         assertThat(viewModel.uiState.value.locationUi.longitudePlaceholder).isEqualTo("1.0000000")
+    }
+
+    @Test
+    fun `show address dropdown when typing address`() = runTest {
+        useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
+
+        viewModel.onAddressTextChange("street")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
+    }
+
+    @Test
+    fun `do not show AAA for international mapcode`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isNull()
+    }
+
+    @Test
+    fun `do not copy AAA when copying international mapcodes`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+        viewModel.copyMapcode()
+
+        assertThat(useCase.clipboard).isEqualTo("AB.CD")
+    }
+
+    @Test
+    fun `do not copy AAA when sharing international mapcodes`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+        )
+
+        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
+        runCurrent()
+        viewModel.shareMapcode()
+
+        assertThat(useCase.sharedText).isEqualTo("AB.CD")
+    }
+
+    @Test
+    fun `copy latitude and longitude to clipboard`() = runTest {
+        viewModel.onCameraMoved(1.0, 2.0, 1f)
+        runCurrent()
+        viewModel.copyLocation()
+
+        assertThat(useCase.clipboard).isEqualTo("1,2")
+    }
+
+    @Test
+    fun `only copy 7 decimal places of latitude and longitude to clipboard`() = runTest {
+        viewModel.onCameraMoved(0.123456789, 1.0, 1f)
+        runCurrent()
+        viewModel.copyLocation()
+
+        assertThat(useCase.clipboard).isEqualTo("0.1234568,1")
     }
 }

@@ -14,6 +14,8 @@ import kotlin.Result.Companion.success
  */
 class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
+        private set
+
     var hasInternetConnection: Boolean = true
     var currentLocation: Location? = null
     var isMapsAppInstalled: Boolean = true
@@ -22,6 +24,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         private set
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
+    val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -77,11 +80,15 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return currentLocation
     }
 
+    override fun shareText(text: String, description: String) {
+        sharedText = text
+    }
+
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
     }
 
-    override fun shareText(text: String, description: String) {
-        sharedText = text
+    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
+        return success(matchingAddresses[query] ?: emptyList())
     }
 }
