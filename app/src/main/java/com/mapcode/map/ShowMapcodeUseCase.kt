@@ -46,7 +46,10 @@ import kotlin.Result.Companion.success
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class ShowMapcodeUseCaseImpl @Inject constructor(@ApplicationContext private val ctx: Context) : ShowMapcodeUseCase {
+class ShowMapcodeUseCaseImpl @Inject constructor(
+    @ApplicationContext private val ctx: Context,
+    private val coroutineScope: CoroutineScope
+) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
     private val fusedLocationClient: FusedLocationProviderClient =
