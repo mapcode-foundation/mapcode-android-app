@@ -24,7 +24,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -421,11 +420,12 @@ private fun LatLngTextField(
             value = textValue,
             singleLine = true,
             label = {
-                ClickableText(
-                    modifier = Modifier.testTag("latlngtextfield"),
-                    text = buildAnnotatedString { append(label) },
-                    maxLines = 1,
-                    onClick = { onCopy() }
+                Text(
+                    modifier = Modifier
+                        .testTag("latlngtextfield")
+                        .clickable { onCopy() },
+                    text = label,
+                    maxLines = 1
                 )
             },
             onValueChange = { value ->
