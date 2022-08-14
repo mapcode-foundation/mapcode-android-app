@@ -34,11 +34,8 @@ import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -220,9 +217,39 @@ class MapViewModel @Inject constructor(
         addressUi.update { it.copy(address = text) }
 
         getMatchingAddressesJob?.cancel()
-        getMatchingAddressesJob = viewModelScope.launch {
-            useCase.getMatchingAddresses(text).onSuccess { result ->
-                addressUi.update { it.copy(matchingAddresses = result) }
+
+        if (text.isNotEmpty()) {
+            getMatchingAddressesJob = viewModelScope.launch(dispatchers.default) {
+                val latLngBounds = withContext(dispatchers.main) {
+                    cameraPositionState.projection?.visibleRegion?.latLngBounds
+                }
+                val maxResults = 10
+
+                val globalMatchingAddresses = useCase.getMatchingAddresses(text, maxResults = maxResults)
+                    .getOrNull()
+
+                val localMatchingAddresses = if (latLngBounds != null) {
+                    useCase.getMatchingAddresses(
+                        text,
+                        maxResults = maxResults,
+                        southwest = Location(latLngBounds.southwest.latitude, latLngBounds.southwest.longitude),
+                        northeast = Location(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
+                    ).getOrNull()
+                } else {
+                    emptyList()
+                }
+
+                if (localMatchingAddresses == null || globalMatchingAddresses == null) {
+                    return@launch
+                }
+
+                val matchingAddresses = if (localMatchingAddresses.size < maxResults) {
+                    localMatchingAddresses.plus(globalMatchingAddresses).take(maxResults)
+                } else {
+                    localMatchingAddresses.take(maxResults)
+                }
+
+                addressUi.update { it.copy(matchingAddresses = matchingAddresses.distinct()) }
             }
         }
     }

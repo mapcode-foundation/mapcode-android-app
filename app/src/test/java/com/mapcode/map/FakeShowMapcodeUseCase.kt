@@ -17,6 +17,7 @@
 package com.mapcode.map
 
 import com.mapcode.FakeLocation
+import com.mapcode.LocalAddressQuery
 import com.mapcode.Mapcode
 import com.mapcode.UnknownMapcodeException
 import com.mapcode.util.Location
@@ -40,7 +41,8 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var currentLocation: Location? = null
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
-    val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
+    val globalMatchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
+    val localMatchingAddresses: MutableMap<LocalAddressQuery, List<String>> = mutableMapOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -103,8 +105,17 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     override fun shareText(text: String, description: String) {
         sharedText = text
     }
-    
-    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
-        return success(matchingAddresses[query] ?: emptyList())
+
+    override suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>> {
+        return success((localMatchingAddresses[LocalAddressQuery(query, southwest, northeast)] ?: emptyList()))
+    }
+
+    override suspend fun getMatchingAddresses(query: String, maxResults: Int): Result<List<String>> {
+        return success(globalMatchingAddresses[query] ?: emptyList())
     }
 }
