@@ -28,6 +28,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.*
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -44,6 +45,7 @@ internal class MapViewModelTest {
 
     @Before
     fun setUp() {
+        Locale.setDefault(Locale.US) // set it to US formatting by default. tests can override it individually
         Dispatchers.setMain(testDispatcher)
 
         useCase = FakeShowMapcodeUseCase()
@@ -961,5 +963,43 @@ internal class MapViewModelTest {
         viewModel.copyLocation()
 
         assertThat(useCase.clipboard).isEqualTo("0.1234568,1")
+    }
+
+    @Test
+    fun `do not show error for comma decimal point in latitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLatitudeTextChanged("1,1")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLatitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `do not show error for comma decimal point in longitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLongitudeTextChanged("1,1")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLongitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `accept comma decimal points for latitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLatitudeTextChanged("1,1")
+        viewModel.onSubmitLatitude()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.locationUi.latitudeText).isEqualTo("1,1000000")
+    }
+
+    @Test
+    fun `accept comma decimal points for longitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLongitudeTextChanged("1,1")
+        viewModel.onSubmitLongitude()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.locationUi.longitudeText).isEqualTo("1,1000000")
     }
 }

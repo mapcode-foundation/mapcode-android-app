@@ -42,6 +42,9 @@ import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.text.ParseException
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,6 +58,8 @@ class MapViewModel @Inject constructor(
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
         const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
     }
+
+    private val latLngNumberFormat: NumberFormat by lazy { NumberFormat.getNumberInstance(Locale.getDefault()) }
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
@@ -252,7 +257,14 @@ class MapViewModel @Inject constructor(
     }
 
     fun onLatitudeTextChanged(text: String) {
-        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
+        val isDecimal = try {
+            latLngNumberFormat.parse(text)
+            true
+        } catch (e: ParseException) {
+            false
+        }
+
+        val isValid = text.isEmpty() || isDecimal
 
         locationUi.update {
             it.copy(latitudeText = text, showLatitudeInvalidError = !isValid)
@@ -261,10 +273,6 @@ class MapViewModel @Inject constructor(
 
     fun onSubmitLatitude() {
         val text = locationUi.value.latitudeText
-
-        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
-            return
-        }
 
         if (text.isEmpty()) {
             val latitudeText = String.format(locationStringFormat, location.value.latitude)
@@ -276,13 +284,26 @@ class MapViewModel @Inject constructor(
                 )
             }
         } else {
-            val cleansedLatitude = LocationUtils.cleanseLatitude(text.toDouble())
+            val latitude = try {
+                latLngNumberFormat.parse(text)!!.toDouble()
+            } catch (e: ParseException) {
+                return
+            }
+
+            val cleansedLatitude = LocationUtils.cleanseLatitude(latitude)
             moveCamera(cleansedLatitude, location.value.longitude, 17f)
         }
     }
 
     fun onLongitudeTextChanged(text: String) {
-        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
+        val isDecimal = try {
+            latLngNumberFormat.parse(text)
+            true
+        } catch (e: ParseException) {
+            false
+        }
+
+        val isValid = text.isEmpty() || isDecimal
 
         locationUi.update {
             it.copy(longitudeText = text, showLongitudeInvalidError = !isValid)
@@ -291,10 +312,6 @@ class MapViewModel @Inject constructor(
 
     fun onSubmitLongitude() {
         val text = locationUi.value.longitudeText
-
-        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
-            return
-        }
 
         if (text.isEmpty()) {
             val longitudeText = String.format(locationStringFormat, location.value.longitude)
@@ -306,7 +323,13 @@ class MapViewModel @Inject constructor(
                 )
             }
         } else {
-            val cleansedLongitude = LocationUtils.cleanseLongitude(text.toDouble())
+            val longitude = try {
+                latLngNumberFormat.parse(text)!!.toDouble()
+            } catch (e: ParseException) {
+                return
+            }
+
+            val cleansedLongitude = LocationUtils.cleanseLongitude(longitude)
             moveCamera(location.value.latitude, cleansedLongitude, 17f)
         }
     }
