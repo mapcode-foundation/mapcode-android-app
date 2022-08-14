@@ -901,7 +901,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `show address dropdown when typing address`() = runTest {
-        useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
+        useCase.globalMatchingAddresses["street"] = listOf("Street 1", "Street 2")
 
         viewModel.onAddressTextChange("street")
         runCurrent()

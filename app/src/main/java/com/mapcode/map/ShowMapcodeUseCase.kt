@@ -18,6 +18,7 @@ package com.mapcode.map
 
 import android.annotation.SuppressLint
 import android.content.*
+import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
 import androidx.core.content.getSystemService
@@ -193,12 +194,36 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         ctx.startActivity(shareIntent)
     }
 
-    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
-        try {
-            val addressList = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(query, 3)
-            }
+    override suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>> {
+        val addressList = withContext(Dispatchers.Default) {
+            geocoder.getFromLocationName(
+                query,
+                maxResults,
+                southwest.latitude,
+                southwest.longitude,
+                northeast.latitude,
+                northeast.longitude
+            )
+        }
 
+        return convertAddressListToStrings(addressList)
+    }
+
+    override suspend fun getMatchingAddresses(query: String, maxResults: Int): Result<List<String>> {
+        val addressList = withContext(Dispatchers.Default) {
+            geocoder.getFromLocationName(query, maxResults)
+        }
+
+        return convertAddressListToStrings(addressList)
+    }
+
+    private fun convertAddressListToStrings(addressList: List<Address>): Result<List<String>> {
+        try {
             val addressStringList = addressList.map { address ->
                 buildString {
                     for (i in 0..address.maxAddressLineIndex) {
@@ -267,7 +292,17 @@ interface ShowMapcodeUseCase {
     fun shareText(text: String, description: String)
 
     /**
-     * Get a list of addresses that might correspond to the [query].
+     * Get a list of addresses within the [northeast] and [southwest] bounds that might correspond to the [query].
      */
-    suspend fun getMatchingAddresses(query: String): Result<List<String>>
+    suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>>
+
+    /**
+     * Get a list of global addresses that might correspond to the [query].
+     */
+    suspend fun getMatchingAddresses(query: String, maxResults: Int): Result<List<String>>
 }
