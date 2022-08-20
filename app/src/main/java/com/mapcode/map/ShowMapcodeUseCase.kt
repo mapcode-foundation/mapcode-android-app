@@ -104,7 +104,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(address, 10).firstOrNull()
+                geocoder.getFromLocationName(address, 10)?.firstOrNull()
             }
 
             if (matchingAddress == null) {
@@ -120,7 +120,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         try {
             val addressList = withContext(Dispatchers.Default) {
-                geocoder.getFromLocation(lat, long, 1)
+                geocoder.getFromLocation(lat, long, 1) ?: emptyList()
             }
 
             if (addressList.isEmpty()) {
@@ -208,7 +208,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
                 southwest.longitude,
                 northeast.latitude,
                 northeast.longitude
-            )
+            ) ?: emptyList()
         }
 
         return convertAddressListToStrings(addressList)
@@ -216,7 +216,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
     override suspend fun getMatchingAddresses(query: String, maxResults: Int): Result<List<String>> {
         val addressList = withContext(Dispatchers.Default) {
-            geocoder.getFromLocationName(query, maxResults)
+            geocoder.getFromLocationName(query, maxResults) ?: emptyList()
         }
 
         return convertAddressListToStrings(addressList)

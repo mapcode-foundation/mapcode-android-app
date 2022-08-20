@@ -8,13 +8,13 @@ plugins {
 
 android {
     namespace 'com.mapcode'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.mapcode"
         minSdk 21
         //noinspection OldTargetApi wait for sources to be released before upgrading
-        targetSdk 32
+        targetSdk 33
         versionCode 3
         versionName "1.1.0"
 
