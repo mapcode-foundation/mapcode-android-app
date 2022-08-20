@@ -64,6 +64,8 @@ dependencies {
     //google
     implementation 'com.google.maps.android:maps-compose:2.2.0'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+    implementation 'com.google.android.libraries.places:places:2.6.0'
+    implementation 'com.google.maps.android:places-ktx:2.0.0'
     implementation "com.google.dagger:hilt-android:2.42"
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     implementation 'com.google.android.gms:play-services-location:20.0.0'
