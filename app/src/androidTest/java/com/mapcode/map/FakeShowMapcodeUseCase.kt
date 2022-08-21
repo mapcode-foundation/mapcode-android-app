@@ -97,11 +97,16 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         sharedText = text
     }
 
-    override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
-        return isMapsAppInstalled
+    override suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>> {
+        return success(matchingAddresses[query] ?: emptyList())
     }
 
-    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
-        return success(matchingAddresses[query] ?: emptyList())
+    override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
+        return isMapsAppInstalled
     }
 }

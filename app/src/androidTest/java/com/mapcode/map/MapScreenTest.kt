@@ -183,7 +183,6 @@ class MapScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Street, City, Country").assertIsDisplayed()
-
         composeTestRule.onNodeWithText("City, Country").assertIsDisplayed()
     }
 
@@ -530,6 +529,10 @@ class MapScreenTest {
             performTextInput("address")
         }
 
+        composeTestRule.waitUntil(2000) {
+            viewModel.uiState.value.addressUi.matchingAddresses.isNotEmpty()
+        }
+
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("address_dropdown").assertIsDisplayed()
         composeTestRule.onNodeWithText("Street 1").assertIsDisplayed()
@@ -572,7 +575,10 @@ class MapScreenTest {
             performTextInput("address")
         }
 
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(2000) {
+            viewModel.uiState.value.addressUi.matchingAddresses.isNotEmpty()
+        }
+
         composeTestRule.onNodeWithText("Street 1").performClick()
         composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
     }
