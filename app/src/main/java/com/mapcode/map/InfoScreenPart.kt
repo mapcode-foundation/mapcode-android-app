@@ -27,15 +27,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -346,7 +343,6 @@ private fun LatitudeTextBox(
         placeholder = placeHolder,
         showInvalidError = showInvalidError,
         label = stringResource(R.string.latitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_latitude_content_description),
         onSubmit = onSubmit,
         onChange = onChange,
         onCopy = onCopy
@@ -372,7 +368,6 @@ private fun LongitudeTextBox(
         placeholder = placeHolder,
         showInvalidError = showInvalidError,
         label = stringResource(R.string.longitude_text_field_label),
-        clearButtonContentDescription = stringResource(R.string.clear_longitude_content_description),
         onSubmit = onSubmit,
         onChange = onChange,
         onCopy = onCopy
@@ -387,7 +382,6 @@ private fun LatLngTextField(
     placeholder: String,
     showInvalidError: Boolean,
     label: String,
-    clearButtonContentDescription: String,
     onSubmit: () -> Unit,
     onChange: (String) -> Unit,
     onCopy: () -> Unit
@@ -421,9 +415,6 @@ private fun LatLngTextField(
             singleLine = true,
             label = {
                 Text(
-                    modifier = Modifier
-                        .testTag("latlngtextfield")
-                        .clickable { onCopy() },
                     text = label,
                     maxLines = 1
                 )
@@ -444,16 +435,11 @@ private fun LatLngTextField(
             }),
             placeholder = { Text(placeholder, maxLines = 1) },
             trailingIcon = {
-                if (text.isNotEmpty()) {
-                    IconButton(onClick = {
-                        focusRequester.requestFocus()
-                        onChange("")
-                    }) {
-                        Icon(
-                            Icons.Outlined.Clear,
-                            contentDescription = clearButtonContentDescription
-                        )
-                    }
+                IconButton(onClick = onCopy) {
+                    Icon(
+                        painterResource(R.drawable.ic_outline_content_copy_24),
+                        contentDescription = stringResource(R.string.copy_location_content_description)
+                    )
                 }
             })
 

@@ -29,9 +29,8 @@
     <string name="territory_header_button">Territory %d of %d</string>
     <string name="next_territory_content_description">Next territory</string>
     <string name="latitude_text_field_label">Latitude (Y)</string>
-    <string name="clear_latitude_content_description">Clear latitude</string>
+    <string name="copy_location_content_description">Copy location</string>
     <string name="longitude_text_field_label">Longitude (X)</string>
-    <string name="clear_longitude_content_description">Clear longitude</string>
     <string name="satellite_mode_button_content_description">Toggle satellite mode</string>
     <string name="open_external_maps_app_content_description">View location in maps app</string>
     <string name="zoom_in_button_content_description">Zoom in</string>

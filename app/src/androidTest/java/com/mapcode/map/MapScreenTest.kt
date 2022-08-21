@@ -613,27 +613,21 @@ class MapScreenTest {
     }
 
     @Test
-    fun copy_location_to_clipboard_when_tapping_latitude_header() {
+    fun copy_location_to_clipboard_when_tapping_latitude_copy_button() {
         setMapScreenAsContent()
         viewModel.onCameraMoved(1.0, 2.0, 1f)
 
-        composeTestRule.onNode(
-            hasText("Latitude (Y)").and(hasTestTag("latlngtextfield")),
-            useUnmergedTree = true
-        ).performClick()
-        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+        composeTestRule.onAllNodes(hasContentDescription("Copy location")).onFirst().performClick()
+        assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
     @Test
-    fun copy_location_to_clipboard_when_tapping_longitude_header() {
+    fun copy_location_to_clipboard_when_tapping_longitude_copy_button() {
         setMapScreenAsContent()
         viewModel.onCameraMoved(1.0, 2.0, 1f)
 
-        composeTestRule.onNode(
-            hasText("Longitude (X)").and(hasTestTag("latlngtextfield")),
-            useUnmergedTree = true
-        ).performClick()
-        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+        composeTestRule.onAllNodes(hasContentDescription("Copy location")).onLast().performClick()
+        assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
     private fun setMapScreenAsContent() {
