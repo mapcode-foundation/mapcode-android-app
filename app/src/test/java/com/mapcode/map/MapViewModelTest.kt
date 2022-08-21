@@ -904,7 +904,7 @@ internal class MapViewModelTest {
         useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
 
         viewModel.onAddressTextChange("street")
-        runCurrent()
+        advanceUntilIdle()
 
         assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
     }
