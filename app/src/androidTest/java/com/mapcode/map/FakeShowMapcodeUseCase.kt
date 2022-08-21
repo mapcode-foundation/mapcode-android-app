@@ -109,8 +109,4 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
     }
-
-    override suspend fun getMatchingAddresses(query: String, maxResults: Int): Result<List<String>> {
-        return success(matchingAddresses[query] ?: emptyList())
-    }
 }

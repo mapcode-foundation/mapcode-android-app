@@ -901,7 +901,7 @@ internal class MapViewModelTest {
 
     @Test
     fun `show address dropdown when typing address`() = runTest {
-        useCase.globalMatchingAddresses["street"] = listOf("Street 1", "Street 2")
+        useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
 
         viewModel.onAddressTextChange("street")
         runCurrent()
@@ -1001,5 +1001,34 @@ internal class MapViewModelTest {
         advanceUntilIdle()
 
         assertThat(viewModel.uiState.value.locationUi.longitudeText).isEqualTo("1,1000000")
+    }
+
+    @Test
+    fun `make address autocomplete request 1,5 seconds after typing stops`() = runTest {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+        viewModel.onAddressTextChange("address")
+        advanceTimeBy(1499)
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).isEmpty()
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1")
+    }
+
+    @Test
+    fun `clear matching addresses when clearing address text`() = runTest {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+        viewModel.onAddressTextChange("address")
+        advanceUntilIdle()
+        viewModel.onAddressTextChange("")
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).isEmpty()
+    }
+    
+    @Test
+    fun `do not clear matching addresses if the address query is being continued`() = runTest {
+        useCase.matchingAddresses["add"] = listOf("Street 1")
+        viewModel.onAddressTextChange("add")
+        advanceUntilIdle()
+        viewModel.onAddressTextChange("addr")
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1")
     }
 }

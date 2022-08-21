@@ -53,7 +53,8 @@ class MapViewModel @Inject constructor(
 
     companion object {
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
-        const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
+        const val ANIMATE_CAMERA_UPDATE_DURATION_MS: Int = 200
+        private const val AUTOCOMPLETE_ADDRESS_DELAY_MS: Long = 1500
     }
 
     private val latLngNumberFormat: NumberFormat by lazy { NumberFormat.getNumberInstance(Locale.getDefault()) }
@@ -214,21 +215,29 @@ class MapViewModel @Inject constructor(
     }
 
     fun onAddressTextChange(text: String) {
-        addressUi.update { it.copy(address = text) }
+        //if the user is continuing the same search query then do not clear the matching addresses
+        val clearMatchingAddresses = text.dropLast(1) != addressUi.value.address
+
+        addressUi.update {
+            if (clearMatchingAddresses) {
+                it.copy(address = text, matchingAddresses = emptyList())
+            } else {
+                it.copy(address = text)
+            }
+        }
 
         getMatchingAddressesJob?.cancel()
 
         if (text.isNotEmpty()) {
             getMatchingAddressesJob = viewModelScope.launch(dispatchers.default) {
+                delay(AUTOCOMPLETE_ADDRESS_DELAY_MS)
+
                 val latLngBounds = withContext(dispatchers.main) {
                     cameraPositionState.projection?.visibleRegion?.latLngBounds
                 }
                 val maxResults = 10
 
-                val globalMatchingAddresses = useCase.getMatchingAddresses(text, maxResults = maxResults)
-                    .getOrNull()
-
-                val localMatchingAddresses = if (latLngBounds != null) {
+                val matchingAddresses = if (latLngBounds != null) {
                     useCase.getMatchingAddresses(
                         text,
                         maxResults = maxResults,
@@ -236,17 +245,16 @@ class MapViewModel @Inject constructor(
                         northeast = Location(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
                     ).getOrNull()
                 } else {
-                    emptyList()
+                    useCase.getMatchingAddresses(
+                        text,
+                        maxResults = maxResults,
+                        southwest = Location.GLOBE_SOUTH_WEST,
+                        northeast = Location.GLOBE_NORTH_EAST
+                    ).getOrNull()
                 }
 
-                if (localMatchingAddresses == null || globalMatchingAddresses == null) {
+                if (matchingAddresses == null) {
                     return@launch
-                }
-
-                val matchingAddresses = if (localMatchingAddresses.size < maxResults) {
-                    localMatchingAddresses.plus(globalMatchingAddresses).take(maxResults)
-                } else {
-                    localMatchingAddresses.take(maxResults)
                 }
 
                 addressUi.update { it.copy(matchingAddresses = matchingAddresses.distinct()) }

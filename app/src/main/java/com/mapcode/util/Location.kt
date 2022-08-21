@@ -16,4 +16,9 @@
 
 package com.mapcode.util
 
-data class Location(val latitude: Double, val longitude: Double)
+data class Location(val latitude: Double, val longitude: Double) {
+    companion object {
+        val GLOBE_SOUTH_WEST: Location = Location(-90.0, -180.0)
+        val GLOBE_NORTH_EAST: Location = Location(90.0, 180.0)
+    }
+}
