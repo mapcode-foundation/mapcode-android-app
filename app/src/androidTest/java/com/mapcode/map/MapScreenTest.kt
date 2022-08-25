@@ -183,7 +183,6 @@ class MapScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Street, City, Country").assertIsDisplayed()
-
         composeTestRule.onNodeWithText("City, Country").assertIsDisplayed()
     }
 
@@ -530,6 +529,10 @@ class MapScreenTest {
             performTextInput("address")
         }
 
+        composeTestRule.waitUntil(2000) {
+            viewModel.uiState.value.addressUi.matchingAddresses.isNotEmpty()
+        }
+
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("address_dropdown").assertIsDisplayed()
         composeTestRule.onNodeWithText("Street 1").assertIsDisplayed()
@@ -572,7 +575,10 @@ class MapScreenTest {
             performTextInput("address")
         }
 
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(2000) {
+            viewModel.uiState.value.addressUi.matchingAddresses.isNotEmpty()
+        }
+
         composeTestRule.onNodeWithText("Street 1").performClick()
         composeTestRule.onNodeWithText("Enter address or mapcode").assertIsNotFocused()
     }
@@ -613,27 +619,21 @@ class MapScreenTest {
     }
 
     @Test
-    fun copy_location_to_clipboard_when_tapping_latitude_header() {
+    fun copy_location_to_clipboard_when_tapping_latitude_copy_button() {
         setMapScreenAsContent()
         viewModel.onCameraMoved(1.0, 2.0, 1f)
 
-        composeTestRule.onNode(
-            hasText("Latitude (Y)").and(hasTestTag("latlngtextfield")),
-            useUnmergedTree = true
-        ).performClick()
-        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+        composeTestRule.onAllNodes(hasContentDescription("Copy location")).onFirst().performClick()
+        assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
     @Test
-    fun copy_location_to_clipboard_when_tapping_longitude_header() {
+    fun copy_location_to_clipboard_when_tapping_longitude_copy_button() {
         setMapScreenAsContent()
         viewModel.onCameraMoved(1.0, 2.0, 1f)
 
-        composeTestRule.onNode(
-            hasText("Longitude (X)").and(hasTestTag("latlngtextfield")),
-            useUnmergedTree = true
-        ).performClick()
-        assertThat(useCase.clipboard).isEqualTo("1.0,2.0")
+        composeTestRule.onAllNodes(hasContentDescription("Copy location")).onLast().performClick()
+        assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
     private fun setMapScreenAsContent() {

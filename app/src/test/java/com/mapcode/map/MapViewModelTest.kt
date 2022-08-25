@@ -28,6 +28,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.util.*
 
 /**
  * Created by sds100 on 01/06/2022.
@@ -44,6 +45,7 @@ internal class MapViewModelTest {
 
     @Before
     fun setUp() {
+        Locale.setDefault(Locale.US) // set it to US formatting by default. tests can override it individually
         Dispatchers.setMain(testDispatcher)
 
         useCase = FakeShowMapcodeUseCase()
@@ -902,7 +904,7 @@ internal class MapViewModelTest {
         useCase.matchingAddresses["street"] = listOf("Street 1", "Street 2")
 
         viewModel.onAddressTextChange("street")
-        runCurrent()
+        advanceUntilIdle()
 
         assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
     }
@@ -961,5 +963,72 @@ internal class MapViewModelTest {
         viewModel.copyLocation()
 
         assertThat(useCase.clipboard).isEqualTo("0.1234568,1")
+    }
+
+    @Test
+    fun `do not show error for comma decimal point in latitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLatitudeTextChanged("1,1")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLatitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `do not show error for comma decimal point in longitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLongitudeTextChanged("1,1")
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.locationUi.showLongitudeInvalidError).isFalse()
+    }
+
+    @Test
+    fun `accept comma decimal points for latitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLatitudeTextChanged("1,1")
+        viewModel.onSubmitLatitude()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.locationUi.latitudeText).isEqualTo("1,1000000")
+    }
+
+    @Test
+    fun `accept comma decimal points for longitude`() = runTest {
+        Locale.setDefault(Locale.GERMAN)
+        viewModel.onLongitudeTextChanged("1,1")
+        viewModel.onSubmitLongitude()
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.locationUi.longitudeText).isEqualTo("1,1000000")
+    }
+
+    @Test
+    fun `make address autocomplete request 1,5 seconds after typing stops`() = runTest {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+        viewModel.onAddressTextChange("address")
+        advanceTimeBy(1499)
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).isEmpty()
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1")
+    }
+
+    @Test
+    fun `clear matching addresses when clearing address text`() = runTest {
+        useCase.matchingAddresses["address"] = listOf("Street 1")
+        viewModel.onAddressTextChange("address")
+        advanceUntilIdle()
+        viewModel.onAddressTextChange("")
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).isEmpty()
+    }
+    
+    @Test
+    fun `do not clear matching addresses if the address query is being continued`() = runTest {
+        useCase.matchingAddresses["add"] = listOf("Street 1")
+        viewModel.onAddressTextChange("add")
+        advanceUntilIdle()
+        viewModel.onAddressTextChange("addr")
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1")
     }
 }

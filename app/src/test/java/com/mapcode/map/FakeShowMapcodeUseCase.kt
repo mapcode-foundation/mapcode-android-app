@@ -103,8 +103,13 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     override fun shareText(text: String, description: String) {
         sharedText = text
     }
-    
-    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
-        return success(matchingAddresses[query] ?: emptyList())
+
+    override suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>> {
+        return success((matchingAddresses[query] ?: emptyList()))
     }
 }

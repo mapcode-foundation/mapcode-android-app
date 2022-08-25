@@ -34,14 +34,14 @@ import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.text.ParseException
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,8 +53,11 @@ class MapViewModel @Inject constructor(
 
     companion object {
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
-        const val ANIMATE_CAMERA_UPDATE_DURATION_MS = 200
+        const val ANIMATE_CAMERA_UPDATE_DURATION_MS: Int = 200
+        private const val AUTOCOMPLETE_ADDRESS_DELAY_MS: Long = 1500
     }
+
+    private val latLngNumberFormat: NumberFormat by lazy { NumberFormat.getNumberInstance(Locale.getDefault()) }
 
     private val mapcodes: MutableStateFlow<List<Mapcode>> = MutableStateFlow(emptyList())
     private val mapcodeIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
@@ -212,12 +215,49 @@ class MapViewModel @Inject constructor(
     }
 
     fun onAddressTextChange(text: String) {
-        addressUi.update { it.copy(address = text) }
+        //if the user is continuing the same search query then do not clear the matching addresses
+        val clearMatchingAddresses = text.dropLast(1) != addressUi.value.address
+
+        addressUi.update {
+            if (clearMatchingAddresses) {
+                it.copy(address = text, matchingAddresses = emptyList())
+            } else {
+                it.copy(address = text)
+            }
+        }
 
         getMatchingAddressesJob?.cancel()
-        getMatchingAddressesJob = viewModelScope.launch {
-            useCase.getMatchingAddresses(text).onSuccess { result ->
-                addressUi.update { it.copy(matchingAddresses = result) }
+
+        if (text.isNotEmpty()) {
+            getMatchingAddressesJob = viewModelScope.launch(dispatchers.default) {
+                delay(AUTOCOMPLETE_ADDRESS_DELAY_MS)
+
+                val latLngBounds = withContext(dispatchers.main) {
+                    cameraPositionState.projection?.visibleRegion?.latLngBounds
+                }
+                val maxResults = 10
+
+                val matchingAddresses = if (latLngBounds != null) {
+                    useCase.getMatchingAddresses(
+                        text,
+                        maxResults = maxResults,
+                        southwest = Location(latLngBounds.southwest.latitude, latLngBounds.southwest.longitude),
+                        northeast = Location(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
+                    ).getOrNull()
+                } else {
+                    useCase.getMatchingAddresses(
+                        text,
+                        maxResults = maxResults,
+                        southwest = Location.GLOBE_SOUTH_WEST,
+                        northeast = Location.GLOBE_NORTH_EAST
+                    ).getOrNull()
+                }
+
+                if (matchingAddresses == null) {
+                    return@launch
+                }
+
+                addressUi.update { it.copy(matchingAddresses = matchingAddresses.distinct()) }
             }
         }
     }
@@ -252,7 +292,14 @@ class MapViewModel @Inject constructor(
     }
 
     fun onLatitudeTextChanged(text: String) {
-        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
+        val isDecimal = try {
+            latLngNumberFormat.parse(text)
+            true
+        } catch (e: ParseException) {
+            false
+        }
+
+        val isValid = text.isEmpty() || isDecimal
 
         locationUi.update {
             it.copy(latitudeText = text, showLatitudeInvalidError = !isValid)
@@ -261,10 +308,6 @@ class MapViewModel @Inject constructor(
 
     fun onSubmitLatitude() {
         val text = locationUi.value.latitudeText
-
-        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
-            return
-        }
 
         if (text.isEmpty()) {
             val latitudeText = String.format(locationStringFormat, location.value.latitude)
@@ -276,13 +319,26 @@ class MapViewModel @Inject constructor(
                 )
             }
         } else {
-            val cleansedLatitude = LocationUtils.cleanseLatitude(text.toDouble())
+            val latitude = try {
+                latLngNumberFormat.parse(text)!!.toDouble()
+            } catch (e: ParseException) {
+                return
+            }
+
+            val cleansedLatitude = LocationUtils.cleanseLatitude(latitude)
             moveCamera(cleansedLatitude, location.value.longitude, 17f)
         }
     }
 
     fun onLongitudeTextChanged(text: String) {
-        val isValid = text.isEmpty() || text.toDoubleOrNull() != null
+        val isDecimal = try {
+            latLngNumberFormat.parse(text)
+            true
+        } catch (e: ParseException) {
+            false
+        }
+
+        val isValid = text.isEmpty() || isDecimal
 
         locationUi.update {
             it.copy(longitudeText = text, showLongitudeInvalidError = !isValid)
@@ -291,10 +347,6 @@ class MapViewModel @Inject constructor(
 
     fun onSubmitLongitude() {
         val text = locationUi.value.longitudeText
-
-        if (text.isNotEmpty() && text.toDoubleOrNull() == null) {
-            return
-        }
 
         if (text.isEmpty()) {
             val longitudeText = String.format(locationStringFormat, location.value.longitude)
@@ -306,7 +358,13 @@ class MapViewModel @Inject constructor(
                 )
             }
         } else {
-            val cleansedLongitude = LocationUtils.cleanseLongitude(text.toDouble())
+            val longitude = try {
+                latLngNumberFormat.parse(text)!!.toDouble()
+            } catch (e: ParseException) {
+                return
+            }
+
+            val cleansedLongitude = LocationUtils.cleanseLongitude(longitude)
             moveCamera(location.value.latitude, cleansedLongitude, 17f)
         }
     }

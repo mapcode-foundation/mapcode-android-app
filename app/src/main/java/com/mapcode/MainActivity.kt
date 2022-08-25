@@ -28,6 +28,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.MapsInitializer
+import com.google.android.libraries.places.api.Places
 import com.mapcode.map.MapViewModel
 import com.mapcode.theme.MapcodeTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
             MapcodeApp(viewModel, windowSizeClass)
         }
 
+        Places.initialize(applicationContext, BuildConfig.MAPS_API_KEY)
         MapsInitializer.initialize(this)
         viewModel.isGoogleMapsSdkLoaded = true
     }

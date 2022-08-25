@@ -21,8 +21,14 @@ import android.content.*
 import android.location.Geocoder
 import android.net.Uri
 import androidx.core.content.getSystemService
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.RectangularBounds
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.ktx.api.net.awaitFindAutocompletePredictions
 import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
 import com.mapcode.UnknownMapcodeException
@@ -31,10 +37,7 @@ import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -61,6 +64,8 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
      * if you disable GPS while the app is running.
      */
     private var cachedLastLocation: Location? = null
+
+    private val placesClient: PlacesClient by lazy { Places.createClient(ctx) }
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         coroutineScope.launch(Dispatchers.IO) {
@@ -103,7 +108,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(address, 10).firstOrNull()
+                geocoder.getFromLocationName(address, 10)?.firstOrNull()
             }
 
             if (matchingAddress == null) {
@@ -119,7 +124,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         try {
             val addressList = withContext(Dispatchers.Default) {
-                geocoder.getFromLocation(lat, long, 1)
+                geocoder.getFromLocation(lat, long, 1) ?: emptyList()
             }
 
             if (addressList.isEmpty()) {
@@ -193,23 +198,36 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         ctx.startActivity(shareIntent)
     }
 
-    override suspend fun getMatchingAddresses(query: String): Result<List<String>> {
-        try {
-            val addressList = withContext(Dispatchers.Default) {
-                geocoder.getFromLocationName(query, 3)
-            }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>> {
+        val locationBias = RectangularBounds.newInstance(
+            LatLng(southwest.latitude, southwest.longitude),
+            LatLng(northeast.latitude, northeast.longitude)
+        )
 
-            val addressStringList = addressList.map { address ->
-                buildString {
-                    for (i in 0..address.maxAddressLineIndex) {
-                        append(address.getAddressLine(i))
-                    }
+        val responseResult = withContext(Dispatchers.Default) {
+            try {
+                val response = placesClient.awaitFindAutocompletePredictions {
+                    this.query = query
+                    this.locationBias = locationBias
                 }
-            }
 
-            return success(addressStringList)
-        } catch (e: IOException) {
-            return failure(e)
+                success(response)
+            } catch (e: ApiException) {
+                Timber.e(e.status.toString())
+                failure(e)
+            }
+        }
+
+        return responseResult.map { response ->
+            response.autocompletePredictions
+                .map { it.getFullText(null) }
+                .map { it.toString() }
         }
     }
 }
@@ -267,7 +285,12 @@ interface ShowMapcodeUseCase {
     fun shareText(text: String, description: String)
 
     /**
-     * Get a list of addresses that might correspond to the [query].
+     * Get a list of addresses within the [northeast] and [southwest] bounds that might correspond to the [query].
      */
-    suspend fun getMatchingAddresses(query: String): Result<List<String>>
+    suspend fun getMatchingAddresses(
+        query: String,
+        maxResults: Int,
+        southwest: Location,
+        northeast: Location
+    ): Result<List<String>>
 }
