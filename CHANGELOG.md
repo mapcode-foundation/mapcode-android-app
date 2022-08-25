@@ -10,8 +10,6 @@
   in dark mode.
 - Button to clear latitude and longitude text is now a copy button.
 
-#### 2022-08-09
-
 ## [1.1.0](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.1.0)
 
 #### 2022-08-09
