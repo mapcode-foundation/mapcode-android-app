@@ -56,7 +56,10 @@ class MapScreenTest {
     fun copy_mapcode_to_clipboard_when_click_header() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -72,7 +75,10 @@ class MapScreenTest {
     fun copy_mapcode_to_clipboard_when_click_mapcode_code() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -88,7 +94,10 @@ class MapScreenTest {
     fun show_snackbar_when_copying_mapcode() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -143,7 +152,10 @@ class MapScreenTest {
     fun update_camera_after_searching_known_address() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -192,7 +204,10 @@ class MapScreenTest {
 
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
@@ -216,7 +231,10 @@ class MapScreenTest {
     fun focus_address_text_field_when_click_clear_button() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
@@ -329,7 +347,10 @@ class MapScreenTest {
     fun update_camera_after_searching_latitude() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -351,7 +372,10 @@ class MapScreenTest {
     fun update_camera_after_searching_longitude() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -376,7 +400,8 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Go to my location").performClick()
 
-        composeTestRule.onNodeWithText("Can't find location. Is your GPS turned on?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Can't find location. Is your GPS turned on?")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -386,14 +411,18 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("View location in maps app").performClick()
 
-        composeTestRule.onNodeWithText("You have no map app installed to open this in.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("You have no map app installed to open this in.")
+            .assertIsDisplayed()
     }
 
     @Test
     fun share_mapcode_when_clicking_share_button() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         setMapScreenAsContent()
@@ -551,7 +580,14 @@ class MapScreenTest {
 
     @Test
     fun clear_address_focus_when_submitting_address_query() {
-        useCase.knownLocations.add(FakeLocation(1.0, 1.0, addresses = listOf("address"), mapcodes = emptyList()))
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("address"),
+                mapcodes = emptyList()
+            )
+        )
         setMapScreenAsContent()
 
         composeTestRule.onNodeWithText("Enter address or mapcode").apply {
@@ -600,7 +636,12 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Latitude (Y)").apply {
             performClick()
-            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+            assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.TextSelectionRange,
+                    TextRange(0, 9)
+                )
+            )
         }
     }
 
@@ -614,7 +655,12 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Longitude (X)").apply {
             performClick()
-            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+            assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.TextSelectionRange,
+                    TextRange(0, 9)
+                )
+            )
         }
     }
 

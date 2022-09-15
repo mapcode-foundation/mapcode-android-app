@@ -27,7 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ScrollableDialog(onDismiss: () -> Unit, title: String, buttonText: String, content: @Composable () -> Unit) {
+fun ScrollableDialog(
+    onDismiss: () -> Unit,
+    title: String,
+    buttonText: String,
+    content: @Composable () -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium) {
             Column(verticalArrangement = Arrangement.SpaceBetween) {

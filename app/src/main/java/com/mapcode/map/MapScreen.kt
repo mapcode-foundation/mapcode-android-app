@@ -101,7 +101,10 @@ fun MapScreen(
     }
 
     Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) { padding ->
+        Scaffold(
+            modifier = Modifier.navigationBarsPadding(),
+            scaffoldState = scaffoldState
+        ) { padding ->
             when (layoutType) {
                 LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
                     Modifier
@@ -139,7 +142,11 @@ private fun VerticalInfoAreaLayout(
 ) {
     Row(modifier, horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
+            MapWithCrossHairs(
+                Modifier.fillMaxSize(),
+                viewModel,
+                renderGoogleMaps = renderGoogleMaps
+            )
 
             MapControls(
                 Modifier
@@ -231,7 +238,8 @@ private fun AboutDialog(onDismiss: () -> Unit = {}) {
 //    val changelogUrl = stringResource(R.string.changelog_url)
 
     ScrollableDialog(
-        onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
+        onDismiss = onDismiss,
+        title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
         buttonText = stringResource(R.string.close_dialog_button)
     ) {
         Column {
@@ -335,7 +343,10 @@ private fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit
 
 @Composable
 private fun greyButtonColors(): ButtonColors {
-    return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
+    return ButtonDefaults.buttonColors(
+        backgroundColor = Color.LightGray,
+        contentColor = Color.DarkGray
+    )
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -594,7 +605,8 @@ private fun Map(
 
     val scope = rememberCoroutineScope()
 
-    val uiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
+    val uiSettings =
+        remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
 
     GoogleMap(
         modifier = modifier,

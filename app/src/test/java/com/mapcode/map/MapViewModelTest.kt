@@ -68,7 +68,10 @@ internal class MapViewModelTest {
                 1.0,
                 1.0,
                 addresses = emptyList(),
-                mapcodes = listOf(Mapcode("1AB.XY", Territory.NLD), Mapcode("1CD.YZ", Territory.AAA))
+                mapcodes = listOf(
+                    Mapcode("1AB.XY", Territory.NLD),
+                    Mapcode("1CD.YZ", Territory.AAA)
+                )
             )
         )
         viewModel.onCameraMoved(1.0, 1.0, 0f)
@@ -138,17 +141,18 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `show address not found message and clear address if unable to geocode address`() = runTest {
-        useCase.knownLocations.clear()
+    fun `show address not found message and clear address if unable to geocode address`() =
+        runTest {
+            useCase.knownLocations.clear()
 
-        viewModel.onAddressTextChange("bad address")
-        viewModel.onSubmitAddress()
-        runCurrent()
+            viewModel.onAddressTextChange("bad address")
+            viewModel.onSubmitAddress()
+            runCurrent()
 
-        val uiState = viewModel.uiState.value
-        assertThat(uiState.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address"))
-        assertThat(uiState.addressUi.address).isEmpty()
-    }
+            val uiState = viewModel.uiState.value
+            assertThat(uiState.addressUi.error).isEqualTo(AddressError.UnknownAddress("bad address"))
+            assertThat(uiState.addressUi.address).isEmpty()
+        }
 
     @Test
     fun `update info correctly if queried mapcode successfully`() = runTest {
@@ -238,43 +242,45 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `show no address found error and empty address if current location has no known address`() = runTest {
-        useCase.knownLocations.add(
-            FakeLocation(
-                0.0,
-                0.0,
-                addresses = listOf("Street, City"),
-                mapcodes = emptyList()
+    fun `show no address found error and empty address if current location has no known address`() =
+        runTest {
+            useCase.knownLocations.add(
+                FakeLocation(
+                    0.0,
+                    0.0,
+                    addresses = listOf("Street, City"),
+                    mapcodes = emptyList()
+                )
             )
-        )
 
-        viewModel.onCameraMoved(0.0, 0.0, 0f) //first get the address set to something non empty
-        viewModel.onCameraMoved(2.0, 3.0, 0f)
-        advanceUntilIdle()
+            viewModel.onCameraMoved(0.0, 0.0, 0f) //first get the address set to something non empty
+            viewModel.onCameraMoved(2.0, 3.0, 0f)
+            advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value
-        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.NoAddress)
-        assertThat(uiState.addressUi.address).isEmpty()
-    }
+            val uiState = viewModel.uiState.value
+            assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.NoAddress)
+            assertThat(uiState.addressUi.address).isEmpty()
+        }
 
     @Test
-    fun `show no error message and address if the current location has a known address`() = runTest {
-        useCase.knownLocations.add(
-            FakeLocation(
-                2.0,
-                3.0,
-                addresses = listOf("Street, City, Country"),
-                mapcodes = emptyList()
+    fun `show no error message and address if the current location has a known address`() =
+        runTest {
+            useCase.knownLocations.add(
+                FakeLocation(
+                    2.0,
+                    3.0,
+                    addresses = listOf("Street, City, Country"),
+                    mapcodes = emptyList()
+                )
             )
-        )
 
-        viewModel.onCameraMoved(2.0, 3.0, 0f)
-        advanceUntilIdle()
+            viewModel.onCameraMoved(2.0, 3.0, 0f)
+            advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value
-        assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.Location("City, Country"))
-        assertThat(uiState.addressUi.address).isEqualTo("Street, City, Country")
-    }
+            val uiState = viewModel.uiState.value
+            assertThat(uiState.addressUi.helper).isEqualTo(AddressHelper.Location("City, Country"))
+            assertThat(uiState.addressUi.address).isEqualTo("Street, City, Country")
+        }
 
     @Test
     fun `update address after moving map`() = runTest {
@@ -379,26 +385,27 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `searching an empty address should should dismiss the query and put the old address back`() = runTest {
-        useCase.knownLocations.add(
-            FakeLocation(
-                1.0,
-                1.0,
-                addresses = listOf("Street, City"),
-                mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+    fun `searching an empty address should should dismiss the query and put the old address back`() =
+        runTest {
+            useCase.knownLocations.add(
+                FakeLocation(
+                    1.0,
+                    1.0,
+                    addresses = listOf("Street, City"),
+                    mapcodes = listOf(Mapcode("AB.CD", Territory.NLD))
+                )
             )
-        )
 
-        viewModel.onCameraMoved(1.0, 1.0, 0f) //fill the address with something
-        viewModel.onAddressTextChange("")
-        viewModel.onSubmitAddress()
+            viewModel.onCameraMoved(1.0, 1.0, 0f) //fill the address with something
+            viewModel.onAddressTextChange("")
+            viewModel.onSubmitAddress()
 
-        runCurrent()
+            runCurrent()
 
-        val uiState = viewModel.uiState.value
-        assertThat(uiState.addressUi.address).isEqualTo("Street, City")
-        assertThat(uiState.addressUi.error).isEqualTo(AddressError.None)
-    }
+            val uiState = viewModel.uiState.value
+            assertThat(uiState.addressUi.address).isEqualTo("Street, City")
+            assertThat(uiState.addressUi.error).isEqualTo(AddressError.None)
+        }
 
     @Test
     fun `do not show last 2 parts of address if only has 2 parts`() = runTest {
@@ -763,51 +770,52 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `use current territory if no mapcode territory specified when searching for mapcode`() = runTest {
-        useCase.knownLocations.add(
-            FakeLocation(
-                0.0,
-                0.0,
-                addresses = listOf("1 Street, City, Country"),
-                mapcodes = listOf(
-                    Mapcode("XY.ZA", Territory.NLD),
-                    Mapcode("XYZ.ABC", Territory.AAA),
+    fun `use current territory if no mapcode territory specified when searching for mapcode`() =
+        runTest {
+            useCase.knownLocations.add(
+                FakeLocation(
+                    0.0,
+                    0.0,
+                    addresses = listOf("1 Street, City, Country"),
+                    mapcodes = listOf(
+                        Mapcode("XY.ZA", Territory.NLD),
+                        Mapcode("XYZ.ABC", Territory.AAA),
+                    )
                 )
             )
-        )
-        useCase.knownLocations.add(
-            FakeLocation(
-                1.0,
-                1.0,
-                addresses = listOf("2 Street, City, Country"),
-                mapcodes = listOf(
-                    Mapcode("AB.CD", Territory.NLD),
-                    Mapcode("FGH.JKL", Territory.AAA),
+            useCase.knownLocations.add(
+                FakeLocation(
+                    1.0,
+                    1.0,
+                    addresses = listOf("2 Street, City, Country"),
+                    mapcodes = listOf(
+                        Mapcode("AB.CD", Territory.NLD),
+                        Mapcode("FGH.JKL", Territory.AAA),
+                    )
                 )
             )
-        )
 
-        viewModel.onCameraMoved(0.0, 0.0, 0f)
-        runCurrent()
+            viewModel.onCameraMoved(0.0, 0.0, 0f)
+            runCurrent()
 
-        viewModel.onTerritoryClick() // check that it uses the user's chosen territory
-        runCurrent()
+            viewModel.onTerritoryClick() // check that it uses the user's chosen territory
+            runCurrent()
 
-        viewModel.onAddressTextChange("FGH.JKL")
-        viewModel.onSubmitAddress()
-        runCurrent()
+            viewModel.onAddressTextChange("FGH.JKL")
+            viewModel.onSubmitAddress()
+            runCurrent()
 
-        assertThat(viewModel.uiState.value.locationUi).isEqualTo(
-            LocationUi(
-                latitudeText = "1.0000000",
-                latitudePlaceholder = "1.0000000",
-                showLatitudeInvalidError = false,
-                longitudeText = "1.0000000",
-                longitudePlaceholder = "1.0000000",
-                showLongitudeInvalidError = false,
+            assertThat(viewModel.uiState.value.locationUi).isEqualTo(
+                LocationUi(
+                    latitudeText = "1.0000000",
+                    latitudePlaceholder = "1.0000000",
+                    showLatitudeInvalidError = false,
+                    longitudeText = "1.0000000",
+                    longitudePlaceholder = "1.0000000",
+                    showLongitudeInvalidError = false,
+                )
             )
-        )
-    }
+        }
 
     @Test
     fun `do nothing if submitting invalid latitude`() = runTest {
@@ -906,13 +914,21 @@ internal class MapViewModelTest {
         viewModel.onAddressTextChange("street")
         advanceUntilIdle()
 
-        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1", "Street 2")
+        assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly(
+            "Street 1",
+            "Street 2"
+        )
     }
 
     @Test
     fun `do not show AAA for international mapcode`() = runTest {
         useCase.knownLocations.add(
-            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.AAA))
+            )
         )
 
         viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
@@ -924,7 +940,12 @@ internal class MapViewModelTest {
     @Test
     fun `do not copy AAA when copying international mapcodes`() = runTest {
         useCase.knownLocations.add(
-            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.AAA))
+            )
         )
 
         viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
@@ -937,7 +958,12 @@ internal class MapViewModelTest {
     @Test
     fun `do not copy AAA when sharing international mapcodes`() = runTest {
         useCase.knownLocations.add(
-            FakeLocation(1.0, 1.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.CD", Territory.AAA)))
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.CD", Territory.AAA))
+            )
         )
 
         viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
@@ -1022,7 +1048,7 @@ internal class MapViewModelTest {
         advanceUntilIdle()
         assertThat(viewModel.uiState.value.addressUi.matchingAddresses).isEmpty()
     }
-    
+
     @Test
     fun `do not clear matching addresses if the address query is being continued`() = runTest {
         useCase.matchingAddresses["add"] = listOf("Street 1")

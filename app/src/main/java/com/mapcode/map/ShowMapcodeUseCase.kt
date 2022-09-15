@@ -172,7 +172,8 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         try {
-            val gmmIntentUri: Uri = Uri.parse("google.navigation:q=${location.latitude},${location.longitude}")
+            val gmmIntentUri: Uri =
+                Uri.parse("google.navigation:q=${location.latitude},${location.longitude}")
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }

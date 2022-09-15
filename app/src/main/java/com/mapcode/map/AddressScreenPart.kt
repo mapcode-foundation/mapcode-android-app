@@ -169,7 +169,10 @@ private fun AddressHelper(modifier: Modifier = Modifier, helper: AddressHelper) 
 @Composable
 private fun AddressError(modifier: Modifier = Modifier, error: AddressError) {
     val errorMessage = when (error) {
-        is AddressError.UnknownAddress -> stringResource(R.string.cant_find_address_error, error.addressQuery)
+        is AddressError.UnknownAddress -> stringResource(
+            R.string.cant_find_address_error,
+            error.addressQuery
+        )
         AddressError.None -> null
     }
 
@@ -197,5 +200,10 @@ private fun ErrorText(modifier: Modifier = Modifier, message: String) {
  */
 @Composable
 private fun HelperText(modifier: Modifier = Modifier, message: String) {
-    Text(modifier = modifier, text = message, style = MaterialTheme.typography.body1, fontWeight = FontWeight.Bold)
+    Text(
+        modifier = modifier,
+        text = message,
+        style = MaterialTheme.typography.body1,
+        fontWeight = FontWeight.Bold
+    )
 }

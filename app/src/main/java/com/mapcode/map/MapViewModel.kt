@@ -64,27 +64,28 @@ class MapViewModel @Inject constructor(
     private val addressUi: MutableStateFlow<AddressUi> =
         MutableStateFlow(AddressUi("", emptyList(), AddressError.None, AddressHelper.None))
 
-    private val mapcodeUi: Flow<MapcodeUi> = combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
-        val mapcode = mapcodes.getOrNull(mapcodeIndex)
+    private val mapcodeUi: Flow<MapcodeUi> =
+        combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
+            val mapcode = mapcodes.getOrNull(mapcodeIndex)
 
-        if (mapcode == null) {
-            MapcodeUi("", "", "", 0, 0)
-        } else {
-            val territoryName = if (mapcode.territory == Territory.AAA) {
-                null
+            if (mapcode == null) {
+                MapcodeUi("", "", "", 0, 0)
             } else {
-                mapcode.territory.name
-            }
+                val territoryName = if (mapcode.territory == Territory.AAA) {
+                    null
+                } else {
+                    mapcode.territory.name
+                }
 
-            MapcodeUi(
-                mapcode.code,
-                territoryName,
-                mapcode.territory.fullName,
-                mapcodeIndex + 1,
-                mapcodes.size
-            )
+                MapcodeUi(
+                    mapcode.code,
+                    territoryName,
+                    mapcode.territory.fullName,
+                    mapcodeIndex + 1,
+                    mapcodes.size
+                )
+            }
         }
-    }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
@@ -241,8 +242,14 @@ class MapViewModel @Inject constructor(
                     useCase.getMatchingAddresses(
                         text,
                         maxResults = maxResults,
-                        southwest = Location(latLngBounds.southwest.latitude, latLngBounds.southwest.longitude),
-                        northeast = Location(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
+                        southwest = Location(
+                            latLngBounds.southwest.latitude,
+                            latLngBounds.southwest.longitude
+                        ),
+                        northeast = Location(
+                            latLngBounds.northeast.latitude,
+                            latLngBounds.northeast.longitude
+                        )
                     ).getOrNull()
                 } else {
                     useCase.getMatchingAddresses(
@@ -280,7 +287,8 @@ class MapViewModel @Inject constructor(
                     val mapcode = mapcodes.value[mapcodeIndex.value]
                     val queryWithTerritory = "${mapcode.territory.name} $addressText"
 
-                    val decodeQueryWithCurrentTerritoryResult = useCase.decodeMapcode(queryWithTerritory)
+                    val decodeQueryWithCurrentTerritoryResult =
+                        useCase.decodeMapcode(queryWithTerritory)
 
                     decodeQueryWithCurrentTerritoryResult.getOrThrow()
                 }.recoverCatching {
@@ -420,8 +428,10 @@ class MapViewModel @Inject constructor(
 
     private fun getLastCameraPosition(): CameraPosition? {
         return runBlocking {
-            val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@runBlocking null
-            val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@runBlocking null
+            val lastLatitude =
+                preferences.get(Keys.lastLocationLatitude).first() ?: return@runBlocking null
+            val lastLongitude =
+                preferences.get(Keys.lastLocationLongitude).first() ?: return@runBlocking null
             val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@runBlocking null
 
             CameraPosition.fromLatLngZoom(LatLng(lastLatitude, lastLongitude), lastZoom)
