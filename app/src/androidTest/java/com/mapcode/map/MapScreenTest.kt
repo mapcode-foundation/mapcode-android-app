@@ -17,6 +17,7 @@
 package com.mapcode.map
 
 import android.Manifest
+import android.os.Build
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
@@ -92,6 +93,10 @@ class MapScreenTest {
 
     @Test
     fun show_snackbar_when_copying_mapcode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+        
         useCase.knownLocations.add(
             FakeLocation(
                 0.0,
