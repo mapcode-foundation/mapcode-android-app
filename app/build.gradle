@@ -88,6 +88,7 @@ dependencies {
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation "androidx.core:core-splashscreen:1.0.0"
     implementation "androidx.compose.material3:material3-window-size-class:1.0.0-beta02"
+    implementation "androidx.compose.material:material-icons-extended:1.2.1"
 
     //other
     implementation 'com.jakewharton.timber:timber:5.0.1'
