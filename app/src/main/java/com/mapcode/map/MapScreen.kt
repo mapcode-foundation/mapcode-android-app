@@ -54,8 +54,10 @@ import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
 import com.mapcode.util.ScrollableDialog
+import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 
+@Destination(start = true)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,

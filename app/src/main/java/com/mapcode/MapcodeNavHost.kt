@@ -23,10 +23,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import com.mapcode.destinations.MapScreenDestination
 import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
+import com.ramcosta.composedestinations.utils.composable
 
 @Composable
 fun MapcodeNavHost(
@@ -47,12 +48,13 @@ fun MapcodeNavHost(
         else -> LayoutType.HorizontalInfoArea
     }
 
+
     NavHost(
         navController = navController,
-        startDestination = MapcodeDestination.Map.name,
+        startDestination = MapScreenDestination.route,
         modifier = modifier
     ) {
-        composable(MapcodeDestination.Map.name) {
+        composable(MapScreenDestination) {
             MapScreen(viewModel, layoutType = layoutType)
         }
     }

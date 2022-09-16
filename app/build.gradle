@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+    id 'com.google.devtools.ksp'
 }
 
 android {
@@ -58,6 +59,17 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    applicationVariants.all { variant ->
+        kotlin.sourceSets {
+            getByName(variant.name) {
+                kotlin.srcDir("build/generated/ksp/${variant.name}/kotlin")
+            }
+        }
+    }
+    ksp {
+        arg("compose-destinations.generateNavGraphs", "false")
+    }
 }
 
 dependencies {
@@ -92,6 +104,9 @@ dependencies {
 
     //other
     implementation 'com.jakewharton.timber:timber:5.0.1'
+    implementation 'io.github.raamcosta.compose-destinations:core:1.7.16-beta'
+    ksp 'io.github.raamcosta.compose-destinations:ksp:1.7.16-beta'
+
     //noinspection GradleDependency. Issue with R8 on Android 8.0 or lower
     implementation 'com.mapcode:mapcode:2.4.14'
     implementation "com.squareup.okhttp3:okhttp:4.10.0"

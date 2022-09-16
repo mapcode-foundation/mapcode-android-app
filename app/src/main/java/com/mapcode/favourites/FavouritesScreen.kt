@@ -20,46 +20,31 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.mapcode.R
-import com.mapcode.util.CustomDialog
 import com.mapcode.util.Location
+import com.ramcosta.composedestinations.annotation.Destination
 
+@Destination
 @Composable
-private fun FavouritesDialog(
-    favourites: List<Favourite>,
-    onDismiss: () -> Unit
+fun FavouritesScreen(
+    favourites: List<Favourite>
 ) {
-    CustomDialog(
-        title = stringResource(R.string.favourites_dialog_title),
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.close_dialog_button))
-            }
-        },
-        onDismissRequest = onDismiss
-    ) {
-        LazyColumn {
-            items(favourites) {
-                FavouritesListItem(modifier = Modifier.fillMaxWidth())
-            }
+    LazyColumn {
+        items(favourites) {
+            FavouritesListItem(modifier = Modifier.fillMaxWidth())
         }
     }
 }
 
 @Preview
 @Composable
-private fun FavouritesDialogPreview() {
-    FavouritesDialog(
+private fun Preview() {
+    FavouritesScreen(
         favourites = listOf(
             Favourite("", Location(0.0, 0.0), "")
-        ),
-        onDismiss = {}
+        )
     )
 }
 
