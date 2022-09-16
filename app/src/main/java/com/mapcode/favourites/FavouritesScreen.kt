@@ -16,26 +16,54 @@
 
 package com.mapcode.favourites
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.mapcode.R
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination
 @Composable
 fun FavouritesScreen(
-    favourites: List<Favourite>
+    modifier: Modifier = Modifier,
+    favourites: List<Favourite>,
+    navigateBack: () -> Unit
 ) {
-    LazyColumn {
-        items(favourites) {
-            FavouritesListItem(modifier = Modifier.fillMaxWidth())
+    Scaffold(
+        modifier = modifier,
+        scaffoldState = rememberScaffoldState(),
+        bottomBar = {
+            BottomAppBar {
+                IconButton(onClick = navigateBack) {
+                    Icon(
+                        Icons.Outlined.ArrowBack,
+                        contentDescription = stringResource(R.string.favourites_navigate_back)
+                    )
+                }
+            }
         }
+    ) { padding ->
+        Content(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            favourites = favourites
+        )
     }
+
+    BackHandler(onBack = navigateBack)
 }
 
 @Preview
@@ -44,13 +72,29 @@ private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
             Favourite("", Location(0.0, 0.0), "")
-        )
+        ),
+        navigateBack = {}
     )
 }
 
 @Composable
-private fun FavouritesListItem(modifier: Modifier) {
-    Row(modifier) {
+private fun Content(
+    modifier: Modifier = Modifier,
+    favourites: List<Favourite>,
+) {
+    LazyColumn(modifier) {
+        items(favourites) { item ->
+            FavouritesListItem(
+                modifier = Modifier.fillMaxWidth(),
+                state = item
+            )
+        }
+    }
+}
 
+@Composable
+private fun FavouritesListItem(modifier: Modifier, state: Favourite) {
+    Row(modifier) {
+        Text(state.name)
     }
 }

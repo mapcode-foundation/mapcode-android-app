@@ -29,9 +29,11 @@ import assertk.assertions.isEqualTo
 import com.mapcode.FakePreferenceRepository
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class MapScreenTest {
 
@@ -44,12 +46,15 @@ class MapScreenTest {
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private lateinit var mockDestinationsNavigator: DestinationsNavigator
+
     private lateinit var useCase: FakeShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setUp() {
         useCase = FakeShowMapcodeUseCase()
+        mockDestinationsNavigator = mock()
         viewModel = MapViewModel(useCase, FakePreferenceRepository())
     }
 
@@ -96,7 +101,7 @@ class MapScreenTest {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return
         }
-        
+
         useCase.knownLocations.add(
             FakeLocation(
                 0.0,
@@ -687,9 +692,32 @@ class MapScreenTest {
         assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
+    @Test
+    fun show_add_favourites_dialog_when_clicking_add_favourites() {
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.onNodeWithText("Name").assertExists()
+    }
+
+    @Test
+    fun show_view_favourites_dialog_when_clicking_view_favourites() {
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithText("View favourites").performClick()
+        composeTestRule.onNodeWithText("Name").assertExists()
+    }
+
+    @Test
+    fun list_favourites_in_dialog() {
+        //TODO
+    }
+
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
-            MapScreen(viewModel = viewModel, renderGoogleMaps = false)
+            MapScreen(
+                viewModel = viewModel,
+                renderGoogleMaps = false,
+                navigator = mockDestinationsNavigator
+            )
         }
     }
 }

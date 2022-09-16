@@ -16,18 +16,23 @@
 
 package com.mapcode
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
+import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.destinations.MapScreenDestination
+import com.mapcode.favourites.Favourite
+import com.mapcode.favourites.FavouritesScreen
 import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
-import com.ramcosta.composedestinations.utils.composable
+import com.mapcode.util.Location
+import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.manualcomposablecalls.composable
 
 @Composable
 fun MapcodeNavHost(
@@ -48,14 +53,26 @@ fun MapcodeNavHost(
         else -> LayoutType.HorizontalInfoArea
     }
 
-
-    NavHost(
+    DestinationsNavHost(
         navController = navController,
-        startDestination = MapScreenDestination.route,
+        navGraph = NavGraphs.root,
         modifier = modifier
     ) {
         composable(MapScreenDestination) {
-            MapScreen(viewModel, layoutType = layoutType)
+            MapScreen(
+                Modifier.fillMaxSize(),
+                viewModel,
+                layoutType = layoutType,
+                navigator = destinationsNavigator
+            )
+        }
+
+        composable(FavouritesScreenDestination) {
+            FavouritesScreen(
+                modifier = Modifier.fillMaxSize(),
+                favourites = listOf(Favourite("bla", Location(0.0, 0.0), "NLD AB.XY")),
+                navigateBack = navController::navigateUp
+            )
         }
     }
 }

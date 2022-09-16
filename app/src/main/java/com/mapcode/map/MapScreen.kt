@@ -50,17 +50,21 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
+import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
 import com.mapcode.util.ScrollableDialog
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 
 @Destination(start = true)
 @Composable
 fun MapScreen(
+    modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
@@ -104,7 +108,7 @@ fun MapScreen(
 
     Surface {
         Scaffold(
-            modifier = Modifier.navigationBarsPadding(),
+            modifier = modifier,
             scaffoldState = scaffoldState
         ) { padding ->
             when (layoutType) {
@@ -113,6 +117,7 @@ fun MapScreen(
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
@@ -121,12 +126,14 @@ fun MapScreen(
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
                 LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
                     Modifier.padding(padding),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
@@ -139,6 +146,7 @@ fun MapScreen(
 private fun VerticalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -167,6 +175,9 @@ private fun VerticalInfoAreaLayout(
                 .imePadding()
                 .systemBarsPadding(),
             viewModel,
+            navigateToFavourites = {
+                navigator.navigate(FavouritesScreenDestination)
+            },
             showSnackbar = showSnackbar,
             isVerticalLayout = true
         )
@@ -177,6 +188,7 @@ private fun VerticalInfoAreaLayout(
 private fun HorizontalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -193,12 +205,15 @@ private fun HorizontalInfoAreaLayout(
         }
 
         InfoArea(
-            Modifier
+            modifier = Modifier
                 .wrapContentHeight()
                 .padding(8.dp),
-            viewModel,
-            showSnackbar,
-            isVerticalLayout = false
+            viewModel = viewModel,
+            showSnackbar = showSnackbar,
+            isVerticalLayout = false,
+            navigateToFavourites = {
+                navigator.navigate(FavouritesScreenDestination)
+            }
         )
     }
 }
@@ -207,6 +222,7 @@ private fun HorizontalInfoAreaLayout(
 private fun FloatingInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -226,7 +242,13 @@ private fun FloatingInfoAreaLayout(
                 Modifier.width(400.dp),
                 elevation = 4.dp
             ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, showSnackbar, isVerticalLayout = false)
+                InfoArea(
+                    modifier = Modifier.padding(8.dp),
+                    viewModel = viewModel,
+                    showSnackbar = showSnackbar, isVerticalLayout = false,
+                    navigateToFavourites = {
+                        navigator.navigate(FavouritesScreenDestination)
+                    })
             }
         }
     }

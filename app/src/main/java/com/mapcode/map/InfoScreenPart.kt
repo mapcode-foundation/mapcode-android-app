@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.mapcode.map
 
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -54,7 +51,8 @@ fun InfoArea(
     modifier: Modifier,
     viewModel: MapViewModel,
     showSnackbar: (String) -> Unit,
-    isVerticalLayout: Boolean
+    isVerticalLayout: Boolean,
+    navigateToFavourites: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
@@ -75,6 +73,12 @@ fun InfoArea(
         }
     }
 
+    val onAddFavouriteClick = remember {
+        {
+
+        }
+    }
+
     InfoArea(
         modifier,
         uiState,
@@ -88,7 +92,9 @@ fun InfoArea(
         onChangeLongitude = viewModel::onLongitudeTextChanged,
         onSubmitLongitude = viewModel::onSubmitLongitude,
         onCopyLongitude = onLocationClick,
-        isVerticalLayout = isVerticalLayout
+        isVerticalLayout = isVerticalLayout,
+        onAddFavouriteClick = onAddFavouriteClick,
+        onViewFavouritesClick = navigateToFavourites
     )
 }
 
@@ -161,7 +167,11 @@ private fun VerticalInfoAreaPreview() {
             ),
             locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
         )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = true)
+        InfoArea(
+            modifier = Modifier.padding(8.dp),
+            state = state,
+            isVerticalLayout = true
+        )
     }
 }
 
@@ -179,7 +189,11 @@ private fun HorizontalInfoAreaPreview() {
             ),
             locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
         )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
+        InfoArea(
+            modifier = Modifier.padding(8.dp),
+            state = state,
+            isVerticalLayout = false
+        )
     }
 }
 

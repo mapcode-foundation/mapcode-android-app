@@ -67,9 +67,6 @@ android {
             }
         }
     }
-    ksp {
-        arg("compose-destinations.generateNavGraphs", "false")
-    }
 }
 
 dependencies {

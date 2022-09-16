@@ -22,13 +22,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CustomDialog(
     title: String,
@@ -38,31 +35,37 @@ fun CustomDialog(
     content: @Composable BoxScope.() -> Unit,
 ) {
     Dialog(
-        onDismissRequest = onDismissRequest,
-        //must be set false so that the dialog resizes when content changes
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        onDismissRequest = onDismissRequest
     ) {
         Surface(
-            modifier = Modifier.padding(50.dp),
-            color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.large
+            color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium
         ) {
-            Column(Modifier.padding(24.dp)) {
+            Column {
                 Text(
-                    modifier = Modifier.wrapContentSize(),
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .height(64.dp)
+                        .wrapContentSize()
+                        .padding(start = 24.dp, end = 24.dp),
                     text = title,
                     style = MaterialTheme.typography.h6
                 )
+                Divider(Modifier.height(1.dp))
+
                 Box(
                     Modifier
                         .weight(1f, fill = false)
-                        .padding(top = 16.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)
                 ) {
                     content()
                 }
+
+                Divider(Modifier.height(1.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.End),
+                        .align(Alignment.End)
+                        .padding(8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
                     dismissButton()

@@ -20,10 +20,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
@@ -65,6 +67,7 @@ fun MapcodeApp(viewModel: MapViewModel, windowSizeClass: WindowSizeClass) {
     MapcodeTheme {
         val navController = rememberNavController()
         MapcodeNavHost(
+            modifier = Modifier.navigationBarsPadding(),
             navController = navController,
             viewModel = viewModel,
             windowSizeClass = windowSizeClass
