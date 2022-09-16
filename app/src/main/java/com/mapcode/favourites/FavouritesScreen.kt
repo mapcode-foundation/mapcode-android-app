@@ -17,20 +17,25 @@
 package com.mapcode.favourites
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.R
+import com.mapcode.theme.MapcodeColor
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -41,6 +46,13 @@ fun FavouritesScreen(
     favourites: List<Favourite>,
     navigateBack: () -> Unit
 ) {
+    val systemUiController = rememberSystemUiController()
+    val systemBarColor = MaterialTheme.colors.primary
+
+    SideEffect {
+        systemUiController.setNavigationBarColor(color = systemBarColor)
+    }
+
     Scaffold(
         modifier = modifier,
         scaffoldState = rememberScaffoldState(),
@@ -82,19 +94,82 @@ private fun Content(
     modifier: Modifier = Modifier,
     favourites: List<Favourite>,
 ) {
-    LazyColumn(modifier) {
-        items(favourites) { item ->
-            FavouritesListItem(
-                modifier = Modifier.fillMaxWidth(),
-                state = item
-            )
+    Column(modifier) {
+        Text(
+            modifier = Modifier.padding(8.dp),
+            text = stringResource(R.string.favourites_screen_caption)
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .padding(8.dp)
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(favourites) { item ->
+                FavouritesListItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .clickable {
+
+                        },
+                    state = item,
+                    onShareClick = {},
+                    onEditClick = {},
+                    onDeleteClick = {}
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun FavouritesListItem(modifier: Modifier, state: Favourite) {
-    Row(modifier) {
-        Text(state.name)
+private fun FavouritesListItem(
+    modifier: Modifier, state: Favourite,
+    onShareClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    Card(modifier) {
+        Row {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = state.name,
+                    style = MaterialTheme.typography.body1
+                )
+
+                Text(
+                    text = state.mapcode,
+                    style = MaterialTheme.typography.body2
+                )
+            }
+
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.rename_favourite_content_description)
+                )
+            }
+
+            IconButton(onClick = onShareClick) {
+                Icon(
+                    Icons.Outlined.Share,
+                    contentDescription = stringResource(R.string.share_favourite_content_description)
+                )
+            }
+
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.delete_favourite_content_description),
+                    tint = MapcodeColor.deleteFavouriteButton()
+                )
+            }
+        }
     }
 }

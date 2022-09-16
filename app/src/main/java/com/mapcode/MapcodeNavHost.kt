@@ -17,6 +17,7 @@
 package com.mapcode
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -69,7 +70,9 @@ fun MapcodeNavHost(
 
         composable(FavouritesScreenDestination) {
             FavouritesScreen(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
                 favourites = listOf(Favourite("bla", Location(0.0, 0.0), "NLD AB.XY")),
                 navigateBack = navController::navigateUp
             )

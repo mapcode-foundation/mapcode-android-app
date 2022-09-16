@@ -64,7 +64,10 @@
     <string name="add_favourite_button">Add favourite</string>
     <string name="view_favourites_button">View favourites</string>
     <string name="favourites_dialog_title">Favourites</string>
-    <string name="rename_favourite_button">Rename favourite</string>
+    <string name="rename_favourite_content_description">Rename favourite</string>
+    <string name="delete_favourite_content_description">Delete favourite</string>
+    <string name="share_favourite_content_description">Share favourite</string>
     <string name="favourites_navigate_back">Go back</string>
+    <string name="favourites_screen_caption">Tap a favourite to go to it on the map!</string>
     <!--  Map screen  -->
 </resources>
