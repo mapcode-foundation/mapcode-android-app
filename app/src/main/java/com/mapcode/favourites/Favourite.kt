@@ -17,5 +17,12 @@
 package com.mapcode.favourites
 
 import com.mapcode.util.Location
+import kotlinx.serialization.Serializable
 
-data class Favourite(val name: String, val location: Location, val mapcode: String)
+@Serializable
+data class Favourite(
+    val id: String,
+    val name: String,
+    val location: Location,
+    val mapcode: String
+)

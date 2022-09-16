@@ -5,6 +5,7 @@ plugins {
     id 'dagger.hilt.android.plugin'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 android {
@@ -103,6 +104,7 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
     implementation 'io.github.raamcosta.compose-destinations:core:1.7.16-beta'
     ksp 'io.github.raamcosta.compose-destinations:ksp:1.7.16-beta'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0"
 
     //noinspection GradleDependency. Issue with R8 on Android 8.0 or lower
     implementation 'com.mapcode:mapcode:2.4.14'

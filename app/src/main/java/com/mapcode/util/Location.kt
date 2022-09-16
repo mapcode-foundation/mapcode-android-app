@@ -16,6 +16,9 @@
 
 package com.mapcode.util
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Location(val latitude: Double, val longitude: Double) {
     companion object {
         val GLOBE_SOUTH_WEST: Location = Location(-90.0, -180.0)
