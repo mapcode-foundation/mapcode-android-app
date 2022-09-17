@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.map
 
-import com.mapcode.map.ShowMapcodeUseCase
-import com.mapcode.map.ShowMapcodeUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

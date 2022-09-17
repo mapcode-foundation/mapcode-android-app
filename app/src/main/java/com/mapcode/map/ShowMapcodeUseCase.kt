@@ -35,6 +35,7 @@ import com.mapcode.UnknownMapcodeException
 import com.mapcode.UnknownPrecisionFormatException
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
+import com.mapcode.favourites.FavouritesDataStore
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
@@ -55,7 +56,8 @@ import kotlin.coroutines.suspendCoroutine
 class ShowMapcodeUseCaseImpl @Inject constructor(
     @ApplicationContext private val ctx: Context,
     private val coroutineScope: CoroutineScope,
-    private val preferences: PreferenceRepository
+    private val preferences: PreferenceRepository,
+    private val favouritesDataStore: FavouritesDataStore
 ) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
@@ -253,6 +255,10 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
         return Pair(Location(lastLatitude, lastLongitude), lastZoom)
     }
+
+    override suspend fun saveFavourite(name: String, location: Location) {
+        favouritesDataStore.create(name, location.latitude, location.longitude)
+    }
 }
 
 /**
@@ -318,5 +324,8 @@ interface ShowMapcodeUseCase {
     ): Result<List<String>>
 
     fun saveLastLocationAndZoom(location: Location, zoom: Float)
+
     suspend fun getLastLocationAndZoom(): Pair<Location, Float>?
+
+    suspend fun saveFavourite(name: String, location: Location)
 }

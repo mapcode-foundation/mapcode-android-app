@@ -29,6 +29,8 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +45,17 @@ import com.ramcosta.composedestinations.annotation.Destination
 @Composable
 fun FavouritesScreen(
     modifier: Modifier = Modifier,
+    viewModel: FavouritesViewModel,
+    navigateBack: () -> Unit
+) {
+    val favourites by viewModel.favourites.collectAsState()
+
+    FavouritesScreen(modifier, favourites, navigateBack)
+}
+
+@Composable
+private fun FavouritesScreen(
+    modifier: Modifier = Modifier,
     favourites: List<Favourite>,
     navigateBack: () -> Unit
 ) {
@@ -52,6 +65,7 @@ fun FavouritesScreen(
     SideEffect {
         systemUiController.setNavigationBarColor(color = systemBarColor)
     }
+
 
     Scaffold(
         modifier = modifier,
@@ -83,7 +97,7 @@ fun FavouritesScreen(
 private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
-            Favourite("id", "", Location(0.0, 0.0), "")
+            Favourite("id0", "Bla", Location(0.0, 0.0), "NLD AB.XY")
         ),
         navigateBack = {}
     )
@@ -96,7 +110,7 @@ private fun Content(
 ) {
     Column(modifier) {
         Text(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp),
             text = stringResource(R.string.favourites_screen_caption)
         )
 

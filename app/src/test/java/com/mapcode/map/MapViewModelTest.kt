@@ -23,6 +23,7 @@ import com.mapcode.FakeLocation
 import com.mapcode.Mapcode
 import com.mapcode.Territory
 import com.mapcode.TestDispatcherProvider
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -1058,5 +1059,29 @@ internal class MapViewModelTest {
         advanceUntilIdle()
         viewModel.onAddressTextChange("addr")
         assertThat(viewModel.uiState.value.addressUi.matchingAddresses).containsExactly("Street 1")
+    }
+
+    @Test
+    fun `save favourite when clicking save favourite`() = runTest {
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
+        viewModel.onCameraMoved(0.0, 0.0, 1.0f)
+
+        viewModel.onSaveFavouriteClick("name")
+        advanceUntilIdle()
+
+        assertThat(useCase.favourites).index(0)
+            .prop(Favourite::name)
+            .isEqualTo("name")
+
+        assertThat(useCase.favourites).index(0)
+            .prop(Favourite::location)
+            .isEqualTo(Location(0.0, 0.0))
     }
 }

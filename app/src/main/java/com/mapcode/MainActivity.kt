@@ -69,7 +69,7 @@ fun MapcodeApp(viewModel: MapViewModel, windowSizeClass: WindowSizeClass) {
         MapcodeNavHost(
             modifier = Modifier.navigationBarsPadding(),
             navController = navController,
-            viewModel = viewModel,
+            mapViewModel = viewModel,
             windowSizeClass = windowSizeClass
         )
     }

@@ -16,12 +16,15 @@
 
 package com.mapcode.favourites
 
-import com.mapcode.util.Location
-import java.util.*
+import kotlinx.serialization.Serializable
 
-data class Favourite(
-    val id: String = UUID.randomUUID().toString(),
+/**
+ * The data model for saving favourites.
+ */
+@Serializable
+data class FavouriteEntity(
+    val id: String,
     val name: String,
-    val location: Location,
-    val mapcode: String
+    val latitude: Double,
+    val longitude: Double
 )

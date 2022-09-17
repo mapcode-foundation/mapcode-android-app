@@ -16,12 +16,19 @@
 
 package com.mapcode.favourites
 
-import com.mapcode.util.Location
-import java.util.*
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-data class Favourite(
-    val id: String = UUID.randomUUID().toString(),
-    val name: String,
-    val location: Location,
-    val mapcode: String
-)
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class FavouritesModule {
+    @Singleton
+    @Binds
+    abstract fun bindDataStore(impl: FavouritesDataStoreImpl): FavouritesDataStore
+
+    @Binds
+    abstract fun bindViewFavouritesUseCase(impl: ViewFavouritesUseCaseImpl): ViewFavouritesUseCase
+}

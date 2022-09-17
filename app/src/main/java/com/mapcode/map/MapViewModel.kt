@@ -412,6 +412,12 @@ class MapViewModel @Inject constructor(
         showCantFindMapsAppSnackBar = !success
     }
 
+    fun onSaveFavouriteClick(name: String) {
+        viewModelScope.launch {
+            useCase.saveFavourite(name = name, location = location.value)
+        }
+    }
+
     private fun getInitialCameraPositionState(): CameraPositionState {
         val lastCameraPosition = getLastCameraPosition()
         if (lastCameraPosition == null) {

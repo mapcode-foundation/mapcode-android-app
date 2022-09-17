@@ -23,15 +23,14 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.destinations.MapScreenDestination
-import com.mapcode.favourites.Favourite
 import com.mapcode.favourites.FavouritesScreen
 import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
-import com.mapcode.util.Location
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.manualcomposablecalls.composable
 
@@ -39,7 +38,7 @@ import com.ramcosta.composedestinations.manualcomposablecalls.composable
 fun MapcodeNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: MapViewModel,
+    mapViewModel: MapViewModel,
     windowSizeClass: WindowSizeClass
 ) {
     val layoutType: LayoutType = when {
@@ -62,7 +61,7 @@ fun MapcodeNavHost(
         composable(MapScreenDestination) {
             MapScreen(
                 Modifier.fillMaxSize(),
-                viewModel,
+                mapViewModel,
                 layoutType = layoutType,
                 navigator = destinationsNavigator
             )
@@ -73,7 +72,7 @@ fun MapcodeNavHost(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding(),
-                favourites = listOf(Favourite("id0", "bla", Location(0.0, 0.0), "NLD AB.XY")),
+                viewModel = hiltViewModel(),
                 navigateBack = navController::navigateUp
             )
         }
