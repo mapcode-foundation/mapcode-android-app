@@ -73,7 +73,7 @@ fun MapcodeNavHost(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding(),
-                favourites = listOf(Favourite("bla", Location(0.0, 0.0), "NLD AB.XY")),
+                favourites = listOf(Favourite("id0", "bla", Location(0.0, 0.0), "NLD AB.XY")),
                 navigateBack = navController::navigateUp
             )
         }

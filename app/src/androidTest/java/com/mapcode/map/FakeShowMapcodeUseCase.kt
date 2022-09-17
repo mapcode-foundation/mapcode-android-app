@@ -106,6 +106,14 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return success(matchingAddresses[query] ?: emptyList())
     }
 
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
+
+    }
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        return null
+    }
+
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
     }

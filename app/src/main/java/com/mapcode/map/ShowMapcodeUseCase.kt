@@ -33,11 +33,14 @@ import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
 import com.mapcode.UnknownMapcodeException
 import com.mapcode.UnknownPrecisionFormatException
+import com.mapcode.data.Keys
+import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -51,7 +54,8 @@ import kotlin.coroutines.suspendCoroutine
 
 class ShowMapcodeUseCaseImpl @Inject constructor(
     @ApplicationContext private val ctx: Context,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val preferences: PreferenceRepository
 ) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
@@ -108,6 +112,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
+                @Suppress("DEPRECATION")
                 geocoder.getFromLocationName(address, 10)?.firstOrNull()
             }
 
@@ -124,6 +129,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         try {
             val addressList = withContext(Dispatchers.Default) {
+                @Suppress("DEPRECATION")
                 geocoder.getFromLocation(lat, long, 1) ?: emptyList()
             }
 
@@ -231,6 +237,22 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
                 .map { it.toString() }
         }
     }
+
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
+        preferences.set(Keys.lastLocationLatitude, location.latitude)
+        preferences.set(Keys.lastLocationLongitude, location.longitude)
+        preferences.set(Keys.lastLocationZoom, zoom)
+    }
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        val lastLatitude =
+            preferences.get(Keys.lastLocationLatitude).first() ?: return null
+        val lastLongitude =
+            preferences.get(Keys.lastLocationLongitude).first() ?: return null
+        val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return null
+
+        return Pair(Location(lastLatitude, lastLongitude), lastZoom)
+    }
 }
 
 /**
@@ -294,4 +316,7 @@ interface ShowMapcodeUseCase {
         southwest: Location,
         northeast: Location
     ): Result<List<String>>
+
+    fun saveLastLocationAndZoom(location: Location, zoom: Float)
+    suspend fun getLastLocationAndZoom(): Pair<Location, Float>?
 }

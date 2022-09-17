@@ -83,7 +83,7 @@ fun FavouritesScreen(
 private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
-            Favourite("", Location(0.0, 0.0), "")
+            Favourite("id", "", Location(0.0, 0.0), "")
         ),
         navigateBack = {}
     )

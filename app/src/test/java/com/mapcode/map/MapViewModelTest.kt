@@ -19,7 +19,10 @@ package com.mapcode.map
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import assertk.assertThat
 import assertk.assertions.*
-import com.mapcode.*
+import com.mapcode.FakeLocation
+import com.mapcode.Mapcode
+import com.mapcode.Territory
+import com.mapcode.TestDispatcherProvider
 import com.mapcode.util.Location
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,8 +54,7 @@ internal class MapViewModelTest {
         useCase = FakeShowMapcodeUseCase()
         viewModel = MapViewModel(
             useCase,
-            dispatchers = TestDispatcherProvider(testDispatcher),
-            preferences = FakePreferenceRepository()
+            dispatchers = TestDispatcherProvider(testDispatcher)
         )
     }
 

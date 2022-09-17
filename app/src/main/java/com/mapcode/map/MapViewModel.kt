@@ -30,8 +30,6 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
 import com.mapcode.Territory
-import com.mapcode.data.Keys
-import com.mapcode.data.PreferenceRepository
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -47,7 +45,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase,
-    private val preferences: PreferenceRepository,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
 
@@ -406,9 +403,7 @@ class MapViewModel @Inject constructor(
     }
 
     fun saveLocation() {
-        preferences.set(Keys.lastLocationLatitude, location.value.latitude)
-        preferences.set(Keys.lastLocationLongitude, location.value.longitude)
-        preferences.set(Keys.lastLocationZoom, zoom.value)
+        useCase.saveLastLocationAndZoom(location = location.value, zoom = zoom.value)
     }
 
     fun onDirectionsClick() {
@@ -428,13 +423,14 @@ class MapViewModel @Inject constructor(
 
     private fun getLastCameraPosition(): CameraPosition? {
         return runBlocking {
-            val lastLatitude =
-                preferences.get(Keys.lastLocationLatitude).first() ?: return@runBlocking null
-            val lastLongitude =
-                preferences.get(Keys.lastLocationLongitude).first() ?: return@runBlocking null
-            val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@runBlocking null
+            val lastLocationAndZoom = useCase.getLastLocationAndZoom() ?: return@runBlocking null
 
-            CameraPosition.fromLatLngZoom(LatLng(lastLatitude, lastLongitude), lastZoom)
+            CameraPosition.fromLatLngZoom(
+                LatLng(
+                    lastLocationAndZoom.first.latitude,
+                    lastLocationAndZoom.first.longitude
+                ), lastLocationAndZoom.second
+            )
         }
     }
 

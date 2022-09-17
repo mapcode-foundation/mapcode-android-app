@@ -112,4 +112,12 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     ): Result<List<String>> {
         return success((matchingAddresses[query] ?: emptyList()))
     }
+
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
+
+    }
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        return null
+    }
 }
