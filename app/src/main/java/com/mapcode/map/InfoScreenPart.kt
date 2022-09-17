@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -43,8 +44,10 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
+import com.mapcode.favourites.FavouritesNameDialog
 import com.mapcode.theme.MapcodeColor
 import com.mapcode.theme.MapcodeTheme
+import com.mapcode.util.ErrorText
 
 @Composable
 fun InfoArea(
@@ -73,9 +76,26 @@ fun InfoArea(
         }
     }
 
+    var showFavouritesNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
+    var favouritesName: String by rememberSaveable { mutableStateOf("") }
+
+    if (showFavouritesNameDialog) {
+        val mapcode: String by remember {
+            derivedStateOf { "${uiState.mapcodeUi.territoryShortName} ${uiState.mapcodeUi.code}" }
+        }
+
+        FavouritesNameDialog(
+            name = favouritesName,
+            mapcode = mapcode,
+            onNameChange = { favouritesName = it },
+            onDismiss = { showFavouritesNameDialog = false },
+            onSubmitClick = { viewModel.onSaveFavouriteClick(favouritesName) })
+    }
+
     val onAddFavouriteClick = remember {
         {
-
+            favouritesName = uiState.addressUi.address
+            showFavouritesNameDialog = true
         }
     }
 
@@ -589,14 +609,4 @@ private fun MapcodeBox(
             Text(text = styledString)
         }
     }
-}
-
-@Composable
-private fun ErrorText(modifier: Modifier = Modifier, text: String) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = MaterialTheme.colors.error,
-        style = MaterialTheme.typography.body2
-    )
 }

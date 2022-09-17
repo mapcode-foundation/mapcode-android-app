@@ -25,10 +25,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextRange
 import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
+import assertk.assertions.index
 import assertk.assertions.isEqualTo
-import com.mapcode.FakePreferenceRepository
+import assertk.assertions.prop
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.mapcode.favourites.Favourite
+import com.mapcode.util.Location
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.junit.Before
 import org.junit.Rule
@@ -55,7 +58,7 @@ class MapScreenTest {
     fun setUp() {
         useCase = FakeShowMapcodeUseCase()
         mockDestinationsNavigator = mock()
-        viewModel = MapViewModel(useCase, FakePreferenceRepository())
+        viewModel = MapViewModel(useCase)
     }
 
     @Test
@@ -695,20 +698,51 @@ class MapScreenTest {
     @Test
     fun show_add_favourites_dialog_when_clicking_add_favourites() {
         setMapScreenAsContent()
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("address"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
+
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
         composeTestRule.onNodeWithText("Add favourite").performClick()
-        composeTestRule.onNodeWithText("Name").assertExists()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Mapcode: NLD AB.XY").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Name").assertIsDisplayed()
     }
 
     @Test
-    fun show_view_favourites_dialog_when_clicking_view_favourites() {
+    fun save_favourites_when_clicking_save_name() {
         setMapScreenAsContent()
-        composeTestRule.onNodeWithText("View favourites").performClick()
-        composeTestRule.onNodeWithText("Name").assertExists()
-    }
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("address"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
 
-    @Test
-    fun list_favourites_in_dialog() {
-        //TODO
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            useCase.favourites.isNotEmpty()
+        }
+
+        assertThat(useCase.favourites).index(0).prop(Favourite::name).isEqualTo("address")
+        assertThat(useCase.favourites).index(0).prop(Favourite::location)
+            .isEqualTo(Location(0.0, 0.0))
+        assertThat(useCase.favourites).index(0).prop(Favourite::mapcode).isEqualTo("NLD AB.XY")
     }
 
     private fun setMapScreenAsContent() {

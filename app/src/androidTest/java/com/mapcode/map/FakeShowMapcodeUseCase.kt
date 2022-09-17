@@ -18,6 +18,7 @@ package com.mapcode.map
 
 import com.mapcode.Mapcode
 import com.mapcode.UnknownMapcodeException
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
@@ -38,6 +39,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
+    val favourites: MutableList<Favourite> = mutableListOf()
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -112,6 +114,16 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
 
     override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
         return null
+    }
+
+    override suspend fun saveFavourite(name: String, location: Location) {
+        favourites.add(
+            Favourite(
+                name = name,
+                location = location,
+                mapcode = getMapcodes(location.latitude, location.longitude).first().toString()
+            )
+        )
     }
 
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {

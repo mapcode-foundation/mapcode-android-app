@@ -69,5 +69,13 @@
     <string name="share_favourite_content_description">Share favourite</string>
     <string name="favourites_navigate_back">Go back</string>
     <string name="favourites_screen_caption">Tap a favourite to go to it on the map!</string>
+    <string name="add_favourite_dialog_title">Add favourite</string>
+    <string name="add_favourite_dialog_cancel_button">Cancel</string>
+    <string name="add_favourite_dialog_submit_button">Save</string>
+    <string name="error_favourite_name_empty">Name must not be empty!</string>
+    <string name="add_favourite_dialog_text_field_label">Name</string>
+    <string name="add_favourite_dialog_message">Save this location to your favourites so you can find it quickly. After you have chosen a name tap  \'view favourites\' to interact with this favourite. It will also appear on the map.</string>
+    <string name="add_favourite_dialog_mapcode">Mapcode: %s</string>
+    <string name="add_favourite_dialog_clear_name_button">Clear name</string>
     <!--  Map screen  -->
 </resources>

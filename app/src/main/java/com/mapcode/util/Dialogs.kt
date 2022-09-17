@@ -50,17 +50,14 @@ fun CustomDialog(
                     text = title,
                     style = MaterialTheme.typography.h6
                 )
-                Divider(Modifier.height(1.dp))
-
                 Box(
                     Modifier
                         .weight(1f, fill = false)
-                        .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp)
+                        .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
                 ) {
                     content()
                 }
 
-                Divider(Modifier.height(1.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
