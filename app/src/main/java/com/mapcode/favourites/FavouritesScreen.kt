@@ -77,8 +77,9 @@ private fun FavouritesScreen(
     val systemUiController = rememberSystemUiController()
     val systemBarColor = MaterialTheme.colors.primary
 
-    SideEffect {
+    DisposableEffect(systemUiController, systemBarColor) {
         systemUiController.setNavigationBarColor(color = systemBarColor)
+        onDispose {}
     }
 
     Scaffold(

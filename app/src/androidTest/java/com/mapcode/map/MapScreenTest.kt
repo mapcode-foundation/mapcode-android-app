@@ -709,7 +709,7 @@ class MapScreenTest {
 
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
-        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.onNodeWithText("Save location").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Mapcode: NLD AB.XY").assertIsDisplayed()
@@ -730,7 +730,7 @@ class MapScreenTest {
 
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
-        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.onNodeWithText("Save location").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Save").performClick()
@@ -751,7 +751,8 @@ class MapScreenTest {
             MapScreen(
                 viewModel = viewModel,
                 renderGoogleMaps = false,
-                navigator = mockDestinationsNavigator
+                navigator = mockDestinationsNavigator,
+                resultRecipient = mock()
             )
         }
     }

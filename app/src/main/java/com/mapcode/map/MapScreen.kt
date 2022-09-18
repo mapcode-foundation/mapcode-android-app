@@ -150,11 +150,12 @@ fun MapScreen(
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = MaterialTheme.colors.isLight
 
-    SideEffect {
+    DisposableEffect(systemUiController, useDarkIcons) {
         systemUiController.setSystemBarsColor(
             color = Color.Transparent,
             darkIcons = useDarkIcons
         )
+        onDispose {}
     }
 
     resultRecipient.onNavResult { result ->
