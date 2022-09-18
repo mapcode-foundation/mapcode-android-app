@@ -97,7 +97,7 @@ private fun FavouritesScreen(
 private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
-            Favourite("id0", "Bla", Location(0.0, 0.0), "NLD AB.XY")
+            Favourite("id0", "Bla", Location(0.0, 0.0))
         ),
         navigateBack = {}
     )
@@ -157,10 +157,10 @@ private fun FavouritesListItem(
                     style = MaterialTheme.typography.body1
                 )
 
-                Text(
-                    text = state.mapcode,
-                    style = MaterialTheme.typography.body2
-                )
+//                Text(
+//                    text = state.mapcode,
+//                    style = MaterialTheme.typography.body2
+//                )
             }
 
             IconButton(onClick = onEditClick) {

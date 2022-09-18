@@ -530,13 +530,7 @@ class MapViewModel @Inject constructor(
 
     fun shareMapcode() {
         val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
-        val text = if (mapcode.territory == Territory.AAA) {
-            mapcode.code
-        } else {
-            mapcode.codeWithTerritory
-        }
-
-        useCase.shareText(text = text, description = "Mapcode: $text")
+        useCase.shareMapcode(mapcode)
     }
 }
 

@@ -29,15 +29,13 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.ktx.api.net.awaitFindAutocompletePredictions
-import com.mapcode.Mapcode
-import com.mapcode.MapcodeCodec
-import com.mapcode.UnknownMapcodeException
-import com.mapcode.UnknownPrecisionFormatException
+import com.mapcode.*
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
 import com.mapcode.favourites.FavouritesDataStore
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
+import com.mapcode.util.ShareAdapter
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
@@ -57,7 +55,8 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     @ApplicationContext private val ctx: Context,
     private val coroutineScope: CoroutineScope,
     private val preferences: PreferenceRepository,
-    private val favouritesDataStore: FavouritesDataStore
+    private val favouritesDataStore: FavouritesDataStore,
+    private val shareAdapter: ShareAdapter
 ) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
@@ -193,18 +192,14 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         }
     }
 
-    override fun shareText(text: String, description: String) {
-        val sendIntent: Intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-            putExtra(Intent.EXTRA_TITLE, description)
+    override fun shareMapcode(mapcode: Mapcode) {
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
         }
 
-        val shareIntent = Intent.createChooser(sendIntent, null).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-
-        ctx.startActivity(shareIntent)
+        shareAdapter.share(text = text, description = "Mapcode: $text")
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -308,10 +303,7 @@ interface ShowMapcodeUseCase {
      */
     fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean
 
-    /**
-     * Open the share sheet to share some text.
-     */
-    fun shareText(text: String, description: String)
+    fun shareMapcode(mapcode: Mapcode)
 
     /**
      * Get a list of addresses within the [northeast] and [southwest] bounds that might correspond to the [query].

@@ -16,8 +16,10 @@
 
 package com.mapcode.favourites
 
-import com.mapcode.MapcodeCodec
+import com.mapcode.Mapcode
+import com.mapcode.Territory
 import com.mapcode.util.Location
+import com.mapcode.util.ShareAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -25,8 +27,21 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ViewFavouritesUseCaseImpl @Inject constructor(
-    private val dataStore: FavouritesDataStore
+    private val dataStore: FavouritesDataStore,
+    private val shareAdapter: ShareAdapter
 ) : ViewFavouritesUseCase {
+    override fun share(favouriteName: String, mapcode: Mapcode) {
+        val mapcodeString = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
+        }
+
+        val text = "$favouriteName. Mapcode: $mapcodeString"
+
+        shareAdapter.share(text = text, description = text)
+    }
+
     override fun getFavourites(): Flow<List<Favourite>> {
         return dataStore.getAll()
             .map { entityList ->
@@ -45,18 +60,17 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
     }
 
     private fun fromFavouriteEntity(entity: FavouriteEntity): Favourite {
-        val mapcode = MapcodeCodec.encode(entity.latitude, entity.longitude).first()!!.toString()
-
         return Favourite(
             entity.id,
             entity.name,
-            Location(entity.latitude, entity.longitude),
-            mapcode
+            Location(entity.latitude, entity.longitude)
         )
     }
 }
 
 interface ViewFavouritesUseCase {
+    fun share(favouriteName: String, mapcode: Mapcode)
+
     fun getFavourites(): Flow<List<Favourite>>
 
     /**

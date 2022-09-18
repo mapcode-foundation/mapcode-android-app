@@ -22,6 +22,5 @@ import java.util.*
 data class Favourite(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val location: Location,
-    val mapcode: String
+    val location: Location
 )

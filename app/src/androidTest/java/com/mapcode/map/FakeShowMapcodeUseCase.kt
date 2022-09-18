@@ -34,9 +34,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var currentLocation: Location? = null
     var isMapsAppInstalled: Boolean = true
 
-    var sharedText: String? = null
-        private set
-
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
     val favourites: MutableList<Favourite> = mutableListOf()
@@ -95,10 +92,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return currentLocation
     }
 
-    override fun shareText(text: String, description: String) {
-        sharedText = text
-    }
-
     override suspend fun getMatchingAddresses(
         query: String,
         maxResults: Int,
@@ -120,8 +113,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         favourites.add(
             Favourite(
                 name = name,
-                location = location,
-                mapcode = getMapcodes(location.latitude, location.longitude).first().toString()
+                location = location
             )
         )
     }
@@ -129,4 +121,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
     }
+
+    override fun shareMapcode(mapcode: Mapcode) {}
 }

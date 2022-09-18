@@ -959,24 +959,6 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `do not copy AAA when sharing international mapcodes`() = runTest {
-        useCase.knownLocations.add(
-            FakeLocation(
-                1.0,
-                1.0,
-                addresses = emptyList(),
-                mapcodes = listOf(Mapcode("AB.CD", Territory.AAA))
-            )
-        )
-
-        viewModel.onCameraMoved(1.0, 1.0, zoom = 1f)
-        runCurrent()
-        viewModel.shareMapcode()
-
-        assertThat(useCase.sharedText).isEqualTo("AB.CD")
-    }
-
-    @Test
     fun `copy latitude and longitude to clipboard`() = runTest {
         viewModel.onCameraMoved(1.0, 2.0, 1f)
         runCurrent()

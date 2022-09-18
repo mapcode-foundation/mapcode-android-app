@@ -34,9 +34,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
         private set
 
-    var sharedText: String? = null
-        private set
-
     var hasInternetConnection: Boolean = true
     var currentLocation: Location? = null
 
@@ -103,8 +100,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return true
     }
 
-    override fun shareText(text: String, description: String) {
-        sharedText = text
+    override fun shareMapcode(mapcode: Mapcode) {
     }
 
     override suspend fun getMatchingAddresses(
@@ -128,8 +124,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         favourites.add(
             Favourite(
                 name = name,
-                location = location,
-                mapcode = getMapcodes(location.latitude, location.longitude).first().toString()
+                location = location
             )
         )
     }
