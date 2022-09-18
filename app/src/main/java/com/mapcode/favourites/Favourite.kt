@@ -23,4 +23,14 @@ data class Favourite(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val location: Location
-)
+) {
+    companion object {
+        fun fromEntity(entity: FavouriteEntity): Favourite {
+            return Favourite(
+                entity.id,
+                entity.name,
+                Location(entity.latitude, entity.longitude)
+            )
+        }
+    }
+}

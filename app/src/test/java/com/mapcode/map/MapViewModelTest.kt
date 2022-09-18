@@ -188,7 +188,8 @@ internal class MapViewModelTest {
                 helper = AddressHelper.Location("City, 1234AB"),
                 error = AddressError.None,
                 matchingAddresses = emptyList()
-            )
+            ),
+            favouriteLocations = emptyList()
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)
@@ -225,7 +226,8 @@ internal class MapViewModelTest {
                 helper = AddressHelper.Location("City, 1234AB"),
                 error = AddressError.None,
                 matchingAddresses = emptyList()
-            )
+            ),
+            favouriteLocations = emptyList()
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)

@@ -52,6 +52,7 @@ import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
 import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
@@ -594,6 +595,7 @@ private fun MapWithCrossHairs(
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val contentPadding = WindowInsets.statusBars.asPaddingValues()
 
     Box(modifier) {
@@ -602,7 +604,8 @@ private fun MapWithCrossHairs(
                 properties = viewModel.mapProperties,
                 onCameraMoved = viewModel::onCameraMoved,
                 cameraPositionState = viewModel.cameraPositionState,
-                contentPadding = contentPadding
+                contentPadding = contentPadding,
+                favouriteLocations = uiState.favouriteLocations
             )
         }
 
@@ -626,6 +629,7 @@ private fun Map(
     properties: MapProperties,
     onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
+    favouriteLocations: List<Favourite>,
     contentPadding: PaddingValues
 ) {
     LaunchedEffect(cameraPositionState.isMoving) {
@@ -674,7 +678,19 @@ private fun Map(
             }
         },
         contentPadding = contentPadding
-    )
+    ) {
+        favouriteLocations.forEach { favourite ->
+            Marker(
+                state = MarkerState(
+                    position = LatLng(
+                        favourite.location.latitude,
+                        favourite.location.longitude
+                    )
+                ),
+                title = favourite.name
+            )
+        }
+    }
 }
 
 /**

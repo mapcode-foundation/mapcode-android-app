@@ -23,6 +23,8 @@ import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.IOException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
@@ -127,5 +129,9 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
                 location = location
             )
         )
+    }
+
+    override fun getFavouriteLocations(): Flow<List<Favourite>> {
+        return MutableStateFlow(emptyList())
     }
 }

@@ -30,6 +30,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -94,12 +95,14 @@ class MapViewModel @Inject constructor(
         combine(
             addressUi,
             mapcodeUi,
-            locationUi
-        ) { addressUi, mapcodeUi, locationUi ->
+            locationUi,
+            useCase.getFavouriteLocations()
+        ) { addressUi, mapcodeUi, locationUi, favouriteLocations ->
             UiState(
                 addressUi = addressUi,
                 mapcodeUi = mapcodeUi,
-                locationUi = locationUi
+                locationUi = locationUi,
+                favouriteLocations = favouriteLocations
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
@@ -537,13 +540,15 @@ class MapViewModel @Inject constructor(
 data class UiState(
     val mapcodeUi: MapcodeUi,
     val addressUi: AddressUi,
-    val locationUi: LocationUi
+    val locationUi: LocationUi,
+    val favouriteLocations: List<Favourite>
 ) {
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
             addressUi = AddressUi("", emptyList(), AddressError.None, AddressHelper.None),
-            locationUi = LocationUi.EMPTY
+            locationUi = LocationUi.EMPTY,
+            favouriteLocations = emptyList()
         )
     }
 }

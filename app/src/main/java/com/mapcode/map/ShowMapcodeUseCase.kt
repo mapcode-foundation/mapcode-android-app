@@ -32,6 +32,7 @@ import com.google.android.libraries.places.ktx.api.net.awaitFindAutocompletePred
 import com.mapcode.*
 import com.mapcode.data.Keys
 import com.mapcode.data.PreferenceRepository
+import com.mapcode.favourites.Favourite
 import com.mapcode.favourites.FavouritesDataStore
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
@@ -39,7 +40,9 @@ import com.mapcode.util.ShareAdapter
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -254,6 +257,11 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     override suspend fun saveFavourite(name: String, location: Location) {
         favouritesDataStore.create(name, location.latitude, location.longitude)
     }
+
+    override fun getFavouriteLocations(): Flow<List<Favourite>> {
+        return favouritesDataStore.getAll()
+            .map { list -> list.map { Favourite.fromEntity(it) } }
+    }
 }
 
 /**
@@ -320,4 +328,6 @@ interface ShowMapcodeUseCase {
     suspend fun getLastLocationAndZoom(): Pair<Location, Float>?
 
     suspend fun saveFavourite(name: String, location: Location)
+
+    fun getFavouriteLocations(): Flow<List<Favourite>>
 }

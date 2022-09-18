@@ -47,7 +47,7 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
     override fun getFavourites(): Flow<List<Favourite>> {
         return dataStore.getAll()
             .map { entityList ->
-                entityList.map { fromFavouriteEntity(it) }
+                entityList.map { Favourite.fromEntity(it) }
             }
             .flowOn(Dispatchers.IO)
     }
@@ -59,14 +59,6 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
 
     override fun deleteFavourite(id: String) {
         dataStore.delete(id)
-    }
-
-    private fun fromFavouriteEntity(entity: FavouriteEntity): Favourite {
-        return Favourite(
-            entity.id,
-            entity.name,
-            Location(entity.latitude, entity.longitude)
-        )
     }
 }
 

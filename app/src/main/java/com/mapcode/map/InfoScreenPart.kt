@@ -198,7 +198,8 @@ private fun VerticalInfoAreaPreview() {
                 AddressError.UnknownAddress("Street, City"),
                 AddressHelper.NoInternet,
             ),
-            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
+            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true),
+            favouriteLocations = emptyList()
         )
         InfoArea(
             modifier = Modifier.padding(8.dp),
@@ -220,7 +221,8 @@ private fun HorizontalInfoAreaPreview() {
                 AddressError.UnknownAddress("Street, City"),
                 AddressHelper.NoInternet,
             ),
-            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
+            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true),
+            favouriteLocations = emptyList()
         )
         InfoArea(
             modifier = Modifier.padding(8.dp),
