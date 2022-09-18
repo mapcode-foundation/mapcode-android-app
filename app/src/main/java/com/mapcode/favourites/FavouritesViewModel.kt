@@ -18,9 +18,11 @@ package com.mapcode.favourites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mapcode.Territory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -28,11 +30,14 @@ import javax.inject.Inject
 class FavouritesViewModel @Inject constructor(
     private val useCase: ViewFavouritesUseCase
 ) : ViewModel() {
-    val favourites: StateFlow<List<Favourite>> = useCase.getFavourites().stateIn(
-        viewModelScope,
-        SharingStarted.Lazily,
-        emptyList()
-    )
+    val favourites: StateFlow<List<FavouriteListItem>> =
+        useCase.getFavourites()
+            .map { list -> list.map { createListItem(it) } }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                emptyList()
+            )
 
 //    fun onShareClick(favourite: Favourite) {
 //        
@@ -47,4 +52,20 @@ class FavouritesViewModel @Inject constructor(
 //    fun onDeleteClick(favourite: Favourite) {
 //        useCase.deleteFavourite(favourite.id)
 //    }
+
+    private fun createListItem(favourite: Favourite): FavouriteListItem {
+        val mapcode = useCase.getMapcodes(favourite.location).first()
+
+        val mapcodeString = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
+        }
+
+        return FavouriteListItem(
+            id = favourite.id,
+            name = favourite.name,
+            mapcode = mapcodeString
+        )
+    }
 }

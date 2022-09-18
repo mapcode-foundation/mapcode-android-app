@@ -89,7 +89,10 @@ fun InfoArea(
             mapcode = mapcode,
             onNameChange = { favouritesName = it },
             onDismiss = { showFavouritesNameDialog = false },
-            onSubmitClick = { viewModel.onSaveFavouriteClick(favouritesName) })
+            onSubmitClick = {
+                viewModel.onSaveFavouriteClick(favouritesName)
+                showFavouritesNameDialog = false
+            })
     }
 
     val onAddFavouriteClick = remember {

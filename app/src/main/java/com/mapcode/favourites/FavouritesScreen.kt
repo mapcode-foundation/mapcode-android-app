@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.R
 import com.mapcode.theme.MapcodeColor
-import com.mapcode.util.Location
 import com.ramcosta.composedestinations.annotation.Destination
 
 @Destination
@@ -56,7 +55,7 @@ fun FavouritesScreen(
 @Composable
 private fun FavouritesScreen(
     modifier: Modifier = Modifier,
-    favourites: List<Favourite>,
+    favourites: List<FavouriteListItem>,
     navigateBack: () -> Unit
 ) {
     val systemUiController = rememberSystemUiController()
@@ -65,7 +64,6 @@ private fun FavouritesScreen(
     SideEffect {
         systemUiController.setNavigationBarColor(color = systemBarColor)
     }
-
 
     Scaffold(
         modifier = modifier,
@@ -97,7 +95,7 @@ private fun FavouritesScreen(
 private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
-            Favourite("id0", "Bla", Location(0.0, 0.0))
+            FavouriteListItem("id0", "Bla", "NLD AB.XY")
         ),
         navigateBack = {}
     )
@@ -106,7 +104,7 @@ private fun Preview() {
 @Composable
 private fun Content(
     modifier: Modifier = Modifier,
-    favourites: List<Favourite>,
+    favourites: List<FavouriteListItem>,
 ) {
     Column(modifier) {
         Text(
@@ -115,9 +113,7 @@ private fun Content(
         )
 
         LazyColumn(
-            modifier = Modifier
-                .padding(8.dp)
-                .weight(1f),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(favourites) { item ->
@@ -140,7 +136,7 @@ private fun Content(
 
 @Composable
 private fun FavouritesListItem(
-    modifier: Modifier, state: Favourite,
+    modifier: Modifier, state: FavouriteListItem,
     onShareClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -157,10 +153,10 @@ private fun FavouritesListItem(
                     style = MaterialTheme.typography.body1
                 )
 
-//                Text(
-//                    text = state.mapcode,
-//                    style = MaterialTheme.typography.body2
-//                )
+                Text(
+                    text = state.mapcode,
+                    style = MaterialTheme.typography.body2
+                )
             }
 
             IconButton(onClick = onEditClick) {

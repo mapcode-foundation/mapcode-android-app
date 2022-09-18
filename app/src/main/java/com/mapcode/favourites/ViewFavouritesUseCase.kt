@@ -17,6 +17,7 @@
 package com.mapcode.favourites
 
 import com.mapcode.Mapcode
+import com.mapcode.MapcodeCodec
 import com.mapcode.Territory
 import com.mapcode.util.Location
 import com.mapcode.util.ShareAdapter
@@ -30,6 +31,11 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
     private val dataStore: FavouritesDataStore,
     private val shareAdapter: ShareAdapter
 ) : ViewFavouritesUseCase {
+
+    override fun getMapcodes(location: Location): List<Mapcode> {
+        return MapcodeCodec.encode(location.latitude, location.longitude)
+    }
+
     override fun share(favouriteName: String, mapcode: Mapcode) {
         val mapcodeString = if (mapcode.territory == Territory.AAA) {
             mapcode.code
@@ -69,6 +75,7 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
 }
 
 interface ViewFavouritesUseCase {
+    fun getMapcodes(location: Location): List<Mapcode>
     fun share(favouriteName: String, mapcode: Mapcode)
 
     fun getFavourites(): Flow<List<Favourite>>

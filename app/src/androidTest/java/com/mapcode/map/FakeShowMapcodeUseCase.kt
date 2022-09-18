@@ -37,6 +37,8 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
     val favourites: MutableList<Favourite> = mutableListOf()
+    var sharedMapcode: Mapcode? = null
+        private set
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -122,5 +124,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return isMapsAppInstalled
     }
 
-    override fun shareMapcode(mapcode: Mapcode) {}
+    override fun shareMapcode(mapcode: Mapcode) {
+        sharedMapcode = mapcode
+    }
 }

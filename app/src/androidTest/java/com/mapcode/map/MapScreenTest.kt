@@ -444,7 +444,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Share mapcode").performClick()
 
-        assertThat(useCase.sharedText).isEqualTo("AB.XY")
+        assertThat(useCase.sharedMapcode).isEqualTo(Mapcode("AB.XY", Territory.AAA))
     }
 
     @Test
@@ -742,7 +742,8 @@ class MapScreenTest {
         assertThat(useCase.favourites).index(0).prop(Favourite::name).isEqualTo("address")
         assertThat(useCase.favourites).index(0).prop(Favourite::location)
             .isEqualTo(Location(0.0, 0.0))
-        assertThat(useCase.favourites).index(0).prop(Favourite::mapcode).isEqualTo("NLD AB.XY")
+
+        composeTestRule.onNodeWithText("Save").assertDoesNotExist()
     }
 
     private fun setMapScreenAsContent() {
