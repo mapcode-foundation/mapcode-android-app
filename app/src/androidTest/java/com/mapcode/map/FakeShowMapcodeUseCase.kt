@@ -18,9 +18,12 @@ package com.mapcode.map
 
 import com.mapcode.Mapcode
 import com.mapcode.UnknownMapcodeException
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.IOException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
@@ -33,11 +36,11 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var currentLocation: Location? = null
     var isMapsAppInstalled: Boolean = true
 
-    var sharedText: String? = null
-        private set
-
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
+    val favourites: MutableList<Favourite> = mutableListOf()
+    var sharedMapcode: Mapcode? = null
+        private set
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -93,10 +96,6 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return currentLocation
     }
 
-    override fun shareText(text: String, description: String) {
-        sharedText = text
-    }
-
     override suspend fun getMatchingAddresses(
         query: String,
         maxResults: Int,
@@ -106,7 +105,32 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return success(matchingAddresses[query] ?: emptyList())
     }
 
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
+
+    }
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        return null
+    }
+
+    override suspend fun saveFavourite(name: String, location: Location) {
+        favourites.add(
+            Favourite(
+                name = name,
+                location = location
+            )
+        )
+    }
+
+    override fun getFavouriteLocations(): Flow<List<Favourite>> {
+        return MutableStateFlow(emptyList())
+    }
+
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         return isMapsAppInstalled
+    }
+
+    override fun shareMapcode(mapcode: Mapcode) {
+        sharedMapcode = mapcode
     }
 }

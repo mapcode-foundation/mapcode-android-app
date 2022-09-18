@@ -16,6 +16,11 @@
 
 package com.mapcode.theme
 
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.contentColorFor
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val LightBlue200 = Color(0xFF81D4FA)
@@ -23,3 +28,45 @@ val LightBlue500 = Color(0xFF03A9F4)
 val LightBlue700 = Color(0xFF0288D1)
 val Green600 = Color(0xFF43A047)
 val Yellow300 = Color(0xFFFFF176)
+val Yellow500 = Color(0xFFFFEB3B)
+val Red500 = Color(0xFFF44336)
+val Red300 = Color(0xFFE57373)
+
+object MapcodeColor {
+    @Composable
+    fun deleteFavouriteButton(): Color {
+        return if (MaterialTheme.colors.isLight) {
+            Red500
+        } else {
+            Red300
+        }
+    }
+
+    @Composable
+    fun addFavouritesButton(): ButtonColors {
+        if (MaterialTheme.colors.isLight) {
+            return ButtonDefaults.buttonColors(
+                backgroundColor = Yellow500,
+                contentColor = MaterialTheme.colors.contentColorFor(Yellow500)
+            )
+        } else {
+            return ButtonDefaults.buttonColors(
+                backgroundColor = Yellow300,
+                contentColor = MaterialTheme.colors.contentColorFor(Yellow300)
+            )
+        }
+    }
+
+    @Composable
+    fun viewFavouritesButton(): ButtonColors {
+        if (MaterialTheme.colors.isLight) {
+            return ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colors.onSurface
+            )
+        } else {
+            return ButtonDefaults.outlinedButtonColors(
+                contentColor = Yellow300
+            )
+        }
+    }
+}

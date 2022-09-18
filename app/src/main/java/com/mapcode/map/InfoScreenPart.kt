@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.mapcode.map
 
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -42,17 +40,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
+import com.mapcode.favourites.FavouritesNameDialog
+import com.mapcode.theme.MapcodeColor
 import com.mapcode.theme.MapcodeTheme
+import com.mapcode.util.ErrorText
 
 @Composable
 fun InfoArea(
     modifier: Modifier,
     viewModel: MapViewModel,
     showSnackbar: (String) -> Unit,
-    isVerticalLayout: Boolean
+    isVerticalLayout: Boolean,
+    navigateToFavourites: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)
@@ -64,11 +67,58 @@ fun InfoArea(
             }
         }
     }
+
     val onLocationClick = remember {
         {
             viewModel.copyLocation()
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
                 showSnackbar(copiedMessageStr)
+            }
+        }
+    }
+
+    var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
+    var favouriteName: String by rememberSaveable { mutableStateOf("") }
+
+    if (showFavouriteNameDialog) {
+        val mapcode: String by remember {
+            derivedStateOf {
+                buildString {
+                    if (uiState.mapcodeUi.territoryShortName != null) {
+                        append(uiState.mapcodeUi.territoryShortName)
+                        append(" ")
+                    }
+
+                    append(uiState.mapcodeUi.code)
+                }
+            }
+        }
+
+        FavouritesNameDialog(
+            name = favouriteName,
+            mapcode = mapcode,
+            onNameChange = { favouriteName = it },
+            onDismiss = { showFavouriteNameDialog = false },
+            onSubmitClick = {
+                viewModel.onSaveFavouriteClick(favouriteName)
+                showFavouriteNameDialog = false
+            })
+    }
+
+    val onAddFavouriteClick = remember {
+        {
+            favouriteName = uiState.addressUi.address
+            showFavouriteNameDialog = true
+        }
+    }
+
+    val noFavouritesMessage = stringResource(R.string.no_favourites_snackbar)
+    val onViewFavouriteClick = remember {
+        {
+            if (uiState.favouriteLocations.isEmpty()) {
+                showSnackbar(noFavouritesMessage)
+            } else {
+                navigateToFavourites()
             }
         }
     }
@@ -86,7 +136,9 @@ fun InfoArea(
         onChangeLongitude = viewModel::onLongitudeTextChanged,
         onSubmitLongitude = viewModel::onSubmitLongitude,
         onCopyLongitude = onLocationClick,
-        isVerticalLayout = isVerticalLayout
+        isVerticalLayout = isVerticalLayout,
+        onAddFavouriteClick = onAddFavouriteClick,
+        onViewFavouritesClick = onViewFavouriteClick
     )
 }
 
@@ -104,6 +156,8 @@ private fun InfoArea(
     onCopyLongitude: () -> Unit = {},
     onTerritoryClick: () -> Unit = {},
     onMapcodeClick: () -> Unit = {},
+    onAddFavouriteClick: () -> Unit = {},
+    onViewFavouritesClick: () -> Unit = {},
     isVerticalLayout: Boolean
 ) {
     if (isVerticalLayout) {
@@ -119,7 +173,9 @@ private fun InfoArea(
             onSubmitLongitude,
             onCopyLongitude,
             onTerritoryClick,
-            onMapcodeClick
+            onMapcodeClick,
+            onAddFavouriteClick,
+            onViewFavouritesClick
         )
     } else {
         HorizontalInfoArea(
@@ -134,14 +190,16 @@ private fun InfoArea(
             onSubmitLongitude,
             onCopyLongitude,
             onTerritoryClick,
-            onMapcodeClick
+            onMapcodeClick,
+            onAddFavouriteClick,
+            onViewFavouritesClick
         )
     }
 }
 
-@Preview(showBackground = true, widthDp = 400, heightDp = 300)
+@Preview(showBackground = true, device = Devices.PIXEL_3)
 @Composable
-private fun InfoAreaPreview() {
+private fun VerticalInfoAreaPreview() {
     MapcodeTheme {
         val state = UiState(
             mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
@@ -151,9 +209,37 @@ private fun InfoAreaPreview() {
                 AddressError.UnknownAddress("Street, City"),
                 AddressHelper.NoInternet,
             ),
-            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true)
+            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true),
+            favouriteLocations = emptyList()
         )
-        InfoArea(modifier = Modifier.padding(8.dp), state = state, isVerticalLayout = false)
+        InfoArea(
+            modifier = Modifier.padding(8.dp),
+            state = state,
+            isVerticalLayout = true
+        )
+    }
+}
+
+@Preview(showBackground = true, device = Devices.PIXEL_3)
+@Composable
+private fun HorizontalInfoAreaPreview() {
+    MapcodeTheme {
+        val state = UiState(
+            mapcodeUi = MapcodeUi("AB.XY", "NLD", "Netherlands", 1, 1),
+            addressUi = AddressUi(
+                "I am a very very very very very very extremely long address",
+                emptyList(),
+                AddressError.UnknownAddress("Street, City"),
+                AddressHelper.NoInternet,
+            ),
+            locationUi = LocationUi("1.0", "1.0", true, "1.0", "1.0", true),
+            favouriteLocations = emptyList()
+        )
+        InfoArea(
+            modifier = Modifier.padding(8.dp),
+            state = state,
+            isVerticalLayout = false
+        )
     }
 }
 
@@ -170,7 +256,9 @@ private fun VerticalInfoArea(
     onSubmitLongitude: () -> Unit,
     onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
-    onMapcodeClick: () -> Unit
+    onMapcodeClick: () -> Unit,
+    onAddFavouriteClick: () -> Unit,
+    onViewFavouritesClick: () -> Unit
 ) {
     Column(modifier) {
         AddressArea(
@@ -219,6 +307,12 @@ private fun VerticalInfoArea(
             onChange = onChangeLongitude,
             onCopy = onCopyLongitude
         )
+
+        FavouritesButtons(
+            modifier = Modifier.imePadding(),
+            onAddClick = onAddFavouriteClick,
+            onViewClick = onViewFavouritesClick
+        )
     }
 }
 
@@ -235,7 +329,9 @@ private fun HorizontalInfoArea(
     onSubmitLongitude: () -> Unit,
     onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
-    onMapcodeClick: () -> Unit
+    onMapcodeClick: () -> Unit,
+    onAddFavouriteClick: () -> Unit,
+    onViewFavouritesClick: () -> Unit
 ) {
     Column(modifier) {
         AddressArea(
@@ -271,8 +367,7 @@ private fun HorizontalInfoArea(
             LatitudeTextBox(
                 modifier = Modifier
                     .weight(0.5f)
-                    .padding(end = 8.dp)
-                    .imePadding(),
+                    .padding(end = 8.dp),
                 text = state.locationUi.latitudeText,
                 placeHolder = state.locationUi.latitudePlaceholder,
                 showInvalidError = state.locationUi.showLatitudeInvalidError,
@@ -283,8 +378,7 @@ private fun HorizontalInfoArea(
             LongitudeTextBox(
                 modifier = Modifier
                     .weight(0.5f)
-                    .padding(start = 8.dp)
-                    .imePadding(),
+                    .padding(start = 8.dp),
                 text = state.locationUi.longitudeText,
                 placeHolder = state.locationUi.longitudePlaceholder,
                 showInvalidError = state.locationUi.showLongitudeInvalidError,
@@ -293,8 +387,38 @@ private fun HorizontalInfoArea(
                 onCopy = onCopyLongitude
             )
         }
+        FavouritesButtons(
+            modifier = Modifier.imePadding(),
+            onAddClick = onAddFavouriteClick,
+            onViewClick = onViewFavouritesClick
+        )
     }
 }
+
+@Composable
+private fun FavouritesButtons(
+    modifier: Modifier,
+    onAddClick: () -> Unit,
+    onViewClick: () -> Unit
+) {
+    Row(modifier = modifier) {
+        Button(
+            modifier = Modifier.weight(0.5f),
+            onClick = onAddClick,
+            colors = MapcodeColor.addFavouritesButton()
+        ) {
+            Text(stringResource(R.string.add_favourite_button))
+        }
+        Spacer(Modifier.width(16.dp))
+        OutlinedButton(
+            modifier = Modifier.weight(0.5f), onClick = onViewClick,
+            colors = MapcodeColor.viewFavouritesButton()
+        ) {
+            Text(stringResource(R.string.view_favourites_button))
+        }
+    }
+}
+
 
 /**
  * The box that shows the territory.
@@ -511,14 +635,4 @@ private fun MapcodeBox(
             Text(text = styledString)
         }
     }
-}
-
-@Composable
-private fun ErrorText(modifier: Modifier = Modifier, text: String) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = MaterialTheme.colors.error,
-        style = MaterialTheme.typography.body2
-    )
 }

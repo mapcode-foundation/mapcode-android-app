@@ -45,30 +45,42 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
+import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
+import com.mapcode.util.Location
 import com.mapcode.util.ScrollableDialog
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.result.ResultRecipient
 import kotlinx.coroutines.launch
 
+@Destination(start = true)
 @Composable
 fun MapScreen(
+    modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
+    resultRecipient: ResultRecipient<FavouritesScreenDestination, Location>,
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
     renderGoogleMaps: Boolean = true,
     layoutType: LayoutType = LayoutType.HorizontalInfoArea
 ) {
+    val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-    val scope = rememberCoroutineScope()
 
     val showSnackbar: (String) -> Unit = { message ->
         scope.launch {
@@ -101,13 +113,17 @@ fun MapScreen(
     }
 
     Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) { padding ->
+        Scaffold(
+            modifier = modifier,
+            scaffoldState = scaffoldState
+        ) { padding ->
             when (layoutType) {
                 LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
                     Modifier
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
@@ -116,16 +132,39 @@ fun MapScreen(
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
                 LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
                     Modifier.padding(padding),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
             }
+        }
+    }
+
+    val systemUiController = rememberSystemUiController()
+    val useDarkIcons = MaterialTheme.colors.isLight
+
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = useDarkIcons
+        )
+    }
+
+    resultRecipient.onNavResult { result ->
+        if (result is NavResult.Value) {
+            val location = result.value
+            val update = CameraUpdateFactory.newLatLngZoom(
+                LatLng(location.latitude, location.longitude),
+                17f
+            )
+            viewModel.cameraPositionState.move(update)
         }
     }
 }
@@ -134,12 +173,17 @@ fun MapScreen(
 private fun VerticalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
     Row(modifier, horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
+            MapWithCrossHairs(
+                Modifier.fillMaxSize(),
+                viewModel,
+                renderGoogleMaps = renderGoogleMaps
+            )
 
             MapControls(
                 Modifier
@@ -158,6 +202,9 @@ private fun VerticalInfoAreaLayout(
                 .imePadding()
                 .systemBarsPadding(),
             viewModel,
+            navigateToFavourites = {
+                navigator.navigate(FavouritesScreenDestination)
+            },
             showSnackbar = showSnackbar,
             isVerticalLayout = true
         )
@@ -168,6 +215,7 @@ private fun VerticalInfoAreaLayout(
 private fun HorizontalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -184,12 +232,15 @@ private fun HorizontalInfoAreaLayout(
         }
 
         InfoArea(
-            Modifier
+            modifier = Modifier
                 .wrapContentHeight()
                 .padding(8.dp),
-            viewModel,
-            showSnackbar,
-            isVerticalLayout = false
+            viewModel = viewModel,
+            showSnackbar = showSnackbar,
+            isVerticalLayout = false,
+            navigateToFavourites = {
+                navigator.navigate(FavouritesScreenDestination)
+            }
         )
     }
 }
@@ -198,6 +249,7 @@ private fun HorizontalInfoAreaLayout(
 private fun FloatingInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -217,7 +269,13 @@ private fun FloatingInfoAreaLayout(
                 Modifier.width(400.dp),
                 elevation = 4.dp
             ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, showSnackbar, isVerticalLayout = false)
+                InfoArea(
+                    modifier = Modifier.padding(8.dp),
+                    viewModel = viewModel,
+                    showSnackbar = showSnackbar, isVerticalLayout = false,
+                    navigateToFavourites = {
+                        navigator.navigate(FavouritesScreenDestination)
+                    })
             }
         }
     }
@@ -231,7 +289,8 @@ private fun AboutDialog(onDismiss: () -> Unit = {}) {
 //    val changelogUrl = stringResource(R.string.changelog_url)
 
     ScrollableDialog(
-        onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
+        onDismiss = onDismiss,
+        title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
         buttonText = stringResource(R.string.close_dialog_button)
     ) {
         Column {
@@ -335,7 +394,10 @@ private fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit
 
 @Composable
 private fun greyButtonColors(): ButtonColors {
-    return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
+    return ButtonDefaults.buttonColors(
+        backgroundColor = Color.LightGray,
+        contentColor = Color.DarkGray
+    )
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -548,15 +610,16 @@ private fun MapWithCrossHairs(
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val contentPadding = WindowInsets.statusBars.asPaddingValues()
 
     Box(modifier) {
         if (renderGoogleMaps) {
             Map(
                 properties = viewModel.mapProperties,
-                onCameraMoved = viewModel::onCameraMoved,
                 cameraPositionState = viewModel.cameraPositionState,
-                contentPadding = contentPadding
+                contentPadding = contentPadding,
+                favouriteLocations = uiState.favouriteLocations
             )
         }
 
@@ -578,23 +641,14 @@ private fun MapWithCrossHairs(
 private fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
-    onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
+    favouriteLocations: List<Favourite>,
     contentPadding: PaddingValues
 ) {
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            onCameraMoved(
-                cameraPositionState.position.target.latitude,
-                cameraPositionState.position.target.longitude,
-                cameraPositionState.position.zoom
-            )
-        }
-    }
-
     val scope = rememberCoroutineScope()
 
-    val uiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
+    val uiSettings =
+        remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
 
     GoogleMap(
         modifier = modifier,
@@ -627,7 +681,19 @@ private fun Map(
             }
         },
         contentPadding = contentPadding
-    )
+    ) {
+        favouriteLocations.forEach { favourite ->
+            Marker(
+                state = MarkerState(
+                    position = LatLng(
+                        favourite.location.latitude,
+                        favourite.location.longitude
+                    )
+                ),
+                title = favourite.name
+            )
+        }
+    }
 }
 
 /**

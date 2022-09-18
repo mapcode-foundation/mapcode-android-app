@@ -27,7 +27,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun ScrollableDialog(onDismiss: () -> Unit, title: String, buttonText: String, content: @Composable () -> Unit) {
+fun CustomDialog(
+    title: String,
+    confirmButton: @Composable () -> Unit = {},
+    dismissButton: @Composable () -> Unit,
+    onDismissRequest: () -> Unit,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest
+    ) {
+        Surface(
+            color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .height(64.dp)
+                        .wrapContentSize()
+                        .padding(start = 24.dp, end = 24.dp),
+                    text = title,
+                    style = MaterialTheme.typography.h6
+                )
+                Box(
+                    Modifier
+                        .weight(1f, fill = false)
+                        .padding(start = 24.dp, end = 24.dp, bottom = 8.dp)
+                ) {
+                    content()
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.End)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    dismissButton()
+                    confirmButton()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScrollableDialog(
+    onDismiss: () -> Unit,
+    title: String,
+    buttonText: String,
+    content: @Composable () -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(color = MaterialTheme.colors.surface, shape = MaterialTheme.shapes.medium) {
             Column(verticalArrangement = Arrangement.SpaceBetween) {

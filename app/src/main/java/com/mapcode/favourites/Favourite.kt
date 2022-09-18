@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.favourites
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import com.mapcode.util.Location
+import java.util.*
 
-@Module
-@InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindShowMapcodeUseCase(impl: ShowMapcodeUseCaseImpl): ShowMapcodeUseCase
+data class Favourite(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val location: Location
+) {
+    companion object {
+        fun fromEntity(entity: FavouriteEntity): Favourite {
+            return Favourite(
+                entity.id,
+                entity.name,
+                Location(entity.latitude, entity.longitude)
+            )
+        }
+    }
 }

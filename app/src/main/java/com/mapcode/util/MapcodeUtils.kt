@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.util
 
-enum class MapcodeDestination {
-    Map,
-    About
+import com.mapcode.Mapcode
+import com.mapcode.Territory
+
+fun Mapcode.codeWithNoInternationalTerritory(): String {
+    return if (territory == Territory.AAA) {
+        code
+    } else {
+        codeWithTerritory
+    }
 }

@@ -19,9 +19,11 @@ package com.mapcode.data
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 
 object Keys {
     val lastLocationLatitude: Preferences.Key<Double> = doublePreferencesKey("last_location_lat")
     val lastLocationLongitude: Preferences.Key<Double> = doublePreferencesKey("last_location_long")
     val lastLocationZoom: Preferences.Key<Float> = floatPreferencesKey("last_location_zoom")
+    val favourites: Preferences.Key<Set<String>> = stringSetPreferencesKey("favourites")
 }

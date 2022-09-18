@@ -20,6 +20,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -30,8 +31,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.mapcode.Mapcode
 import com.mapcode.Territory
-import com.mapcode.data.Keys
-import com.mapcode.data.PreferenceRepository
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -47,10 +47,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase,
-    private val preferences: PreferenceRepository,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
-
     companion object {
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
         const val ANIMATE_CAMERA_UPDATE_DURATION_MS: Int = 200
@@ -64,27 +62,28 @@ class MapViewModel @Inject constructor(
     private val addressUi: MutableStateFlow<AddressUi> =
         MutableStateFlow(AddressUi("", emptyList(), AddressError.None, AddressHelper.None))
 
-    private val mapcodeUi: Flow<MapcodeUi> = combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
-        val mapcode = mapcodes.getOrNull(mapcodeIndex)
+    private val mapcodeUi: Flow<MapcodeUi> =
+        combine(mapcodeIndex, mapcodes) { mapcodeIndex, mapcodes ->
+            val mapcode = mapcodes.getOrNull(mapcodeIndex)
 
-        if (mapcode == null) {
-            MapcodeUi("", "", "", 0, 0)
-        } else {
-            val territoryName = if (mapcode.territory == Territory.AAA) {
-                null
+            if (mapcode == null) {
+                MapcodeUi("", "", "", 0, 0)
             } else {
-                mapcode.territory.name
-            }
+                val territoryName = if (mapcode.territory == Territory.AAA) {
+                    null
+                } else {
+                    mapcode.territory.name
+                }
 
-            MapcodeUi(
-                mapcode.code,
-                territoryName,
-                mapcode.territory.fullName,
-                mapcodeIndex + 1,
-                mapcodes.size
-            )
+                MapcodeUi(
+                    mapcode.code,
+                    territoryName,
+                    mapcode.territory.fullName,
+                    mapcodeIndex + 1,
+                    mapcodes.size
+                )
+            }
         }
-    }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val zoom: MutableStateFlow<Float> = MutableStateFlow(0f)
@@ -96,12 +95,14 @@ class MapViewModel @Inject constructor(
         combine(
             addressUi,
             mapcodeUi,
-            locationUi
-        ) { addressUi, mapcodeUi, locationUi ->
+            locationUi,
+            useCase.getFavouriteLocations()
+        ) { addressUi, mapcodeUi, locationUi, favouriteLocations ->
             UiState(
                 addressUi = addressUi,
                 mapcodeUi = mapcodeUi,
-                locationUi = locationUi
+                locationUi = locationUi,
+                favouriteLocations = favouriteLocations
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
@@ -110,7 +111,6 @@ class MapViewModel @Inject constructor(
 
     var isGoogleMapsSdkLoaded: Boolean = false
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
-        private set
 
     var mapProperties: MapProperties by mutableStateOf(MapProperties())
         private set
@@ -119,9 +119,28 @@ class MapViewModel @Inject constructor(
 
     var showCantFindMapsAppSnackBar: Boolean by mutableStateOf(false)
 
+    init {
+        val isMovingFlow = snapshotFlow { cameraPositionState.isMoving }
+
+        snapshotFlow { cameraPositionState.position }
+            .dropWhile { !isGoogleMapsSdkLoaded }
+            .distinctUntilChanged()
+            .combine(isMovingFlow) { position, isMoving ->
+                if (!isMoving) {
+                    onCameraMoved(
+                        lat = position.target.latitude,
+                        long = position.target.longitude,
+                        zoom = position.zoom,
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     /**
      * When the camera has moved the mapcode information should be updated.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
         location.value = Location(lat, long)
         locationUi.update {
@@ -241,8 +260,14 @@ class MapViewModel @Inject constructor(
                     useCase.getMatchingAddresses(
                         text,
                         maxResults = maxResults,
-                        southwest = Location(latLngBounds.southwest.latitude, latLngBounds.southwest.longitude),
-                        northeast = Location(latLngBounds.northeast.latitude, latLngBounds.northeast.longitude)
+                        southwest = Location(
+                            latLngBounds.southwest.latitude,
+                            latLngBounds.southwest.longitude
+                        ),
+                        northeast = Location(
+                            latLngBounds.northeast.latitude,
+                            latLngBounds.northeast.longitude
+                        )
                     ).getOrNull()
                 } else {
                     useCase.getMatchingAddresses(
@@ -280,7 +305,8 @@ class MapViewModel @Inject constructor(
                     val mapcode = mapcodes.value[mapcodeIndex.value]
                     val queryWithTerritory = "${mapcode.territory.name} $addressText"
 
-                    val decodeQueryWithCurrentTerritoryResult = useCase.decodeMapcode(queryWithTerritory)
+                    val decodeQueryWithCurrentTerritoryResult =
+                        useCase.decodeMapcode(queryWithTerritory)
 
                     decodeQueryWithCurrentTerritoryResult.getOrThrow()
                 }.recoverCatching {
@@ -398,15 +424,19 @@ class MapViewModel @Inject constructor(
     }
 
     fun saveLocation() {
-        preferences.set(Keys.lastLocationLatitude, location.value.latitude)
-        preferences.set(Keys.lastLocationLongitude, location.value.longitude)
-        preferences.set(Keys.lastLocationZoom, zoom.value)
+        useCase.saveLastLocationAndZoom(location = location.value, zoom = zoom.value)
     }
 
     fun onDirectionsClick() {
         val success = useCase.launchDirectionsToLocation(location.value, zoom.value)
 
         showCantFindMapsAppSnackBar = !success
+    }
+
+    fun onSaveFavouriteClick(name: String) {
+        viewModelScope.launch {
+            useCase.saveFavourite(name = name, location = location.value)
+        }
     }
 
     private fun getInitialCameraPositionState(): CameraPositionState {
@@ -420,11 +450,14 @@ class MapViewModel @Inject constructor(
 
     private fun getLastCameraPosition(): CameraPosition? {
         return runBlocking {
-            val lastLatitude = preferences.get(Keys.lastLocationLatitude).first() ?: return@runBlocking null
-            val lastLongitude = preferences.get(Keys.lastLocationLongitude).first() ?: return@runBlocking null
-            val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return@runBlocking null
+            val lastLocationAndZoom = useCase.getLastLocationAndZoom() ?: return@runBlocking null
 
-            CameraPosition.fromLatLngZoom(LatLng(lastLatitude, lastLongitude), lastZoom)
+            CameraPosition.fromLatLngZoom(
+                LatLng(
+                    lastLocationAndZoom.first.latitude,
+                    lastLocationAndZoom.first.longitude
+                ), lastLocationAndZoom.second
+            )
         }
     }
 
@@ -518,26 +551,22 @@ class MapViewModel @Inject constructor(
 
     fun shareMapcode() {
         val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
-        val text = if (mapcode.territory == Territory.AAA) {
-            mapcode.code
-        } else {
-            mapcode.codeWithTerritory
-        }
-
-        useCase.shareText(text = text, description = "Mapcode: $text")
+        useCase.shareMapcode(mapcode)
     }
 }
 
 data class UiState(
     val mapcodeUi: MapcodeUi,
     val addressUi: AddressUi,
-    val locationUi: LocationUi
+    val locationUi: LocationUi,
+    val favouriteLocations: List<Favourite>
 ) {
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
             addressUi = AddressUi("", emptyList(), AddressError.None, AddressHelper.None),
-            locationUi = LocationUi.EMPTY
+            locationUi = LocationUi.EMPTY,
+            favouriteLocations = emptyList()
         )
     }
 }

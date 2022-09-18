@@ -17,6 +17,7 @@
 package com.mapcode.map
 
 import android.Manifest
+import android.os.Build
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.test.*
@@ -24,13 +25,18 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextRange
 import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
+import assertk.assertions.index
 import assertk.assertions.isEqualTo
-import com.mapcode.FakePreferenceRepository
+import assertk.assertions.prop
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.mapcode.favourites.Favourite
+import com.mapcode.util.Location
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class MapScreenTest {
 
@@ -43,20 +49,26 @@ class MapScreenTest {
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
+    private lateinit var mockDestinationsNavigator: DestinationsNavigator
+
     private lateinit var useCase: FakeShowMapcodeUseCase
     private lateinit var viewModel: MapViewModel
 
     @Before
     fun setUp() {
         useCase = FakeShowMapcodeUseCase()
-        viewModel = MapViewModel(useCase, FakePreferenceRepository())
+        mockDestinationsNavigator = mock()
+        viewModel = MapViewModel(useCase)
     }
 
     @Test
     fun copy_mapcode_to_clipboard_when_click_header() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -72,7 +84,10 @@ class MapScreenTest {
     fun copy_mapcode_to_clipboard_when_click_mapcode_code() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -86,9 +101,16 @@ class MapScreenTest {
 
     @Test
     fun show_snackbar_when_copying_mapcode() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = emptyList(), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = emptyList(),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -143,7 +165,10 @@ class MapScreenTest {
     fun update_camera_after_searching_known_address() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -192,7 +217,10 @@ class MapScreenTest {
 
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
@@ -216,7 +244,10 @@ class MapScreenTest {
     fun focus_address_text_field_when_click_clear_button() {
         useCase.knownLocations.add(
             FakeLocation(
-                0.0, 0.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                0.0,
+                0.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         viewModel.onCameraMoved(0.0, 0.0, 0f) //fill address field with something
@@ -329,7 +360,10 @@ class MapScreenTest {
     fun update_camera_after_searching_latitude() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -351,7 +385,10 @@ class MapScreenTest {
     fun update_camera_after_searching_longitude() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
 
@@ -376,7 +413,8 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Go to my location").performClick()
 
-        composeTestRule.onNodeWithText("Can't find location. Is your GPS turned on?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Can't find location. Is your GPS turned on?")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -386,14 +424,18 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("View location in maps app").performClick()
 
-        composeTestRule.onNodeWithText("You have no map app installed to open this in.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("You have no map app installed to open this in.")
+            .assertIsDisplayed()
     }
 
     @Test
     fun share_mapcode_when_clicking_share_button() {
         useCase.knownLocations.add(
             FakeLocation(
-                3.0, 2.0, addresses = listOf("Street, City"), mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
+                3.0,
+                2.0,
+                addresses = listOf("Street, City"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.AAA))
             )
         )
         setMapScreenAsContent()
@@ -402,7 +444,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Share mapcode").performClick()
 
-        assertThat(useCase.sharedText).isEqualTo("AB.XY")
+        assertThat(useCase.sharedMapcode).isEqualTo(Mapcode("AB.XY", Territory.AAA))
     }
 
     @Test
@@ -551,7 +593,14 @@ class MapScreenTest {
 
     @Test
     fun clear_address_focus_when_submitting_address_query() {
-        useCase.knownLocations.add(FakeLocation(1.0, 1.0, addresses = listOf("address"), mapcodes = emptyList()))
+        useCase.knownLocations.add(
+            FakeLocation(
+                1.0,
+                1.0,
+                addresses = listOf("address"),
+                mapcodes = emptyList()
+            )
+        )
         setMapScreenAsContent()
 
         composeTestRule.onNodeWithText("Enter address or mapcode").apply {
@@ -600,7 +649,12 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Latitude (Y)").apply {
             performClick()
-            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+            assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.TextSelectionRange,
+                    TextRange(0, 9)
+                )
+            )
         }
     }
 
@@ -614,7 +668,12 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithText("Longitude (X)").apply {
             performClick()
-            assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(0, 9)))
+            assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.TextSelectionRange,
+                    TextRange(0, 9)
+                )
+            )
         }
     }
 
@@ -636,9 +695,64 @@ class MapScreenTest {
         assertThat(useCase.clipboard).isEqualTo("1,2")
     }
 
+    @Test
+    fun show_add_favourites_dialog_when_clicking_add_favourites() {
+        setMapScreenAsContent()
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("address"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
+
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Mapcode: NLD AB.XY").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Name").assertIsDisplayed()
+    }
+
+    @Test
+    fun save_favourites_when_clicking_save_name() {
+        setMapScreenAsContent()
+        useCase.knownLocations.add(
+            FakeLocation(
+                0.0,
+                0.0,
+                addresses = listOf("address"),
+                mapcodes = listOf(Mapcode("AB.XY", Territory.NLD))
+            )
+        )
+
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithText("Add favourite").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Save").performClick()
+
+        composeTestRule.waitUntil(2000) {
+            useCase.favourites.isNotEmpty()
+        }
+
+        assertThat(useCase.favourites).index(0).prop(Favourite::name).isEqualTo("address")
+        assertThat(useCase.favourites).index(0).prop(Favourite::location)
+            .isEqualTo(Location(0.0, 0.0))
+
+        composeTestRule.onNodeWithText("Save").assertDoesNotExist()
+    }
+
     private fun setMapScreenAsContent() {
         composeTestRule.setContent {
-            MapScreen(viewModel = viewModel, renderGoogleMaps = false)
+            MapScreen(
+                viewModel = viewModel,
+                renderGoogleMaps = false,
+                navigator = mockDestinationsNavigator
+            )
         }
     }
 }

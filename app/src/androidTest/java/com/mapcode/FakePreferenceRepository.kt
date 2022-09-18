@@ -23,7 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class FakePreferenceRepository : PreferenceRepository {
-    private val preferences: MutableStateFlow<Map<Preferences.Key<*>, Any?>> = MutableStateFlow(emptyMap())
+    private val preferences: MutableStateFlow<Map<Preferences.Key<*>, Any?>> =
+        MutableStateFlow(emptyMap())
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> get(key: Preferences.Key<T>): Flow<T?> {
