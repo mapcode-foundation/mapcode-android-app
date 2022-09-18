@@ -20,10 +20,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapcode.Territory
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,19 +37,26 @@ class FavouritesViewModel @Inject constructor(
                 emptyList()
             )
 
-//    fun onShareClick(favourite: Favourite) {
-//        
-//    }
-//
+    fun onShareClick(id: String) {
+        viewModelScope.launch {
+            val favourite = useCase.getFavourites().first().find { it.id == id } ?: return@launch
+            useCase.share(
+                favouriteName = favourite.name,
+                mapcode = useCase.getMapcodes(favourite.location).first()
+            )
+        }
+    }
+
+    //
 //    fun onSubmitNameChange(id: String, name: String) {
 //        viewModelScope.launch {
 //            useCase.setFavouriteName(id, name)
 //        }
 //    }
 //
-fun onDeleteClick(id: String) {
-    useCase.deleteFavourite(id)
-}
+    fun onDeleteClick(id: String) {
+        useCase.deleteFavourite(id)
+    }
 
     private fun createListItem(favourite: Favourite): FavouriteListItem {
         val mapcode = useCase.getMapcodes(favourite.location).first()

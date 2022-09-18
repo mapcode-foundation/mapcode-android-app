@@ -53,6 +53,7 @@ fun FavouritesScreen(
         modifier = modifier,
         navigateBack = navigateBack,
         favourites = favourites,
+        onShareFavourite = viewModel::onShareClick,
         onDeleteFavourite = viewModel::onDeleteClick
     )
 }
@@ -62,6 +63,7 @@ private fun FavouritesScreen(
     modifier: Modifier = Modifier,
     navigateBack: () -> Unit = {},
     favourites: List<FavouriteListItem>,
+    onShareFavourite: (String) -> Unit = {},
     onDeleteFavourite: (String) -> Unit = {}
 ) {
     val systemUiController = rememberSystemUiController()
@@ -90,6 +92,7 @@ private fun FavouritesScreen(
                 .fillMaxSize()
                 .padding(padding),
             favourites = favourites,
+            onShareFavourite = onShareFavourite,
             onDeleteFavourite = onDeleteFavourite
         )
     }
@@ -111,7 +114,8 @@ private fun Preview() {
 private fun Content(
     modifier: Modifier = Modifier,
     favourites: List<FavouriteListItem>,
-    onDeleteFavourite: (String) -> Unit
+    onShareFavourite: (String) -> Unit,
+    onDeleteFavourite: (String) -> Unit,
 ) {
     Column(modifier) {
         Text(
@@ -132,7 +136,9 @@ private fun Content(
 
                         },
                     state = item,
-                    onShareClick = {},
+                    onShareClick = {
+                        onShareFavourite(item.id)
+                    },
                     onEditClick = {},
                     onDeleteClick = {
                         onDeleteFavourite(item.id)
