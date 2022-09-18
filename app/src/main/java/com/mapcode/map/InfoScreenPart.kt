@@ -112,6 +112,17 @@ fun InfoArea(
         }
     }
 
+    val noFavouritesMessage = stringResource(R.string.no_favourites_snackbar)
+    val onViewFavouriteClick = remember {
+        {
+            if (uiState.favouriteLocations.isEmpty()) {
+                showSnackbar(noFavouritesMessage)
+            } else {
+                navigateToFavourites()
+            }
+        }
+    }
+
     InfoArea(
         modifier,
         uiState,
@@ -127,7 +138,7 @@ fun InfoArea(
         onCopyLongitude = onLocationClick,
         isVerticalLayout = isVerticalLayout,
         onAddFavouriteClick = onAddFavouriteClick,
-        onViewFavouritesClick = navigateToFavourites
+        onViewFavouritesClick = onViewFavouriteClick
     )
 }
 
