@@ -18,9 +18,9 @@ package com.mapcode.favourites
 
 import com.mapcode.Mapcode
 import com.mapcode.MapcodeCodec
-import com.mapcode.Territory
 import com.mapcode.util.Location
 import com.mapcode.util.ShareAdapter
+import com.mapcode.util.codeWithNoInternationalTerritory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -37,11 +37,7 @@ class ViewFavouritesUseCaseImpl @Inject constructor(
     }
 
     override fun share(favouriteName: String, mapcode: Mapcode) {
-        val mapcodeString = if (mapcode.territory == Territory.AAA) {
-            mapcode.code
-        } else {
-            mapcode.codeWithTerritory
-        }
+        val mapcodeString = mapcode.codeWithNoInternationalTerritory()
 
         val text = "$favouriteName. Mapcode: $mapcodeString"
 

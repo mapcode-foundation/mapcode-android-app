@@ -67,6 +67,7 @@ fun InfoArea(
             }
         }
     }
+
     val onLocationClick = remember {
         {
             viewModel.copyLocation()
@@ -76,29 +77,38 @@ fun InfoArea(
         }
     }
 
-    var showFavouritesNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
-    var favouritesName: String by rememberSaveable { mutableStateOf("") }
+    var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
+    var favouriteName: String by rememberSaveable { mutableStateOf("") }
 
-    if (showFavouritesNameDialog) {
+    if (showFavouriteNameDialog) {
         val mapcode: String by remember {
-            derivedStateOf { "${uiState.mapcodeUi.territoryShortName} ${uiState.mapcodeUi.code}" }
+            derivedStateOf {
+                buildString {
+                    if (uiState.mapcodeUi.territoryShortName != null) {
+                        append(uiState.mapcodeUi.territoryShortName)
+                        append(" ")
+                    }
+
+                    append(uiState.mapcodeUi.code)
+                }
+            }
         }
 
         FavouritesNameDialog(
-            name = favouritesName,
+            name = favouriteName,
             mapcode = mapcode,
-            onNameChange = { favouritesName = it },
-            onDismiss = { showFavouritesNameDialog = false },
+            onNameChange = { favouriteName = it },
+            onDismiss = { showFavouriteNameDialog = false },
             onSubmitClick = {
-                viewModel.onSaveFavouriteClick(favouritesName)
-                showFavouritesNameDialog = false
+                viewModel.onSaveFavouriteClick(favouriteName)
+                showFavouriteNameDialog = false
             })
     }
 
     val onAddFavouriteClick = remember {
         {
-            favouritesName = uiState.addressUi.address
-            showFavouritesNameDialog = true
+            favouriteName = uiState.addressUi.address
+            showFavouriteNameDialog = true
         }
     }
 

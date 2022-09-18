@@ -18,7 +18,7 @@ package com.mapcode.favourites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mapcode.Territory
+import com.mapcode.util.codeWithNoInternationalTerritory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -47,13 +47,13 @@ class FavouritesViewModel @Inject constructor(
         }
     }
 
-    //
-//    fun onSubmitNameChange(id: String, name: String) {
-//        viewModelScope.launch {
-//            useCase.setFavouriteName(id, name)
-//        }
-//    }
-//
+
+    fun onSubmitNameChange(id: String, name: String) {
+        viewModelScope.launch {
+            useCase.setFavouriteName(id, name)
+        }
+    }
+
     fun onDeleteClick(id: String) {
         useCase.deleteFavourite(id)
     }
@@ -61,16 +61,10 @@ class FavouritesViewModel @Inject constructor(
     private fun createListItem(favourite: Favourite): FavouriteListItem {
         val mapcode = useCase.getMapcodes(favourite.location).first()
 
-        val mapcodeString = if (mapcode.territory == Territory.AAA) {
-            mapcode.code
-        } else {
-            mapcode.codeWithTerritory
-        }
-
         return FavouriteListItem(
             id = favourite.id,
             name = favourite.name,
-            mapcode = mapcodeString
+            mapcode = mapcode.codeWithNoInternationalTerritory()
         )
     }
 }

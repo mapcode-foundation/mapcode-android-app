@@ -27,10 +27,8 @@ import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,7 +52,8 @@ fun FavouritesScreen(
         navigateBack = navigateBack,
         favourites = favourites,
         onShareFavourite = viewModel::onShareClick,
-        onDeleteFavourite = viewModel::onDeleteClick
+        onDeleteFavourite = viewModel::onDeleteClick,
+        onChangeFavouriteName = viewModel::onSubmitNameChange
     )
 }
 
@@ -64,7 +63,8 @@ private fun FavouritesScreen(
     navigateBack: () -> Unit = {},
     favourites: List<FavouriteListItem>,
     onShareFavourite: (String) -> Unit = {},
-    onDeleteFavourite: (String) -> Unit = {}
+    onDeleteFavourite: (String) -> Unit = {},
+    onChangeFavouriteName: (String, String) -> Unit = { _, _ -> },
 ) {
     val systemUiController = rememberSystemUiController()
     val systemBarColor = MaterialTheme.colors.primary
@@ -93,7 +93,8 @@ private fun FavouritesScreen(
                 .padding(padding),
             favourites = favourites,
             onShareFavourite = onShareFavourite,
-            onDeleteFavourite = onDeleteFavourite
+            onDeleteFavourite = onDeleteFavourite,
+            onChangeFavouriteName = onChangeFavouriteName
         )
     }
 
@@ -114,9 +115,26 @@ private fun Preview() {
 private fun Content(
     modifier: Modifier = Modifier,
     favourites: List<FavouriteListItem>,
+    onChangeFavouriteName: (String, String) -> Unit,
     onShareFavourite: (String) -> Unit,
     onDeleteFavourite: (String) -> Unit,
 ) {
+    var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
+    var editedFavourite: FavouriteListItem? by rememberSaveable { mutableStateOf(null) }
+
+    if (showFavouriteNameDialog) {
+        FavouritesNameDialog(
+            name = editedFavourite!!.name,
+            mapcode = editedFavourite!!.mapcode,
+            onNameChange = { editedFavourite = editedFavourite!!.copy(name = it) },
+            onDismiss = { showFavouriteNameDialog = false },
+            onSubmitClick = {
+                onChangeFavouriteName(editedFavourite!!.id, editedFavourite!!.name)
+                showFavouriteNameDialog = false
+            })
+    }
+
+
     Column(modifier) {
         Text(
             modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 8.dp),
@@ -139,7 +157,10 @@ private fun Content(
                     onShareClick = {
                         onShareFavourite(item.id)
                     },
-                    onEditClick = {},
+                    onEditClick = {
+                        editedFavourite = item
+                        showFavouriteNameDialog = true
+                    },
                     onDeleteClick = {
                         onDeleteFavourite(item.id)
                     }
