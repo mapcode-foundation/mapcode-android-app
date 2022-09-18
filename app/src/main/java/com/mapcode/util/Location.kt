@@ -16,10 +16,11 @@
 
 package com.mapcode.util
 
-import kotlinx.serialization.Serializable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-@Serializable
-data class Location(val latitude: Double, val longitude: Double) {
+@Parcelize
+data class Location(val latitude: Double, val longitude: Double) : Parcelable {
     companion object {
         val GLOBE_SOUTH_WEST: Location = Location(-90.0, -180.0)
         val GLOBE_NORTH_EAST: Location = Location(90.0, 180.0)

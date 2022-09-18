@@ -18,10 +18,12 @@ package com.mapcode.favourites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mapcode.util.Location
 import com.mapcode.util.codeWithNoInternationalTerritory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,6 +49,14 @@ class FavouritesViewModel @Inject constructor(
         }
     }
 
+    fun getFavouriteLocation(id: String): Location? {
+        return runBlocking {
+            useCase.getFavourites()
+                .first()
+                .find { it.id == id }
+                ?.location
+        }
+    }
 
     fun onSubmitNameChange(id: String, name: String) {
         viewModelScope.launch {

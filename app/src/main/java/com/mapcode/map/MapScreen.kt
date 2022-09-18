@@ -56,9 +56,12 @@ import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
+import com.mapcode.util.Location
 import com.mapcode.util.ScrollableDialog
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.result.ResultRecipient
 import kotlinx.coroutines.launch
 
 @Destination(start = true)
@@ -67,16 +70,17 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
     navigator: DestinationsNavigator,
+    resultRecipient: ResultRecipient<FavouritesScreenDestination, Location>,
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
     renderGoogleMaps: Boolean = true,
     layoutType: LayoutType = LayoutType.HorizontalInfoArea
 ) {
+    val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-    val scope = rememberCoroutineScope()
 
     val showSnackbar: (String) -> Unit = { message ->
         scope.launch {
@@ -151,6 +155,17 @@ fun MapScreen(
             color = Color.Transparent,
             darkIcons = useDarkIcons
         )
+    }
+
+    resultRecipient.onNavResult { result ->
+        if (result is NavResult.Value) {
+            val location = result.value
+            val update = CameraUpdateFactory.newLatLngZoom(
+                LatLng(location.latitude, location.longitude),
+                17f
+            )
+            viewModel.cameraPositionState.move(update)
+        }
     }
 }
 
@@ -602,7 +617,6 @@ private fun MapWithCrossHairs(
         if (renderGoogleMaps) {
             Map(
                 properties = viewModel.mapProperties,
-                onCameraMoved = viewModel::onCameraMoved,
                 cameraPositionState = viewModel.cameraPositionState,
                 contentPadding = contentPadding,
                 favouriteLocations = uiState.favouriteLocations
@@ -627,21 +641,10 @@ private fun MapWithCrossHairs(
 private fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
-    onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
     favouriteLocations: List<Favourite>,
     contentPadding: PaddingValues
 ) {
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            onCameraMoved(
-                cameraPositionState.position.target.latitude,
-                cameraPositionState.position.target.longitude,
-                cameraPositionState.position.zoom
-            )
-        }
-    }
-
     val scope = rememberCoroutineScope()
 
     val uiSettings =

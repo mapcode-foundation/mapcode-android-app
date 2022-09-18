@@ -33,6 +33,8 @@ import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.manualcomposablecalls.composable
+import com.ramcosta.composedestinations.scope.resultBackNavigator
+import com.ramcosta.composedestinations.scope.resultRecipient
 
 @Composable
 fun MapcodeNavHost(
@@ -63,7 +65,8 @@ fun MapcodeNavHost(
                 Modifier.fillMaxSize(),
                 mapViewModel,
                 layoutType = layoutType,
-                navigator = destinationsNavigator
+                navigator = destinationsNavigator,
+                resultRecipient = resultRecipient()
             )
         }
 
@@ -73,7 +76,7 @@ fun MapcodeNavHost(
                     .fillMaxSize()
                     .statusBarsPadding(),
                 viewModel = hiltViewModel(),
-                navigateBack = navController::navigateUp
+                resultBackNavigator = resultBackNavigator()
             )
         }
     }

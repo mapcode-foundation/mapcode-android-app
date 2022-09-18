@@ -36,20 +36,27 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.R
 import com.mapcode.theme.MapcodeColor
+import com.mapcode.util.Location
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.result.ResultBackNavigator
 
 @Destination
 @Composable
 fun FavouritesScreen(
     modifier: Modifier = Modifier,
     viewModel: FavouritesViewModel,
-    navigateBack: () -> Unit
+    resultBackNavigator: ResultBackNavigator<Location>
 ) {
     val favourites by viewModel.favourites.collectAsState()
 
     FavouritesScreen(
         modifier = modifier,
-        navigateBack = navigateBack,
+        navigateBack = resultBackNavigator::navigateBack,
+        onFavouriteClick = { id ->
+            viewModel.getFavouriteLocation(id)?.also {
+                resultBackNavigator.navigateBack(it)
+            }
+        },
         favourites = favourites,
         onShareFavourite = viewModel::onShareClick,
         onDeleteFavourite = viewModel::onDeleteClick,
@@ -61,6 +68,7 @@ fun FavouritesScreen(
 private fun FavouritesScreen(
     modifier: Modifier = Modifier,
     navigateBack: () -> Unit = {},
+    onFavouriteClick: (String) -> Unit = {},
     favourites: List<FavouriteListItem>,
     onShareFavourite: (String) -> Unit = {},
     onDeleteFavourite: (String) -> Unit = {},
@@ -94,7 +102,8 @@ private fun FavouritesScreen(
             favourites = favourites,
             onShareFavourite = onShareFavourite,
             onDeleteFavourite = onDeleteFavourite,
-            onChangeFavouriteName = onChangeFavouriteName
+            onChangeFavouriteName = onChangeFavouriteName,
+            onFavouriteClick = onFavouriteClick
         )
     }
 
@@ -118,6 +127,7 @@ private fun Content(
     onChangeFavouriteName: (String, String) -> Unit,
     onShareFavourite: (String) -> Unit,
     onDeleteFavourite: (String) -> Unit,
+    onFavouriteClick: (String) -> Unit = {}
 ) {
     var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     var editedFavourite: FavouriteListItem? by rememberSaveable { mutableStateOf(null) }
@@ -133,7 +143,6 @@ private fun Content(
                 showFavouriteNameDialog = false
             })
     }
-
 
     Column(modifier) {
         Text(
@@ -151,7 +160,7 @@ private fun Content(
                         .fillMaxWidth()
                         .padding(4.dp)
                         .clickable {
-
+                            onFavouriteClick(item.id)
                         },
                     state = item,
                     onShareClick = {

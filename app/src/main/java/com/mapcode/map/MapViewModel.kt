@@ -20,6 +20,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -48,7 +49,6 @@ class MapViewModel @Inject constructor(
     private val useCase: ShowMapcodeUseCase,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider()
 ) : ViewModel() {
-
     companion object {
         private const val UNKNOWN_ADDRESS_ERROR_TIMEOUT: Long = 3000
         const val ANIMATE_CAMERA_UPDATE_DURATION_MS: Int = 200
@@ -111,7 +111,6 @@ class MapViewModel @Inject constructor(
 
     var isGoogleMapsSdkLoaded: Boolean = false
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
-        private set
 
     var mapProperties: MapProperties by mutableStateOf(MapProperties())
         private set
@@ -120,9 +119,28 @@ class MapViewModel @Inject constructor(
 
     var showCantFindMapsAppSnackBar: Boolean by mutableStateOf(false)
 
+    init {
+        val isMovingFlow = snapshotFlow { cameraPositionState.isMoving }
+
+        snapshotFlow { cameraPositionState.position }
+            .dropWhile { !isGoogleMapsSdkLoaded }
+            .distinctUntilChanged()
+            .combine(isMovingFlow) { position, isMoving ->
+                if (!isMoving) {
+                    onCameraMoved(
+                        lat = position.target.latitude,
+                        long = position.target.longitude,
+                        zoom = position.zoom,
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     /**
      * When the camera has moved the mapcode information should be updated.
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun onCameraMoved(lat: Double, long: Double, zoom: Float) {
         location.value = Location(lat, long)
         locationUi.update {
