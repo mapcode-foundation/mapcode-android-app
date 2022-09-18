@@ -49,14 +49,20 @@ fun FavouritesScreen(
 ) {
     val favourites by viewModel.favourites.collectAsState()
 
-    FavouritesScreen(modifier, favourites, navigateBack)
+    FavouritesScreen(
+        modifier = modifier,
+        navigateBack = navigateBack,
+        favourites = favourites,
+        onDeleteFavourite = viewModel::onDeleteClick
+    )
 }
 
 @Composable
 private fun FavouritesScreen(
     modifier: Modifier = Modifier,
+    navigateBack: () -> Unit = {},
     favourites: List<FavouriteListItem>,
-    navigateBack: () -> Unit
+    onDeleteFavourite: (String) -> Unit = {}
 ) {
     val systemUiController = rememberSystemUiController()
     val systemBarColor = MaterialTheme.colors.primary
@@ -83,7 +89,8 @@ private fun FavouritesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            favourites = favourites
+            favourites = favourites,
+            onDeleteFavourite = onDeleteFavourite
         )
     }
 
@@ -96,8 +103,7 @@ private fun Preview() {
     FavouritesScreen(
         favourites = listOf(
             FavouriteListItem("id0", "Bla", "NLD AB.XY")
-        ),
-        navigateBack = {}
+        )
     )
 }
 
@@ -105,6 +111,7 @@ private fun Preview() {
 private fun Content(
     modifier: Modifier = Modifier,
     favourites: List<FavouriteListItem>,
+    onDeleteFavourite: (String) -> Unit
 ) {
     Column(modifier) {
         Text(
@@ -127,7 +134,9 @@ private fun Content(
                     state = item,
                     onShareClick = {},
                     onEditClick = {},
-                    onDeleteClick = {}
+                    onDeleteClick = {
+                        onDeleteFavourite(item.id)
+                    }
                 )
             }
         }

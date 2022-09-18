@@ -49,9 +49,9 @@ class FavouritesViewModel @Inject constructor(
 //        }
 //    }
 //
-//    fun onDeleteClick(favourite: Favourite) {
-//        useCase.deleteFavourite(favourite.id)
-//    }
+fun onDeleteClick(id: String) {
+    useCase.deleteFavourite(id)
+}
 
     private fun createListItem(favourite: Favourite): FavouriteListItem {
         val mapcode = useCase.getMapcodes(favourite.location).first()
