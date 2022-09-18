@@ -52,7 +52,7 @@ class FavouritesDataStoreImpl @Inject constructor(
     override fun update(entity: FavouriteEntity) {
         coroutineScope.launch(dispatchers.io) {
             favourites.value
-                .dropWhile { it.id == entity.id }
+                .filter { it.id != entity.id }
                 .plus(entity)
                 .map { Json.encodeToString(it) }
                 .toSet()
@@ -84,7 +84,7 @@ class FavouritesDataStoreImpl @Inject constructor(
     override fun delete(id: String) {
         coroutineScope.launch(dispatchers.io) {
             favourites.value
-                .dropWhile { it.id == id }
+                .filter { it.id != id }
                 .map { Json.encodeToString(it) }
                 .toSet()
                 .also { repository.set(Keys.favourites, it) }
