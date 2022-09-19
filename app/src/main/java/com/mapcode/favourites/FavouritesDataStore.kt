@@ -30,6 +30,8 @@ import kotlinx.serialization.json.Json
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.Result.Companion.failure
+import kotlin.Result.Companion.success
 
 @Singleton
 class FavouritesDataStoreImpl @Inject constructor(
@@ -60,7 +62,17 @@ class FavouritesDataStoreImpl @Inject constructor(
         }
     }
 
-    override suspend fun create(name: String, latitude: Double, longitude: Double): String {
+    override suspend fun create(name: String, latitude: Double, longitude: Double): Result<String> {
+        val favourites = withContext(dispatchers.io) {
+            favourites.first()
+        }
+
+        favourites.forEach {
+            if (it.latitude == latitude && it.longitude == longitude) {
+                return failure(DuplicateFavouriteException())
+            }
+        }
+
         val id = UUID.randomUUID().toString()
         val entity = FavouriteEntity(
             id = id,
@@ -69,16 +81,13 @@ class FavouritesDataStoreImpl @Inject constructor(
             longitude = longitude
         )
 
-        withContext(dispatchers.io) {
-            favourites
-                .first()
-                .plus(entity)
-                .map { Json.encodeToString(it) }
-                .toSet()
-                .also { repository.set(Keys.favourites, it) }
-        }
+        favourites
+            .plus(entity)
+            .map { Json.encodeToString(it) }
+            .toSet()
+            .also { repository.set(Keys.favourites, it) }
 
-        return id
+        return success(id)
     }
 
     override fun delete(id: String) {
@@ -104,6 +113,6 @@ interface FavouritesDataStore {
     /**
      * @return the id of the new favourite.
      */
-    suspend fun create(name: String, latitude: Double, longitude: Double): String
+    suspend fun create(name: String, latitude: Double, longitude: Double): Result<String>
     fun delete(id: String)
 }

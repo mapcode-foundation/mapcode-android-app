@@ -19,6 +19,7 @@ package com.mapcode.favourites
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
+import assertk.assertions.isFailure
 import com.mapcode.FakePreferenceRepository
 import com.mapcode.TestDispatcherProvider
 import com.mapcode.data.Keys
@@ -56,12 +57,12 @@ internal class FavouritesDataStoreTest {
     @Test
     fun `save favourite if favourites does not exist in repository`() = runTest(testDispatcher) {
         fakeRepository.set(Keys.favourites, null)
-        val id = dataStore.create(name = "name", latitude = 0.0, longitude = 0.0)
+        val idResult = dataStore.create(name = "name", latitude = 0.0, longitude = 0.0)
         advanceUntilIdle()
 
         assertThat(dataStore.getAll().first()).containsExactly(
             FavouriteEntity(
-                id = id,
+                id = idResult.getOrThrow(),
                 name = "name",
                 latitude = 0.0,
                 longitude = 0.0
@@ -109,7 +110,7 @@ internal class FavouritesDataStoreTest {
         fakeRepository.set(Keys.favourites, setOf(Json.encodeToString(favourite)))
         advanceUntilIdle()
 
-        val newFavId = dataStore.create(name = "name2", latitude = 1.0, longitude = 1.0)
+        val newFavIdResult = dataStore.create(name = "name2", latitude = 1.0, longitude = 1.0)
         advanceUntilIdle()
 
         assertThat(dataStore.getAll().first()).containsExactly(
@@ -120,7 +121,7 @@ internal class FavouritesDataStoreTest {
                 longitude = 0.0
             ),
             FavouriteEntity(
-                id = newFavId,
+                id = newFavIdResult.getOrThrow(),
                 name = "name2",
                 latitude = 1.0,
                 longitude = 1.0
@@ -143,4 +144,22 @@ internal class FavouritesDataStoreTest {
 
         assertThat(dataStore.getAll().first()).isEmpty()
     }
+
+    @Test
+    fun `return error if creating a favourite for a location that already has one`() =
+        runTest(testDispatcher) {
+            val favourite1 = FavouriteEntity(
+                id = "0",
+                name = "fav1",
+                latitude = 0.0,
+                longitude = 0.0
+            )
+
+            fakeRepository.set(Keys.favourites, setOf(Json.encodeToString(favourite1)))
+            advanceUntilIdle()
+
+            val result = dataStore.create(name = "id2", latitude = 0.0, longitude = 0.0)
+
+            assertThat(result).isFailure()
+        }
 }
