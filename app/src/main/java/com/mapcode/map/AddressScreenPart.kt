@@ -21,8 +21,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -35,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
+import com.mapcode.theme.MapcodeColor
 import com.mapcode.theme.MapcodeTheme
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -46,69 +50,89 @@ fun AddressArea(
     onChange: (String) -> Unit = {},
     onSubmit: () -> Unit = {},
     helper: AddressHelper,
-    error: AddressError
+    error: AddressError,
+    onAddFavouriteClick: () -> Unit = {},
+    onDeleteFavouriteClick: () -> Unit = {},
+    isFavouriteLocation: Boolean
 ) {
     Column(modifier) {
+
         var menuExpanded by remember { mutableStateOf(false) }
         val focusRequester = FocusRequester()
         val focusManager = LocalFocusManager.current
 
-        ExposedDropdownMenuBox(expanded = menuExpanded, onExpandedChange = { menuExpanded = it }) {
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                value = address,
-                onValueChange = {
-                    onChange(it)
-                    if (!menuExpanded) {
-                        menuExpanded = true
-                    }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Search,
-                    keyboardType = KeyboardType.Text
-                ),
-                keyboardActions = KeyboardActions(onSearch = {
-                    menuExpanded = false
-                    focusManager.clearFocus()
-                    onSubmit()
-                }),
-                label = { Text(stringResource(R.string.address_bar_label), maxLines = 1) },
-                placeholder = { Text(address, maxLines = 1) },
-                trailingIcon = {
-                    if (address.isNotEmpty()) {
-                        IconButton(
-                            onClick = {
-                                focusRequester.requestFocus()
-                                onChange("")
-                            }) {
-                            Icon(
-                                Icons.Outlined.Clear,
-                                contentDescription = stringResource(R.string.clear_address_content_description)
-                            )
+        Row {
+            ExposedDropdownMenuBox(
+                modifier = Modifier.weight(1f),
+                expanded = menuExpanded,
+                onExpandedChange = { menuExpanded = it }) {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    value = address,
+                    onValueChange = {
+                        onChange(it)
+                        if (!menuExpanded) {
+                            menuExpanded = true
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search,
+                        keyboardType = KeyboardType.Text
+                    ),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        menuExpanded = false
+                        focusManager.clearFocus()
+                        onSubmit()
+                    }),
+                    label = { Text(stringResource(R.string.address_bar_label), maxLines = 1) },
+                    placeholder = { Text(address, maxLines = 1) },
+                    trailingIcon = {
+                        if (address.isNotEmpty()) {
+                            IconButton(
+                                onClick = {
+                                    focusRequester.requestFocus()
+                                    onChange("")
+                                }) {
+                                Icon(
+                                    Icons.Outlined.Clear,
+                                    contentDescription = stringResource(R.string.clear_address_content_description)
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
 
-            if (matchingAddresses.isNotEmpty()) {
-                ExposedDropdownMenu(
-                    modifier = Modifier.testTag("address_dropdown"),
-                    expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                    matchingAddresses.forEach { address ->
-                        DropdownMenuItem(onClick = {
-                            menuExpanded = false
-                            focusManager.clearFocus()
-                            onChange(address)
-                            onSubmit()
-                        }) {
-                            Text(address)
+                if (matchingAddresses.isNotEmpty()) {
+                    ExposedDropdownMenu(
+                        modifier = Modifier.testTag("address_dropdown"),
+                        expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        matchingAddresses.forEach { address ->
+                            DropdownMenuItem(onClick = {
+                                menuExpanded = false
+                                focusManager.clearFocus()
+                                onChange(address)
+                                onSubmit()
+                            }) {
+                                Text(address)
+                            }
                         }
                     }
                 }
             }
+
+            Spacer(Modifier.width(8.dp))
+
+            FavouriteButton(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(top = 8.dp),
+                isFavouriteLocation = isFavouriteLocation,
+                addFavourite = onAddFavouriteClick,
+                deleteFavourite = onDeleteFavouriteClick
+            )
         }
 
         val extraTextHeight = 20.dp
@@ -141,6 +165,7 @@ private fun AddressAreaPreview() {
                 helper = AddressHelper.None,
                 error = AddressError.None,
                 matchingAddresses = listOf("Address 1", "VERY VERY VERY VERY VERY LONG ADDRESS"),
+                isFavouriteLocation = true
             )
         }
     }
@@ -206,4 +231,40 @@ private fun HelperText(modifier: Modifier = Modifier, message: String) {
         style = MaterialTheme.typography.body1,
         fontWeight = FontWeight.Bold
     )
+}
+
+@Composable
+private fun FavouriteButton(
+    modifier: Modifier = Modifier,
+    isFavouriteLocation: Boolean,
+    deleteFavourite: () -> Unit,
+    addFavourite: () -> Unit
+) {
+    IconButton(
+        modifier = modifier,
+        onClick = {
+            if (isFavouriteLocation) {
+                deleteFavourite()
+            } else {
+                addFavourite()
+            }
+        }
+    ) {
+        if (isFavouriteLocation) {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.Outlined.Bookmark,
+                contentDescription = stringResource(R.string.delete_favourite_button_content_description),
+                tint = MapcodeColor.addFavouritesButton()
+            )
+        } else {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.Outlined.BookmarkAdd,
+                contentDescription = stringResource(R.string.add_favourite_button_content_description),
+                tint = MapcodeColor.addFavouritesButton()
+            )
+        }
+    }
+
 }

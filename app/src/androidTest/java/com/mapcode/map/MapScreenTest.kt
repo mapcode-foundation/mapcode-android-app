@@ -26,6 +26,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.test.rule.GrantPermissionRule
 import assertk.assertThat
 import assertk.assertions.index
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import com.mapcode.Mapcode
@@ -709,7 +710,7 @@ class MapScreenTest {
 
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
-        composeTestRule.onNodeWithText("Save location").performClick()
+        composeTestRule.onNodeWithContentDescription("Save location").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Mapcode: NLD AB.XY").assertIsDisplayed()
@@ -730,20 +731,32 @@ class MapScreenTest {
 
         viewModel.onCameraMoved(0.0, 0.0, 1f)
 
-        composeTestRule.onNodeWithText("Save location").performClick()
+        composeTestRule.onNodeWithContentDescription("Save location").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Save").performClick()
 
         composeTestRule.waitUntil(2000) {
-            useCase.favourites.isNotEmpty()
+            useCase.favourites.value.isNotEmpty()
         }
 
-        assertThat(useCase.favourites).index(0).prop(Favourite::name).isEqualTo("address")
-        assertThat(useCase.favourites).index(0).prop(Favourite::location)
+        assertThat(useCase.favourites.value).index(0).prop(Favourite::name).isEqualTo("address")
+        assertThat(useCase.favourites.value).index(0).prop(Favourite::location)
             .isEqualTo(Location(0.0, 0.0))
 
         composeTestRule.onNodeWithText("Save").assertDoesNotExist()
+    }
+
+    @Test
+    fun favourite_button_deletes_favourite_when_location_is_saved() {
+        setMapScreenAsContent()
+
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        composeTestRule.onNodeWithContentDescription("Delete saved location").performClick()
+        assertThat(useCase.favourites.value).isEmpty()
     }
 
     private fun setMapScreenAsContent() {

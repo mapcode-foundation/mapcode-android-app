@@ -61,7 +61,8 @@
     <string name="website_url" translatable="false">https://mapcode.com</string>
     <string name="source_code_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app</string>
     <string name="changelog_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app/blob/main/CHANGELOG.md</string>
-    <string name="add_favourite_button">Save location</string>
+    <string name="add_favourite_button_content_description">Save location</string>
+    <string name="delete_favourite_button_content_description">Delete saved location</string>
     <string name="view_favourites_button">View saved locations</string>
     <string name="rename_favourite_content_description">Rename location</string>
     <string name="delete_favourite_content_description">Delete location</string>

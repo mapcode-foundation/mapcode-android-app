@@ -189,7 +189,8 @@ internal class MapViewModelTest {
                 error = AddressError.None,
                 matchingAddresses = emptyList()
             ),
-            favouriteLocations = emptyList()
+            favouriteLocations = emptyList(),
+            isFavouriteLocation = false
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)
@@ -227,7 +228,8 @@ internal class MapViewModelTest {
                 error = AddressError.None,
                 matchingAddresses = emptyList()
             ),
-            favouriteLocations = emptyList()
+            favouriteLocations = emptyList(),
+            isFavouriteLocation = false
         )
 
         assertThat(uiState).isEqualTo(expectedUiState)
@@ -1060,12 +1062,51 @@ internal class MapViewModelTest {
         viewModel.onSaveFavouriteClick("name")
         advanceUntilIdle()
 
-        assertThat(useCase.favourites).index(0)
+        assertThat(useCase.favourites.value).index(0)
             .prop(Favourite::name)
             .isEqualTo("name")
 
-        assertThat(useCase.favourites).index(0)
+        assertThat(useCase.favourites.value).index(0)
             .prop(Favourite::location)
             .isEqualTo(Location(0.0, 0.0))
+    }
+
+    @Test
+    fun `favourite button deletes favourite if location is saved`() = runTest {
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.isFavouriteLocation).isTrue()
+    }
+
+    @Test
+    fun `favourite button deletes favourite if no locations are saved`() = runTest {
+        useCase.favourites.value = emptyList()
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        assertThat(viewModel.uiState.value.isFavouriteLocation).isFalse()
+    }
+
+    @Test
+    fun `favourite button deletes favourite if location is not saved`() = runTest {
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+        viewModel.onCameraMoved(1.0, 1.0, 1f)
+
+        assertThat(viewModel.uiState.value.isFavouriteLocation).isFalse()
+    }
+
+    @Test
+    fun `delete favourite on favourite click if current location is saved`() = runTest {
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+        viewModel.onCameraMoved(0.0, 0.0, 1f)
+
+        viewModel.onDeleteFavouriteClick()
+        runCurrent()
+
+        assertThat(useCase.favourites.value).isEmpty()
     }
 }

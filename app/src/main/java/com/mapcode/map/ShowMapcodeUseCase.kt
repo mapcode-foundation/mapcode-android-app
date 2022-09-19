@@ -258,6 +258,16 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         favouritesDataStore.create(name, location.latitude, location.longitude)
     }
 
+    override suspend fun deleteFavourite(location: Location) {
+        val favourite = favouritesDataStore
+            .getAll()
+            .first()
+            .find { it.latitude == location.latitude && it.longitude == location.longitude }
+            ?: return
+
+        favouritesDataStore.delete(favourite.id)
+    }
+
     override fun getFavouriteLocations(): Flow<List<Favourite>> {
         return favouritesDataStore.getAll()
             .map { list -> list.map { Favourite.fromEntity(it) } }
@@ -328,6 +338,7 @@ interface ShowMapcodeUseCase {
     suspend fun getLastLocationAndZoom(): Pair<Location, Float>?
 
     suspend fun saveFavourite(name: String, location: Location)
+    suspend fun deleteFavourite(location: Location)
 
     fun getFavouriteLocations(): Flow<List<Favourite>>
 }

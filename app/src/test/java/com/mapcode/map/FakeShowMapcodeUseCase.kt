@@ -25,6 +25,7 @@ import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.IOException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
@@ -42,7 +43,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
 
-    val favourites: MutableList<Favourite> = mutableListOf()
+    val favourites: MutableStateFlow<List<Favourite>> = MutableStateFlow(emptyList())
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -114,24 +115,30 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return success((matchingAddresses[query] ?: emptyList()))
     }
 
-    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
-
-    }
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {}
 
     override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
         return null
     }
 
     override suspend fun saveFavourite(name: String, location: Location) {
-        favourites.add(
-            Favourite(
-                name = name,
-                location = location
+        favourites.update { list ->
+            list.plus(
+                Favourite(
+                    name = name,
+                    location = location
+                )
             )
-        )
+        }
+    }
+
+    override suspend fun deleteFavourite(location: Location) {
+        favourites.update { list ->
+            list.toMutableList().also { it.removeAll { it.location == location } }
+        }
     }
 
     override fun getFavouriteLocations(): Flow<List<Favourite>> {
-        return MutableStateFlow(emptyList())
+        return favourites
     }
 }

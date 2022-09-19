@@ -95,14 +95,17 @@ class MapViewModel @Inject constructor(
         combine(
             addressUi,
             mapcodeUi,
+            location,
             locationUi,
             useCase.getFavouriteLocations()
-        ) { addressUi, mapcodeUi, locationUi, favouriteLocations ->
+        ) { addressUi, mapcodeUi, location, locationUi, favouriteLocations ->
+            val isFavouriteLocation = isFavouriteLocation(location, favouriteLocations)
             UiState(
                 addressUi = addressUi,
                 mapcodeUi = mapcodeUi,
                 locationUi = locationUi,
-                favouriteLocations = favouriteLocations
+                favouriteLocations = favouriteLocations,
+                isFavouriteLocation = isFavouriteLocation
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.EMPTY)
 
@@ -439,6 +442,12 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    fun onDeleteFavouriteClick() {
+        viewModelScope.launch {
+            useCase.deleteFavourite(location.value)
+        }
+    }
+
     private fun getInitialCameraPositionState(): CameraPositionState {
         val lastCameraPosition = getLastCameraPosition()
         if (lastCameraPosition == null) {
@@ -553,20 +562,26 @@ class MapViewModel @Inject constructor(
         val mapcode = mapcodes.value.getOrNull(mapcodeIndex.value) ?: return
         useCase.shareMapcode(mapcode)
     }
+
+    private fun isFavouriteLocation(location: Location, favourites: List<Favourite>): Boolean {
+        return favourites.any { it.location == location }
+    }
 }
 
 data class UiState(
     val mapcodeUi: MapcodeUi,
     val addressUi: AddressUi,
     val locationUi: LocationUi,
-    val favouriteLocations: List<Favourite>
+    val favouriteLocations: List<Favourite>,
+    val isFavouriteLocation: Boolean
 ) {
     companion object {
         val EMPTY: UiState = UiState(
             mapcodeUi = MapcodeUi("", "", "", 0, 0),
             addressUi = AddressUi("", emptyList(), AddressError.None, AddressHelper.None),
             locationUi = LocationUi.EMPTY,
-            favouriteLocations = emptyList()
+            favouriteLocations = emptyList(),
+            isFavouriteLocation = false
         )
     }
 }

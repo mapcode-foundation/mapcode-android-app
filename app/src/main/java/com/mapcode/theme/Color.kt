@@ -19,7 +19,6 @@ package com.mapcode.theme
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
@@ -43,30 +42,11 @@ object MapcodeColor {
     }
 
     @Composable
-    fun addFavouritesButton(): ButtonColors {
+    fun addFavouritesButton(): Color {
         if (MaterialTheme.colors.isLight) {
-            return ButtonDefaults.buttonColors(
-                backgroundColor = Yellow500,
-                contentColor = MaterialTheme.colors.contentColorFor(Yellow500)
-            )
+            return Yellow500
         } else {
-            return ButtonDefaults.buttonColors(
-                backgroundColor = Yellow300,
-                contentColor = MaterialTheme.colors.contentColorFor(Yellow300)
-            )
-        }
-    }
-
-    @Composable
-    fun viewFavouritesButton(): ButtonColors {
-        if (MaterialTheme.colors.isLight) {
-            return ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colors.onSurface
-            )
-        } else {
-            return ButtonDefaults.outlinedButtonColors(
-                contentColor = Yellow300
-            )
+            return Yellow300
         }
     }
 }
