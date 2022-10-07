@@ -31,6 +31,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import com.mapcode.Mapcode
 import com.mapcode.Territory
+import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -38,6 +39,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class MapScreenTest {
 
@@ -759,6 +761,28 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("Delete saved location").performClick()
         assertThat(useCase.favourites.value).isEmpty()
+    }
+
+    @Test
+    fun navigate_to_favourites_screen_when_click_view_favourites() {
+        setMapScreenAsContent()
+
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+
+        composeTestRule.onNodeWithContentDescription("View saved locations").performClick()
+
+        verify(mockDestinationsNavigator).navigate(FavouritesScreenDestination)
+    }
+
+    @Test
+    fun prompt_to_save_location_when_clicking_favourites_and_no_favourites_are_saved() {
+        setMapScreenAsContent()
+        
+        useCase.favourites.value = emptyList()
+        
+        composeTestRule.onNodeWithContentDescription("View saved locations").performClick()
+        composeTestRule.onNodeWithText("Save a location first!").assertIsDisplayed()
     }
 
     private fun setMapScreenAsContent() {
