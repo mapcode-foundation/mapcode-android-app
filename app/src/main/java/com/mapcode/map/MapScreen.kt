@@ -185,11 +185,12 @@ private fun VerticalInfoAreaLayout(
             )
 
             MapControls(
-                Modifier
+                modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel,
-                navigator
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
             )
         }
 
@@ -221,11 +222,13 @@ private fun HorizontalInfoAreaLayout(
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
             MapControls(
-                Modifier
+                modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel,
-                navigator
+
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
             )
         }
 
@@ -256,8 +259,13 @@ private fun FloatingInfoAreaLayout(
                 .align(Alignment.BottomEnd)
                 .padding(8.dp)
         ) {
+            MapControls(
+                modifier = Modifier.align(Alignment.Bottom),
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
+            )
 
-            MapControls(Modifier.align(Alignment.Bottom), viewModel, navigator)
             Spacer(Modifier.width(8.dp))
 
             Card(
@@ -399,7 +407,8 @@ private fun greyButtonColors(): ButtonColors {
 private fun MapControls(
     modifier: Modifier,
     viewModel: MapViewModel,
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    showSnackbar: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val isSatelliteModeEnabled by remember { derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID } }
@@ -430,6 +439,9 @@ private fun MapControls(
 
     viewModel.setMyLocationEnabled(isLocationPermissionGranted)
 
+    val uiState by viewModel.uiState.collectAsState()
+    val noFavouritesMessage = stringResource(R.string.no_favourites_snackbar)
+
     Column(modifier = modifier) {
         MapControls(
             onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
@@ -458,7 +470,11 @@ private fun MapControls(
                 }
             },
             onSavedLocationsClick = {
-                navigator.navigate(FavouritesScreenDestination)
+                if (uiState.favouriteLocations.isEmpty()) {
+                    showSnackbar(noFavouritesMessage)
+                } else {
+                    navigator.navigate(FavouritesScreenDestination)
+                }
             },
             onMoreClick = { showMoreDropdown = true }
         )
