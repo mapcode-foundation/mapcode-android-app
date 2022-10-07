@@ -423,7 +423,8 @@ class MapScreenTest {
         useCase.isMapsAppInstalled = false
         setMapScreenAsContent()
 
-        composeTestRule.onNodeWithContentDescription("View location in maps app").performClick()
+        composeTestRule.onNodeWithContentDescription("More").performClick()
+        composeTestRule.onNodeWithText("Directions").performClick()
 
         composeTestRule.onNodeWithText("You have no map app installed to open this in.")
             .assertIsDisplayed()
@@ -443,7 +444,8 @@ class MapScreenTest {
 
         viewModel.onCameraMoved(3.0, 2.0, 1f)
 
-        composeTestRule.onNodeWithContentDescription("Share mapcode").performClick()
+        composeTestRule.onNodeWithContentDescription("More").performClick()
+        composeTestRule.onNodeWithText("Share mapcode").performClick()
 
         assertThat(useCase.sharedMapcode).isEqualTo(Mapcode("AB.XY", Territory.AAA))
     }
