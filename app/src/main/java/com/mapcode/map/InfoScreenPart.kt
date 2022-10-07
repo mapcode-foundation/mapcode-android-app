@@ -55,8 +55,7 @@ fun InfoArea(
     modifier: Modifier,
     viewModel: MapViewModel,
     showSnackbar: (String) -> Unit,
-    isVerticalLayout: Boolean,
-    navigateToFavourites: () -> Unit
+    isVerticalLayout: Boolean
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val copiedMessageStr = stringResource(R.string.copied_to_clipboard_snackbar_text)

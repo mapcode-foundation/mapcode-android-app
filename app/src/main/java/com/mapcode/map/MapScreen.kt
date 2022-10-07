@@ -188,7 +188,8 @@ private fun VerticalInfoAreaLayout(
                 Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel
+                viewModel,
+                navigator
             )
         }
 
@@ -201,9 +202,6 @@ private fun VerticalInfoAreaLayout(
                 .imePadding()
                 .systemBarsPadding(),
             viewModel,
-            navigateToFavourites = {
-                navigator.navigate(FavouritesScreenDestination)
-            },
             showSnackbar = showSnackbar,
             isVerticalLayout = true
         )
@@ -226,7 +224,8 @@ private fun HorizontalInfoAreaLayout(
                 Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel
+                viewModel,
+                navigator
             )
         }
 
@@ -237,9 +236,6 @@ private fun HorizontalInfoAreaLayout(
             viewModel = viewModel,
             showSnackbar = showSnackbar,
             isVerticalLayout = false,
-            navigateToFavourites = {
-                navigator.navigate(FavouritesScreenDestination)
-            }
         )
     }
 }
@@ -261,7 +257,7 @@ private fun FloatingInfoAreaLayout(
                 .padding(8.dp)
         ) {
 
-            MapControls(Modifier.align(Alignment.Bottom), viewModel)
+            MapControls(Modifier.align(Alignment.Bottom), viewModel, navigator)
             Spacer(Modifier.width(8.dp))
 
             Card(
@@ -271,10 +267,9 @@ private fun FloatingInfoAreaLayout(
                 InfoArea(
                     modifier = Modifier.padding(8.dp),
                     viewModel = viewModel,
-                    showSnackbar = showSnackbar, isVerticalLayout = false,
-                    navigateToFavourites = {
-                        navigator.navigate(FavouritesScreenDestination)
-                    })
+                    showSnackbar = showSnackbar,
+                    isVerticalLayout = false,
+                )
             }
         }
     }
@@ -403,7 +398,8 @@ private fun greyButtonColors(): ButtonColors {
 @Composable
 private fun MapControls(
     modifier: Modifier,
-    viewModel: MapViewModel
+    viewModel: MapViewModel,
+    navigator: DestinationsNavigator
 ) {
     val scope = rememberCoroutineScope()
     val isSatelliteModeEnabled by remember { derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID } }
@@ -461,7 +457,9 @@ private fun MapControls(
                     locationPermissionsState.launchMultiplePermissionRequest()
                 }
             },
-            onSavedLocationsClick = {},
+            onSavedLocationsClick = {
+                navigator.navigate(FavouritesScreenDestination)
+            },
             onMoreClick = { showMoreDropdown = true }
         )
 
