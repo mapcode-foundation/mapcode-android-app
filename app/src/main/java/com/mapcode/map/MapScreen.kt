@@ -24,16 +24,14 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -314,7 +312,7 @@ private fun AboutDialog(onDismiss: () -> Unit = {}) {
                     )
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_outline_directions_24),
+                        imageVector = Icons.Outlined.Directions,
                         contentDescription = ""
                     )
                 },
@@ -485,10 +483,10 @@ private fun MapControls(
         ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     }
 
-    val satelliteButtonIcon: Painter = if (isSatelliteModeEnabled) {
-        painterResource(R.drawable.map_outline)
+    val satelliteButtonIcon: ImageVector = if (isSatelliteModeEnabled) {
+        Icons.Outlined.Map
     } else {
-        painterResource(R.drawable.satellite)
+        Icons.Outlined.Satellite
     }
 
     Row(modifier) {
@@ -529,7 +527,7 @@ private fun MapControls(
             colors = greyButtonColors()
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_outline_directions_24),
+                imageVector = Icons.Outlined.Directions,
                 contentDescription = stringResource(R.string.open_external_maps_app_content_description)
             )
         }
@@ -543,7 +541,7 @@ private fun MapControls(
             colors = satelliteButtonColors
         ) {
             Icon(
-                painter = satelliteButtonIcon,
+                imageVector = satelliteButtonIcon,
                 contentDescription = stringResource(R.string.satellite_mode_button_content_description)
             )
         }

@@ -18,20 +18,22 @@ package com.mapcode.map
 
 import android.annotation.SuppressLint
 import android.os.Build
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.FastForward
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -400,7 +402,7 @@ private fun TerritoryBox(
             HeaderWithIcon(
                 modifier = Modifier.fillMaxWidth(),
                 headerText,
-                R.drawable.ic_outline_fast_forward_24
+                Icons.Outlined.FastForward
             )
 
             Text(
@@ -525,7 +527,7 @@ private fun LatLngTextField(
             trailingIcon = {
                 IconButton(onClick = onCopy) {
                     Icon(
-                        painterResource(R.drawable.ic_outline_content_copy_24),
+                        imageVector = Icons.Outlined.ContentCopy,
                         contentDescription = stringResource(R.string.copy_location_content_description)
                     )
                 }
@@ -545,7 +547,7 @@ private fun LatLngTextField(
 }
 
 @Composable
-private fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @DrawableRes icon: Int) {
+private fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, icon: ImageVector) {
     Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             modifier = Modifier.fillMaxHeight(),
@@ -555,7 +557,7 @@ private fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, @Drawabl
 
         Icon(
             modifier = Modifier.height(20.dp),
-            painter = painterResource(icon),
+            imageVector = icon,
             contentDescription = ""
         )
     }
@@ -578,7 +580,7 @@ private fun MapcodeBox(
             HeaderWithIcon(
                 Modifier.fillMaxWidth(),
                 stringResource(R.string.mapcode_header_button),
-                R.drawable.ic_outline_content_copy_24
+                Icons.Outlined.ContentCopy
             )
 
             val codeSpanStyle: SpanStyle =
