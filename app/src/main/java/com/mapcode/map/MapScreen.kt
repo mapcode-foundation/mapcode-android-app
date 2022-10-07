@@ -414,6 +414,8 @@ private fun MapControls(
         AboutDialog(onDismiss = { showAboutDialog = false })
     }
 
+    var showMoreDropdown by rememberSaveable { mutableStateOf(false) }
+
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
             Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -432,37 +434,58 @@ private fun MapControls(
 
     viewModel.setMyLocationEnabled(isLocationPermissionGranted)
 
-    MapControls(
-        modifier = modifier,
-        onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
-        isSatelliteModeEnabled = isSatelliteModeEnabled,
-        onZoomInClick = {
-            scope.launch {
-                viewModel.cameraPositionState.animate(
-                    CameraUpdateFactory.zoomIn(),
-                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
-                )
-            }
-        },
-        onZoomOutClick = {
-            scope.launch {
-                viewModel.cameraPositionState.animate(
-                    CameraUpdateFactory.zoomOut(),
-                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
-                )
-            }
-        },
-        onMyLocationClick = {
-            if (isLocationPermissionGranted) {
-                viewModel.goToMyLocation()
-            } else {
-                locationPermissionsState.launchMultiplePermissionRequest()
-            }
-        },
-        onDirectionsClick = viewModel::onDirectionsClick,
-        onShareMapcodeClick = viewModel::shareMapcode,
-        onAboutClick = { showAboutDialog = true }
-    )
+    Column(modifier = modifier) {
+        MapControls(
+            onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onZoomInClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomIn(),
+                        MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onZoomOutClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomOut(),
+                        MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onMyLocationClick = {
+                if (isLocationPermissionGranted) {
+                    viewModel.goToMyLocation()
+                } else {
+                    locationPermissionsState.launchMultiplePermissionRequest()
+                }
+            },
+            onSavedLocationsClick = {},
+            onMoreClick = { showMoreDropdown = true }
+        )
+
+        Box {
+            MoreDropdownMenu(
+                expanded = showMoreDropdown,
+                onAboutClick = {
+                    showAboutDialog = true
+                    showMoreDropdown = false
+                },
+                onShareMapcodeClick = {
+                    viewModel.shareMapcode()
+                    showMoreDropdown = false
+                },
+                onDirectionsClick = {
+                    viewModel.onDirectionsClick()
+                    showMoreDropdown = false
+                },
+                onDismiss = {
+                    showMoreDropdown = false
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -473,9 +496,8 @@ private fun MapControls(
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
-    onDirectionsClick: () -> Unit = {},
-    onShareMapcodeClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {}
+    onSavedLocationsClick: () -> Unit = {},
+    onMoreClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -494,44 +516,34 @@ private fun MapControls(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Bottom),
-            onClick = onAboutClick,
+            onClick = onMoreClick,
             contentPadding = PaddingValues(8.dp),
             colors = greyButtonColors()
         ) {
             Icon(
-                imageVector = Icons.Outlined.Info,
-                contentDescription = stringResource(R.string.about_content_description)
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = stringResource(R.string.more_content_description)
             )
         }
+
         Spacer(Modifier.width(8.dp))
+
         Button(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Bottom),
-            onClick = onShareMapcodeClick,
+            onClick = onSavedLocationsClick,
             contentPadding = PaddingValues(8.dp),
             colors = greyButtonColors()
         ) {
             Icon(
-                imageVector = Icons.Outlined.Share,
-                contentDescription = stringResource(R.string.share_mapcode_content_description)
+                imageVector = Icons.Outlined.Bookmarks,
+                contentDescription = stringResource(R.string.view_favourites_button_content_description)
             )
         }
+
         Spacer(Modifier.width(8.dp))
-        Button(
-            modifier = Modifier
-                .size(48.dp)
-                .align(Alignment.Bottom),
-            onClick = onDirectionsClick,
-            contentPadding = PaddingValues(8.dp),
-            colors = greyButtonColors()
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Directions,
-                contentDescription = stringResource(R.string.open_external_maps_app_content_description)
-            )
-        }
-        Spacer(Modifier.width(8.dp))
+
         Button(
             modifier = Modifier
                 .size(48.dp)
@@ -567,6 +579,34 @@ private fun MapControlsPreview() {
             isSatelliteModeEnabled = isSatelliteModeEnabled,
             onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
         )
+    }
+}
+
+@Composable
+private fun MoreDropdownMenu(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    onAboutClick: () -> Unit,
+    onShareMapcodeClick: () -> Unit,
+    onDirectionsClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    DropdownMenu(
+        modifier = modifier,
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        DropdownMenuItem(onClick = onAboutClick) {
+            Text(text = stringResource(R.string.about_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onShareMapcodeClick) {
+            Text(text = stringResource(R.string.share_mapcode_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onDirectionsClick) {
+            Text(text = stringResource(R.string.directions_menu_item))
+        }
     }
 }
 
