@@ -88,7 +88,7 @@ class FavouritesScreenTest {
     }
 
     @Test
-    fun show_dialog_to_edit_name_when_clicking_edit() = runTest(testDispatcher) {
+    fun show_dialog_to_rename_when_clicking_edit() = runTest(testDispatcher) {
         setFavourites(FavouriteEntity("0", "Favourite 1", 0.0, 0.0))
         advanceUntilIdle()
         setContent()
@@ -146,6 +146,32 @@ class FavouritesScreenTest {
 
         advanceUntilIdle()
         assertThat(getFavourites()).isEmpty()
+    }
+
+    @Test
+    fun dismiss_dialog_when_renaming_favourite() = runTest(testDispatcher) {
+        setFavourites(FavouriteEntity("0", "Favourite 1", 0.0, 0.0))
+        advanceUntilIdle()
+        setContent()
+
+        composeTestRule.onNodeWithContentDescription("Rename location").performClick()
+        composeTestRule.onNodeWithText("Save").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Rename location").assertDoesNotExist()
+    }
+
+    @Test
+    fun dismiss_dialog_when_deleting_favourite() = runTest(testDispatcher) {
+        setFavourites(FavouriteEntity("0", "Favourite 1", 0.0, 0.0))
+        advanceUntilIdle()
+        setContent()
+
+        composeTestRule.onNodeWithContentDescription("Delete location").performClick()
+        composeTestRule.onNodeWithText("Yes").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Delete location").assertDoesNotExist()
     }
 
     @Test

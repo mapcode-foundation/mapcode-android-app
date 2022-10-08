@@ -148,7 +148,10 @@ private fun Content(
     if (showDeleteFavouriteDialog) {
         DeleteFavouriteDialog(
             favouriteName = dialogFavourite!!.name,
-            onConfirm = { onDeleteFavourite(dialogFavourite!!.id) },
+            onConfirm = {
+                onDeleteFavourite(dialogFavourite!!.id)
+                showDeleteFavouriteDialog = false
+            },
             onDismiss = { showDeleteFavouriteDialog = false }
         )
     }
