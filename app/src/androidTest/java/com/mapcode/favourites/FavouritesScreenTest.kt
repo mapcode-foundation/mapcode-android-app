@@ -76,13 +76,12 @@ class FavouritesScreenTest {
 
     @Test
     fun list_favourites() = runTest(testDispatcher) {
-        setContent()
         setFavourites(
             FavouriteEntity("0", "Favourite 1", 0.0, 0.0),
             FavouriteEntity("1", "Favourite 2", 0.0, 0.0)
         )
-
         advanceUntilIdle()
+        setContent()
 
         composeTestRule.onNodeWithText("Favourite 1").assertIsDisplayed()
         composeTestRule.onNodeWithText("Favourite 2").assertIsDisplayed()
@@ -90,10 +89,9 @@ class FavouritesScreenTest {
 
     @Test
     fun show_dialog_to_edit_name_when_clicking_edit() = runTest(testDispatcher) {
-        setContent()
         setFavourites(FavouriteEntity("0", "Favourite 1", 0.0, 0.0))
-
         advanceUntilIdle()
+        setContent()
 
         composeTestRule.onNodeWithContentDescription("Rename location").performClick()
         composeTestRule.waitForIdle()
