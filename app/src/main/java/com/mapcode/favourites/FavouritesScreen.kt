@@ -162,6 +162,8 @@ private fun Content(
             text = stringResource(R.string.favourites_screen_caption)
         )
 
+        Spacer(Modifier.height(8.dp))
+
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -170,7 +172,7 @@ private fun Content(
                 FavouritesListItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(4.dp)
+                        .padding(start = 4.dp, end = 4.dp)
                         .clickable {
                             onFavouriteClick(item.id)
                         },
