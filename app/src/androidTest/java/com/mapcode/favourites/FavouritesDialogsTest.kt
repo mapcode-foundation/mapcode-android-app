@@ -24,7 +24,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.Rule
 import org.junit.Test
 
-class FavouritesNameDialogTest {
+class FavouritesDialogsTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -66,12 +66,10 @@ class FavouritesNameDialogTest {
 
     private fun setContent() {
         composeTestRule.setContent {
-            FavouritesNameDialog(
+            CreateFavouriteDialog(
                 name = name,
                 mapcode = mapcode,
-                onNameChange = {
-                    name = it
-                },
+                onNameChange = { name = it },
                 onDismiss = { }) {
             }
         }

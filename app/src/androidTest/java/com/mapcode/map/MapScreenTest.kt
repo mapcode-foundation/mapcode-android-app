@@ -778,11 +778,42 @@ class MapScreenTest {
     @Test
     fun prompt_to_save_location_when_clicking_favourites_and_no_favourites_are_saved() {
         setMapScreenAsContent()
-        
+
         useCase.favourites.value = emptyList()
-        
+
         composeTestRule.onNodeWithContentDescription("View saved locations").performClick()
         composeTestRule.onNodeWithText("Save a location first!").assertIsDisplayed()
+    }
+
+    @Test
+    fun show_confirmation_dialog_when_deleting_favourite() {
+        setMapScreenAsContent()
+
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+
+        composeTestRule.onNodeWithContentDescription("Delete location")
+
+        composeTestRule.onNodeWithText("Delete location").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Are you sure you want to delete this saved location?")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun delete_favourite_when_confirming_dialog() {
+        setMapScreenAsContent()
+
+        viewModel.onCameraMoved(0.0, 0.0, 0f)
+        useCase.favourites.value =
+            listOf(Favourite(id = "0", location = Location(0.0, 0.0), name = "fav"))
+
+        composeTestRule.onNodeWithContentDescription("Delete location")
+
+        composeTestRule.onNodeWithText("Delete location").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Yes").performClick()
+
+        assertThat(useCase.favourites.value).isEmpty()
     }
 
     private fun setMapScreenAsContent() {

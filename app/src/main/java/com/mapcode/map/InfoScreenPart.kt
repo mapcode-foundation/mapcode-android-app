@@ -46,7 +46,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
-import com.mapcode.favourites.FavouritesNameDialog
+import com.mapcode.favourites.CreateFavouriteDialog
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.util.ErrorText
 
@@ -94,7 +94,7 @@ fun InfoArea(
             }
         }
 
-        FavouritesNameDialog(
+        CreateFavouriteDialog(
             name = favouriteName,
             mapcode = mapcode,
             onNameChange = { favouriteName = it },

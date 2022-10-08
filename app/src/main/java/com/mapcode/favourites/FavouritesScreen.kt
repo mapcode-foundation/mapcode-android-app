@@ -113,7 +113,7 @@ private fun FavouritesScreen(
 
 @Preview
 @Composable
-private fun Preview() {
+private fun CreateFavouriteDialogPreview() {
     FavouritesScreen(
         favourites = listOf(
             FavouriteListItem("id0", "Bla", "NLD AB.XY")
@@ -130,19 +130,27 @@ private fun Content(
     onDeleteFavourite: (String) -> Unit,
     onFavouriteClick: (String) -> Unit = {}
 ) {
+    var showDeleteFavouriteDialog: Boolean by rememberSaveable { mutableStateOf(false) }
     var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
-    var editedFavourite: FavouriteListItem? by rememberSaveable { mutableStateOf(null) }
+    var dialogFavourite: FavouriteListItem? by rememberSaveable { mutableStateOf(null) }
 
     if (showFavouriteNameDialog) {
-        FavouritesNameDialog(
-            name = editedFavourite!!.name,
-            mapcode = editedFavourite!!.mapcode,
-            onNameChange = { editedFavourite = editedFavourite!!.copy(name = it) },
+        RenameFavouriteDialog(
+            name = dialogFavourite!!.name,
+            onNameChange = { dialogFavourite = dialogFavourite!!.copy(name = it) },
             onDismiss = { showFavouriteNameDialog = false },
             onSubmitClick = {
-                onChangeFavouriteName(editedFavourite!!.id, editedFavourite!!.name)
+                onChangeFavouriteName(dialogFavourite!!.id, dialogFavourite!!.name)
                 showFavouriteNameDialog = false
             })
+    }
+
+    if (showDeleteFavouriteDialog) {
+        DeleteFavouriteDialog(
+            favouriteName = dialogFavourite!!.name,
+            onConfirm = { onDeleteFavourite(dialogFavourite!!.id) },
+            onDismiss = { showDeleteFavouriteDialog = false }
+        )
     }
 
     Column(modifier) {
@@ -168,11 +176,12 @@ private fun Content(
                         onShareFavourite(item.id)
                     },
                     onEditClick = {
-                        editedFavourite = item
+                        dialogFavourite = item
                         showFavouriteNameDialog = true
                     },
                     onDeleteClick = {
-                        onDeleteFavourite(item.id)
+                        dialogFavourite = item
+                        showDeleteFavouriteDialog = true
                     }
                 )
             }

@@ -48,7 +48,7 @@ fun CustomDialog(
                         .wrapContentSize()
                         .padding(start = 24.dp, end = 24.dp),
                     text = title,
-                    style = MaterialTheme.typography.h6
+                    style = MaterialTheme.typography.subtitle1
                 )
                 Box(
                     Modifier

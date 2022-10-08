@@ -79,5 +79,10 @@
     <string name="add_favourite_dialog_mapcode">Mapcode: %s</string>
     <string name="add_favourite_dialog_clear_name_button">Clear name</string>
     <string name="no_favourites_snackbar">Save a location first!</string>
+    <string name="rename_favourite_dialog_title">Rename location</string>
+    <string name="delete_favourite_dialog_confirm_button">Yes</string>
+    <string name="delete_favourite_dialog_dismiss_button">Cancel</string>
+    <string name="delete_favourite_dialog_title">Delete location</string>
+    <string name="delete_favourite_dialog_text">Are you sure you want to delete %s?</string>
     <!--  Map screen  -->
 </resources>
