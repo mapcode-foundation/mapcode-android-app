@@ -24,7 +24,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,7 +42,6 @@ class FavouritesViewModel @Inject constructor(
     fun onShareClick(id: String) {
         viewModelScope.launch {
             val favourite = useCase.getFavourites().first().find { it.id == id } ?: return@launch
-            Timber.e(favourite.toString())
             useCase.share(
                 favouriteName = favourite.name,
                 mapcode = useCase.getMapcodes(favourite.location).first()
