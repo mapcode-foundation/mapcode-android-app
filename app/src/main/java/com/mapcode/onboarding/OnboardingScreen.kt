@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.mapcode.data
+package com.mapcode.onboarding
 
-import androidx.datastore.preferences.core.*
+import androidx.compose.runtime.Composable
+import com.ramcosta.composedestinations.annotation.Destination
 
-object Keys {
-    val lastLocationLatitude: Preferences.Key<Double> = doublePreferencesKey("last_location_lat")
-    val lastLocationLongitude: Preferences.Key<Double> = doublePreferencesKey("last_location_long")
-    val lastLocationZoom: Preferences.Key<Float> = floatPreferencesKey("last_location_zoom")
-    val favourites: Preferences.Key<Set<String>> = stringSetPreferencesKey("favourites")
-    val finishedOnboarding: Preferences.Key<Boolean> = booleanPreferencesKey("finished_onboarding")
+@Destination(start = true)
+@Composable
+fun OnboardingScreen() {
+
 }

@@ -22,11 +22,14 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.destinations.MapScreenDestination
+import com.mapcode.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.FavouritesScreen
 import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
@@ -55,10 +58,20 @@ fun MapcodeNavHost(
         else -> LayoutType.HorizontalInfoArea
     }
 
+    val appViewModel: AppViewModel = hiltViewModel()
+    val showOnboarding: Boolean by appViewModel.showOnboarding.collectAsState()
+
+    val startDestination = if (showOnboarding) {
+        OnboardingScreenDestination
+    } else {
+        MapScreenDestination
+    }
+
     DestinationsNavHost(
         navController = navController,
         navGraph = NavGraphs.root,
-        modifier = modifier
+        modifier = modifier,
+        startRoute = startDestination
     ) {
         composable(MapScreenDestination) {
             MapScreen(

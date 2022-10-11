@@ -62,7 +62,7 @@ import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
 import kotlinx.coroutines.launch
 
-@Destination(start = true)
+@Destination
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
