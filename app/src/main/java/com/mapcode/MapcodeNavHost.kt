@@ -18,6 +18,7 @@ package com.mapcode
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -34,6 +35,7 @@ import com.mapcode.favourites.FavouritesScreen
 import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapViewModel
+import com.mapcode.onboarding.OnboardingScreen
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.manualcomposablecalls.composable
 import com.ramcosta.composedestinations.scope.resultBackNavigator
@@ -90,6 +92,14 @@ fun MapcodeNavHost(
                     .statusBarsPadding(),
                 viewModel = hiltViewModel(),
                 resultBackNavigator = resultBackNavigator()
+            )
+        }
+
+        composable(OnboardingScreenDestination) {
+            OnboardingScreen(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
             )
         }
     }
