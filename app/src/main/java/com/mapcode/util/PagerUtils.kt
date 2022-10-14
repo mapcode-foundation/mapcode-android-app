@@ -20,19 +20,19 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.PagerState
 
 @OptIn(ExperimentalPagerApi::class)
-suspend fun PagerState.scrollToNextPage() {
+suspend fun PagerState.animateScrollToNextPage() {
     if (currentPage == pageCount - 1) {
         return
     }
 
-    scrollToPage(currentPage + 1)
+    animateScrollToPage(currentPage + 1)
 }
 
 @OptIn(ExperimentalPagerApi::class)
-suspend fun PagerState.scrollToPreviousPage() {
+suspend fun PagerState.animateScrollToPreviousPage() {
     if (currentPage == 0) {
         return
     }
 
-    scrollToPage(currentPage - 1)
+    animateScrollToPage(currentPage - 1)
 }

@@ -17,7 +17,9 @@
 package com.mapcode.onboarding
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ArrowForward
@@ -32,16 +34,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.HorizontalPagerIndicator
-import com.google.accompanist.pager.rememberPagerState
+import com.google.accompanist.pager.*
 import com.mapcode.R
-import com.mapcode.theme.Cyan500
-import com.mapcode.theme.LightBlue500
-import com.mapcode.theme.LightGreen500
-import com.mapcode.util.scrollToNextPage
-import com.mapcode.util.scrollToPreviousPage
+import com.mapcode.theme.*
+import com.mapcode.util.animateScrollToNextPage
+import com.mapcode.util.animateScrollToPreviousPage
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 
@@ -50,15 +47,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState()
-    val scope = rememberCoroutineScope()
 
-    val backgroundColor = when (pagerState.currentPage) {
-        0 -> LightBlue500
-        1 -> Cyan500
-        else -> LightGreen500
-    }
-
-    Surface(modifier = modifier, color = backgroundColor) {
+    Surface(modifier = modifier, color = backgroundColor(pagerState.currentPage)) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -77,60 +67,12 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            Row(
+            PageControls(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val contentColor = MaterialTheme.colors.contentColorFor(backgroundColor)
-
-                val previousPageButtonAlpha = if (pagerState.currentPage == 0) {
-                    0.0f
-                } else {
-                    1.0f
-                }
-
-                IconButton(
-                    modifier = Modifier.alpha(previousPageButtonAlpha),
-                    onClick = {
-                        scope.launch {
-                            pagerState.scrollToPreviousPage()
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowBack,
-                        contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
-                        tint = contentColor
-                    )
-                }
-
-                HorizontalPagerIndicator(
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                    pagerState = pagerState,
-                    inactiveColor = Color.White,
-                    activeColor = contentColor
-                )
-
-                IconButton(onClick = {
-                    scope.launch {
-                        pagerState.scrollToNextPage()
-                    }
-                }) {
-                    val icon = if (pagerState.currentPage == pagerState.pageCount - 1) {
-                        Icons.Outlined.Done
-                    } else {
-                        Icons.Outlined.ArrowForward
-                    }
-
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = stringResource(R.string.onboarding_next_page_content_description),
-                        tint = contentColor
-                    )
-                }
-            }
+                pagerState = pagerState
+            )
         }
     }
 }
@@ -139,6 +81,68 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun OnboardingScreenPreview() {
     OnboardingScreen(modifier = Modifier.fillMaxSize())
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+private fun PageControls(
+    modifier: Modifier,
+    pagerState: PagerState
+) {
+    val scope = rememberCoroutineScope()
+
+    val darkBackgroundColor = darkBackgroundColor(pagerState.currentPage)
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val previousPageButtonAlpha = if (pagerState.currentPage == 0) {
+            0.0f
+        } else {
+            1.0f
+        }
+
+        IconButton(
+            modifier = Modifier.alpha(previousPageButtonAlpha),
+            onClick = {
+                scope.launch {
+                    pagerState.animateScrollToPreviousPage()
+                }
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ArrowBack,
+                contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
+                tint = Color.White
+            )
+        }
+
+        HorizontalPagerIndicator(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            pagerState = pagerState,
+            inactiveColor = Color.White,
+            activeColor = darkBackgroundColor
+        )
+
+        IconButton(onClick = {
+            scope.launch {
+                pagerState.animateScrollToNextPage()
+            }
+        }) {
+            val icon = if (pagerState.currentPage == pagerState.pageCount - 1) {
+                Icons.Outlined.Done
+            } else {
+                Icons.Outlined.ArrowForward
+            }
+
+            Icon(
+                imageVector = icon,
+                contentDescription = stringResource(R.string.onboarding_next_page_content_description),
+                tint = Color.White
+            )
+        }
+    }
 }
 
 @Composable
@@ -154,4 +158,21 @@ private fun TerritoriesPage() {
 @Composable
 private fun LocationPermissionPage() {
 
+}
+
+private fun darkBackgroundColor(page: Int): Color {
+    return when (page) {
+        0 -> LightBlue900
+        1 -> Cyan900
+        else -> LightGreen900
+    }
+
+}
+
+private fun backgroundColor(page: Int): Color {
+    return when (page) {
+        0 -> LightBlue500
+        1 -> Cyan500
+        else -> LightGreen500
+    }
 }
