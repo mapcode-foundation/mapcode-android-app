@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.R
 import com.mapcode.theme.MapcodeColor
 import com.mapcode.util.Location
@@ -74,14 +73,6 @@ private fun FavouritesScreen(
     onDeleteFavourite: (String) -> Unit = {},
     onChangeFavouriteName: (String, String) -> Unit = { _, _ -> },
 ) {
-    val systemUiController = rememberSystemUiController()
-    val systemBarColor = MaterialTheme.colors.primary
-
-    DisposableEffect(systemUiController, systemBarColor) {
-        systemUiController.setNavigationBarColor(color = systemBarColor)
-        onDispose {}
-    }
-
     Scaffold(
         modifier = modifier,
         scaffoldState = rememberScaffoldState(),

@@ -84,5 +84,18 @@
     <string name="delete_favourite_dialog_dismiss_button">Cancel</string>
     <string name="delete_favourite_dialog_title">Delete location</string>
     <string name="delete_favourite_dialog_text">Are you sure you want to delete %s?</string>
+
+    <string name="onboarding_done_content_description">Finish tutorial</string>
+    <string name="onboarding_next_page_content_description">Next page</string>
+    <string name="onboarding_previous_page_content_description">Previous page</string>
+    <string name="onboarding_welcome_page_title">What is a mapcode?</string>
+    <string name="onboarding_welcome_page_text_1">Mapcodes are short, precise and easy to recognise codes that can be used to pinpoint any location on Earth, much like a normal address.</string>
+    <string name="onboarding_welcome_page_text_2">They are especially useful in areas where no addresses exist, or they are hard to find or incomplete.\n\nYou can use this app to find the Mapcode for any location on Earth and to convert between mapcodes, addresses and coordinates.\n\nUnlike other geographic location systems, mapcodes are backed by a non-commercial foundation, with a mission to keep mapcodes free and open-source for anyone to use! Tap \'learn more\' below to read more about the Mapcode Foundation\'s mission.</string>
+    <string name="onboarding_welcome_page_learn_more_button">Learn more</string>
+    <string name="onboarding_welcome_page_learn_more_url">https://www.mapcode.com/about</string>
+    <string name="onboarding_skip_button">Skip</string>
+    <string name="onboarding_territories_page_title">Territories</string>
+    <string name="onboarding_territories_page_text">A mapcode consists of a territory and a code. Every location has multiple codes for each territory that it is in and each code is unique in its territory, for example, San Fransisco has a California, USA, and International code. The international code is unique to the entire world but it is very long and hard to remember. So you are recommended to use the most local mapcode and omit the territory depending on who you are sharing it with. This is the same as normal addresses: you don\'t put the country when you share your home address with a friend that lives in the same town.\n\nInside the app you can tap the territory button below to cycle through all the mapcodes for a location. Have a go!</string>
+    <string name="onboarding_territories_click_territory_tooltip">Click me!</string>
     <!--  Map screen  -->
 </resources>

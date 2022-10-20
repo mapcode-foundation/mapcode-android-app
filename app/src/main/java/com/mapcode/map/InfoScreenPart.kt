@@ -334,25 +334,13 @@ private fun HorizontalInfoArea(
             onDeleteFavouriteClick = onDeleteFavouriteClick,
             isFavouriteLocation = state.isFavouriteLocation
         )
-        Row(Modifier.padding(top = 8.dp)) {
-            TerritoryBox(
-                modifier = Modifier
-                    .weight(0.5f)
-                    .padding(end = 8.dp)
-                    .clickable { onTerritoryClick() },
-                index = state.mapcodeUi.number,
-                count = state.mapcodeUi.count,
-                territoryName = state.mapcodeUi.territoryFullName
-            )
-            MapcodeBox(
-                Modifier
-                    .weight(0.5f)
-                    .padding(start = 8.dp)
-                    .clickable { onMapcodeClick() },
-                state.mapcodeUi.code,
-                state.mapcodeUi.territoryShortName
-            )
-        }
+
+        MapcodeButtons(
+            modifier = Modifier.padding(top = 8.dp),
+            state = state.mapcodeUi,
+            onTerritoryClick = onTerritoryClick,
+            onMapcodeClick = onMapcodeClick
+        )
 
         Row(
             Modifier
@@ -389,7 +377,7 @@ private fun HorizontalInfoArea(
  * The box that shows the territory.
  */
 @Composable
-private fun TerritoryBox(
+fun TerritoryBox(
     modifier: Modifier = Modifier,
     index: Int,
     count: Int,
@@ -566,7 +554,7 @@ private fun HeaderWithIcon(modifier: Modifier = Modifier, text: String, icon: Im
  * The box that shows the mapcode.
  */
 @Composable
-private fun MapcodeBox(
+fun MapcodeBox(
     modifier: Modifier = Modifier,
     code: String,
     territory: String?
@@ -599,5 +587,32 @@ private fun MapcodeBox(
 
             Text(text = styledString)
         }
+    }
+}
+
+@Composable
+fun MapcodeButtons(
+    modifier: Modifier = Modifier,
+    state: MapcodeUi,
+    onTerritoryClick: () -> Unit,
+    onMapcodeClick: () -> Unit
+) {
+    Row(modifier) {
+        TerritoryBox(
+            modifier = Modifier
+                .weight(0.5f)
+                .clickable { onTerritoryClick() },
+            index = state.number,
+            count = state.count,
+            territoryName = state.territoryFullName
+        )
+        Spacer(Modifier.width(16.dp))
+        MapcodeBox(
+            modifier = Modifier
+                .weight(0.5f)
+                .clickable { onMapcodeClick() },
+            code = state.code,
+            territory = state.territoryShortName
+        )
     }
 }

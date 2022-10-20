@@ -69,19 +69,7 @@ class MapViewModel @Inject constructor(
             if (mapcode == null) {
                 MapcodeUi("", "", "", 0, 0)
             } else {
-                val territoryName = if (mapcode.territory == Territory.AAA) {
-                    null
-                } else {
-                    mapcode.territory.name
-                }
-
-                MapcodeUi(
-                    mapcode.code,
-                    territoryName,
-                    mapcode.territory.fullName,
-                    mapcodeIndex + 1,
-                    mapcodes.size
-                )
+                MapcodeUi.fromMapcode(mapcode, mapcodeIndex, mapcodes.size)
             }
         }
 

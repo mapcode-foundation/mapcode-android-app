@@ -17,7 +17,14 @@
 package com.mapcode.util
 
 import com.mapcode.Mapcode
+import com.mapcode.MapcodeCodec
 import com.mapcode.Territory
+
+object MapcodeUtils {
+    fun GoogleHqMapcodes(): List<Mapcode> {
+        return MapcodeCodec.encode(37.4220935, -122.0839221).distinctBy { it.territory }
+    }
+}
 
 fun Mapcode.codeWithNoInternationalTerritory(): String {
     return if (territory == Territory.AAA) {

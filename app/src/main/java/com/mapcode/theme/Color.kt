@@ -16,8 +16,6 @@
 
 package com.mapcode.theme
 
-import androidx.compose.material.ButtonColors
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -25,6 +23,10 @@ import androidx.compose.ui.graphics.Color
 val LightBlue200 = Color(0xFF81D4FA)
 val LightBlue500 = Color(0xFF03A9F4)
 val LightBlue700 = Color(0xFF0288D1)
+val LightBlue900 = Color(0xFF01579B)
+val Cyan200 = Color(0xFF80DEEA)
+val Cyan500 = Color(0xFF00BCD4)
+val Cyan900 = Color(0xFF006064)
 val Green600 = Color(0xFF43A047)
 val Yellow300 = Color(0xFFFFF176)
 val Yellow500 = Color(0xFFFFEB3B)

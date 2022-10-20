@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package com.mapcode.data
+package com.mapcode.util
 
-import androidx.datastore.preferences.core.*
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
 
-object Keys {
-    val lastLocationLatitude: Preferences.Key<Double> = doublePreferencesKey("last_location_lat")
-    val lastLocationLongitude: Preferences.Key<Double> = doublePreferencesKey("last_location_long")
-    val lastLocationZoom: Preferences.Key<Float> = floatPreferencesKey("last_location_zoom")
-    val favourites: Preferences.Key<Set<String>> = stringSetPreferencesKey("favourites")
-    val finishedOnboarding: Preferences.Key<Boolean> = booleanPreferencesKey("finished_onboarding")
+@OptIn(ExperimentalPagerApi::class)
+suspend fun PagerState.animateScrollToNextPage() {
+    if (currentPage == pageCount - 1) {
+        return
+    }
+
+    animateScrollToPage(currentPage + 1)
 }
+
+@OptIn(ExperimentalPagerApi::class)
+suspend fun PagerState.animateScrollToPreviousPage() {
+    if (currentPage == 0) {
+        return
+    }
+
+    animateScrollToPage(currentPage - 1)
+}
+
+@OptIn(ExperimentalPagerApi::class)
+fun PagerState.isLastPage(): Boolean = this.currentPage == this.pageCount - 1
