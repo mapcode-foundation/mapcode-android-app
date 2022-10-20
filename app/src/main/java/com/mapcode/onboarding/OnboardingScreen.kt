@@ -22,11 +22,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,9 +42,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
 import com.mapcode.AppViewModel
+import com.mapcode.Mapcode
 import com.mapcode.R
 import com.mapcode.destinations.MapScreenDestination
+import com.mapcode.map.MapcodeButtons
+import com.mapcode.map.MapcodeUi
 import com.mapcode.theme.*
+import com.mapcode.util.MapcodeUtils
 import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
 import com.mapcode.util.isLastPage
@@ -103,8 +105,10 @@ private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: 
                 ) { page ->
                     when (page) {
                         0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
-                        1 -> TerritoriesPage(modifier = pageModifier)
-                        2 -> LocationPermissionPage(modifier = pageModifier)
+                        1 -> TerritoriesPage(modifier = pageModifier, pageColors = pageColors)
+                        2 -> LocationPermissionPage(
+                            modifier = pageModifier
+                        )
                     }
                 }
 
@@ -148,7 +152,9 @@ private fun calculatePageColor(currentPage: Int, pageOffset: Float): Color {
 @Preview(device = Devices.PIXEL_3)
 @Composable
 private fun OnboardingScreenPreview() {
-    OnboardingScreen(modifier = Modifier.fillMaxSize(), onFinishOnboarding = {})
+    MapcodeTheme {
+        OnboardingScreen(modifier = Modifier.fillMaxSize(), onFinishOnboarding = {})
+    }
 }
 
 @OptIn(ExperimentalPagerApi::class)
@@ -234,6 +240,24 @@ private fun PreviousPageButton(modifier: Modifier = Modifier, onClick: () -> Uni
 }
 
 @Composable
+private fun PageButton(modifier: Modifier, pageColors: PageColors, onClick: () -> Unit) {
+    val contentColor = MaterialTheme.colors.contentColorFor(pageColors.backgroundDark)
+
+    val buttonColors = ButtonDefaults.buttonColors(
+        backgroundColor = pageColors.backgroundDark,
+        contentColor = contentColor
+    )
+
+    Button(
+        modifier = modifier,
+        onClick = onClick,
+        colors = buttonColors
+    ) {
+        Text(stringResource(R.string.onboarding_welcome_page_learn_more_button))
+    }
+}
+
+@Composable
 private fun WelcomePage(modifier: Modifier, pageColors: PageColors) {
     Column(modifier) {
         Image(
@@ -301,27 +325,99 @@ private fun WelcomePage(modifier: Modifier, pageColors: PageColors) {
 }
 
 @Composable
-private fun PageButton(modifier: Modifier, pageColors: PageColors, onClick: () -> Unit) {
-    val contentColor = MaterialTheme.colors.contentColorFor(pageColors.backgroundDark)
+private fun TerritoriesPage(modifier: Modifier, pageColors: PageColors) {
+    Column(modifier) {
+        Icon(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth()
+                .padding(32.dp)
+                .weight(0.3f),
+            imageVector = Icons.Outlined.PinDrop,
+            contentDescription = null,
+            tint = pageColors.foreground
+        )
 
-    val buttonColors = ButtonDefaults.buttonColors(
-        backgroundColor = pageColors.backgroundDark,
-        contentColor = contentColor
-    )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.1f),
+            text = stringResource(R.string.onboarding_territories_page_title),
+            style = MaterialTheme.typography.h4,
+            textAlign = TextAlign.Center,
+            color = pageColors.foreground
+        )
 
-    Button(
-        modifier = modifier,
-        onClick = onClick,
-        colors = buttonColors
-    ) {
-        Text(stringResource(R.string.onboarding_welcome_page_learn_more_button))
+        Column(
+            modifier = Modifier
+                .weight(0.4f)
+                .verticalScroll(state = rememberScrollState())
+        ) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.onboarding_territories_page_text),
+                style = MaterialTheme.typography.body1
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        TerritoriesPageButtons(pageColors = pageColors)
+    }
+}
+
+@Preview
+@Composable
+private fun TerritoriesPagePreview() {
+    MapcodeTheme {
+        Surface(color = pageColors(1).background) {
+            TerritoriesPage(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                pageColors = pageColors(1)
+            )
+        }
     }
 }
 
 @Composable
-private fun TerritoriesPage(modifier: Modifier) {
-    Column(modifier) {
+private fun TerritoriesPageButtons(modifier: Modifier = Modifier, pageColors: PageColors) {
+    val mapcodes: List<Mapcode> = remember { MapcodeUtils.GoogleHqMapcodes() }
+    var mapcodeIndex by rememberSaveable { mutableStateOf(0) }
 
+    val mapcodeUi: MapcodeUi by remember {
+        derivedStateOf {
+            MapcodeUi.fromMapcode(mapcodes[mapcodeIndex], mapcodeIndex, mapcodes.size)
+        }
+    }
+
+    Column(modifier) {
+        Row {
+            Spacer(Modifier.width(8.dp))
+
+            Text(
+                text = stringResource(R.string.onboarding_territories_click_territory_tooltip),
+                color = pageColors.foreground,
+                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold)
+            )
+
+            Icon(
+                imageVector = Icons.Outlined.KeyboardDoubleArrowDown,
+                contentDescription = null,
+                tint = pageColors.foreground
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        MapcodeButtons(
+            state = mapcodeUi,
+            onTerritoryClick = {
+                mapcodeIndex = (mapcodeIndex + 1) % mapcodes.size
+            },
+            onMapcodeClick = {}
+        )
     }
 }
 
@@ -341,8 +437,8 @@ private fun pageColors(page: Int): PageColors {
         )
         1 -> PageColors(
             foreground = Cyan900,
-            background = Cyan500,
-            backgroundDark = Cyan700
+            background = Cyan200,
+            backgroundDark = Cyan500
         )
         else -> PageColors(
             foreground = LightGreen900,

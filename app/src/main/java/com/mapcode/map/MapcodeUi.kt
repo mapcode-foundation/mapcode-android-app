@@ -16,6 +16,9 @@
 
 package com.mapcode.map
 
+import com.mapcode.Mapcode
+import com.mapcode.Territory
+
 data class MapcodeUi(
     val code: String,
     /**
@@ -37,4 +40,22 @@ data class MapcodeUi(
      * How many different territories have mapcodes for this location.
      */
     val count: Int
-)
+) {
+    companion object {
+        fun fromMapcode(mapcode: Mapcode, index: Int, numMapcodes: Int): MapcodeUi {
+            val territoryName = if (mapcode.territory == Territory.AAA) {
+                null
+            } else {
+                mapcode.territory.name
+            }
+
+            return MapcodeUi(
+                mapcode.code,
+                territoryName,
+                mapcode.territory.fullName,
+                index + 1,
+                numMapcodes
+            )
+        }
+    }
+}
