@@ -66,7 +66,7 @@ fun WelcomePageVertical(modifier: Modifier, pageColors: PageColors) {
 
         WelcomeText(
             modifier = Modifier
-                .weight(1f)
+                .weight(0.4f)
                 .verticalScroll(state = rememberScrollState()),
             pageColors = pageColors
         )
