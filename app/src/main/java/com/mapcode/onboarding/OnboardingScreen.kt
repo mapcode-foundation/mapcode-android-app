@@ -65,7 +65,7 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize()
         ) {
             val pageModifier = Modifier
-                .padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 16.dp)
+                .padding(start = 32.dp, end = 32.dp, top = 16.dp)
                 .fillMaxSize()
 
             HorizontalPager(
@@ -190,7 +190,7 @@ private fun WelcomePage(modifier: Modifier, pageColors: PageColors) {
         ) {
             val text = buildAnnotatedString {
                 pushStyle(
-                    MaterialTheme.typography.body1
+                    MaterialTheme.typography.subtitle1
                         .copy(fontWeight = FontWeight.W600, color = pageColors.foreground)
                         .toSpanStyle()
                 )
