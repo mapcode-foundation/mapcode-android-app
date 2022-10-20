@@ -408,13 +408,15 @@ private fun TerritoriesPageButtons(modifier: Modifier = Modifier, pageColors: Pa
 
         Spacer(Modifier.height(8.dp))
 
-        MapcodeButtons(
-            state = mapcodeUi,
-            onTerritoryClick = {
-                mapcodeIndex = (mapcodeIndex + 1) % mapcodes.size
-            },
-            onMapcodeClick = {}
-        )
+        MapcodeTheme(darkTheme = false) {
+            MapcodeButtons(
+                state = mapcodeUi,
+                onTerritoryClick = {
+                    mapcodeIndex = (mapcodeIndex + 1) % mapcodes.size
+                },
+                onMapcodeClick = {}
+            )
+        }
     }
 }
 
