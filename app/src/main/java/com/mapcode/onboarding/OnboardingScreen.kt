@@ -94,18 +94,30 @@ private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: 
                 .padding(start = 32.dp, end = 32.dp, top = 16.dp)
                 .fillMaxSize()
 
-            HorizontalPager(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                count = 3,
-                userScrollEnabled = true,
-                state = pagerState
-            ) { page ->
-                when (page) {
-                    0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
-                    1 -> TerritoriesPage(modifier = pageModifier)
-                    2 -> LocationPermissionPage(modifier = pageModifier)
+            Box(modifier = Modifier.weight(1f)) {
+                HorizontalPager(
+                    modifier = Modifier.fillMaxWidth(),
+                    count = 3,
+                    userScrollEnabled = true,
+                    state = pagerState
+                ) { page ->
+                    when (page) {
+                        0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
+                        1 -> TerritoriesPage(modifier = pageModifier)
+                        2 -> LocationPermissionPage(modifier = pageModifier)
+                    }
+                }
+
+                TextButton(
+                    modifier = Modifier
+                        .align(alignment = Alignment.TopEnd)
+                        .padding(8.dp),
+                    onClick = onFinishOnboarding
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_skip_button),
+                        color = pageColors.foreground,
+                    )
                 }
             }
 

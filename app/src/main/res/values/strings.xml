@@ -93,5 +93,6 @@
     <string name="onboarding_welcome_page_text_2">They are especially useful in areas where no addresses exist, or they are hard to find or incomplete.\n\nYou can use this app to find the Mapcode for any location on Earth and to convert between mapcodes, addresses and coordinates.\n\nUnlike other geographic location systems, mapcodes are backed by a non-commercial foundation, with a mission to keep mapcodes free and open-source for anyone to use! Tap \'learn more\' below to read more about the Mapcode Foundation\'s mission.</string>
     <string name="onboarding_welcome_page_learn_more_button">Learn more</string>
     <string name="onboarding_welcome_page_learn_more_url">https://www.mapcode.com/about</string>
+    <string name="onboarding_skip_button">Skip</string>
     <!--  Map screen  -->
 </resources>
