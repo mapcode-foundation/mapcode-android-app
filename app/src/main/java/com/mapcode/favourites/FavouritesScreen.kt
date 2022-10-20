@@ -90,7 +90,8 @@ private fun FavouritesScreen(
         Content(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .systemBarsPadding(),
             favourites = favourites,
             onShareFavourite = onShareFavourite,
             onDeleteFavourite = onDeleteFavourite,
