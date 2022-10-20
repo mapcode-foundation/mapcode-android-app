@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -49,6 +50,7 @@ import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalPagerApi::class)
 @Destination(start = true)
@@ -58,11 +60,18 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
     val pageColors = pageColors(pagerState.currentPage)
 
     val systemUiController = rememberSystemUiController()
-    systemUiController.setSystemBarsColor(pageColors.background)
+    systemUiController.setStatusBarColor(Color.Transparent)
 
-    Surface(modifier = modifier, color = pageColors.background) {
+    val pageColor = calculatePageColor(
+        currentPage = pagerState.currentPage,
+        pageOffset = pagerState.currentPageOffset
+    )
+
+    Surface(modifier = modifier, color = pageColor) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
         ) {
             val pageModifier = Modifier
                 .padding(start = 32.dp, end = 32.dp, top = 16.dp)
@@ -90,6 +99,19 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
                 pagerState = pagerState
             )
         }
+    }
+}
+
+@Composable
+private fun calculatePageColor(currentPage: Int, pageOffset: Float): Color {
+    val currentPageColor = pageColors(currentPage).background
+
+    if (pageOffset < 0) {
+        val previousPageColor = pageColors(currentPage - 1).background
+        return lerp(currentPageColor, previousPageColor, fraction = pageOffset.absoluteValue)
+    } else {
+        val nextPageColor = pageColors(currentPage + 1).background
+        return lerp(currentPageColor, nextPageColor, fraction = pageOffset.absoluteValue)
     }
 }
 

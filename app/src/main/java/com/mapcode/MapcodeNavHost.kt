@@ -18,7 +18,6 @@ package com.mapcode
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -99,7 +98,6 @@ fun MapcodeNavHost(
             OnboardingScreen(
                 modifier = Modifier
                     .fillMaxSize()
-                    .systemBarsPadding()
             )
         }
     }
