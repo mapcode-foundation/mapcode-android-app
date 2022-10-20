@@ -16,10 +16,11 @@
 
 package com.mapcode.onboarding
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Surface
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ArrowForward
@@ -30,7 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,11 +54,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState()
+    val pageColors = pageColors(pagerState.currentPage)
 
-    Surface(modifier = modifier, color = backgroundColor(pagerState.currentPage)) {
+    Surface(modifier = modifier, color = pageColors.background) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+            val pageModifier = Modifier
+                .padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 16.dp)
+                .fillMaxSize()
+
             HorizontalPager(
                 modifier = Modifier
                     .weight(1f)
@@ -61,9 +73,9 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
                 state = pagerState
             ) { page ->
                 when (page) {
-                    0 -> WelcomePage()
-                    1 -> TerritoriesPage()
-                    2 -> LocationPermissionPage()
+                    0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
+                    1 -> TerritoriesPage(modifier = pageModifier)
+                    2 -> LocationPermissionPage(modifier = pageModifier)
                 }
             }
 
@@ -91,7 +103,7 @@ private fun PageControls(
 ) {
     val scope = rememberCoroutineScope()
 
-    val darkBackgroundColor = darkBackgroundColor(pagerState.currentPage)
+    val darkBackgroundColor = pageColors(pagerState.currentPage).backgroundDark
 
     Row(
         modifier = modifier,
@@ -146,33 +158,120 @@ private fun PageControls(
 }
 
 @Composable
-private fun WelcomePage() {
+private fun WelcomePage(modifier: Modifier, pageColors: PageColors) {
+    Column(modifier) {
+        Image(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .weight(0.3f),
+            painter = painterResource(R.mipmap.ic_launcher_foreground),
+            contentDescription = null,
+            contentScale = ContentScale.FillHeight
+        )
 
-}
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.1f),
+            text = stringResource(R.string.onboarding_welcome_page_title),
+            style = MaterialTheme.typography.h4,
+            textAlign = TextAlign.Center,
+            color = pageColors.foreground
+        )
 
-@Composable
-private fun TerritoriesPage() {
+        Column(
+            modifier = Modifier
+                .weight(0.4f)
+                .verticalScroll(state = rememberScrollState())
+        ) {
+            val text = buildAnnotatedString {
+                pushStyle(
+                    MaterialTheme.typography.body1
+                        .copy(fontWeight = FontWeight.W600, color = pageColors.foreground)
+                        .toSpanStyle()
+                )
+                append(stringResource(R.string.onboarding_welcome_page_text_1))
+                pop()
 
-}
+                append("\n\n")
 
-@Composable
-private fun LocationPermissionPage() {
+                val normalTextColor = MaterialTheme.colors.contentColorFor(pageColors.background)
+                val normalTextStyle =
+                    MaterialTheme.typography.body1.copy(color = normalTextColor).toSpanStyle()
 
-}
+                pushStyle(normalTextStyle)
+                append(stringResource(R.string.onboarding_welcome_page_text_2))
+                pop()
+            }
 
-private fun darkBackgroundColor(page: Int): Color {
-    return when (page) {
-        0 -> LightBlue900
-        1 -> Cyan900
-        else -> LightGreen900
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = text,
+                style = MaterialTheme.typography.body1
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        val learnMoreUrl = stringResource(R.string.onboarding_welcome_page_learn_more_url)
+        val uriHandler = LocalUriHandler.current
+
+        PageButton(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            pageColors = pageColors,
+            onClick = { uriHandler.openUri(learnMoreUrl) }
+        )
     }
-
 }
 
-private fun backgroundColor(page: Int): Color {
+@Composable
+private fun PageButton(modifier: Modifier, pageColors: PageColors, onClick: () -> Unit) {
+    val contentColor = MaterialTheme.colors.contentColorFor(pageColors.backgroundDark)
+
+    val buttonColors = ButtonDefaults.buttonColors(
+        backgroundColor = pageColors.backgroundDark,
+        contentColor = contentColor
+    )
+
+    Button(
+        modifier = modifier,
+        onClick = onClick,
+        colors = buttonColors
+    ) {
+        Text(stringResource(R.string.onboarding_welcome_page_learn_more_button))
+    }
+}
+
+@Composable
+private fun TerritoriesPage(modifier: Modifier) {
+    Column(modifier) {
+
+    }
+}
+
+@Composable
+private fun LocationPermissionPage(modifier: Modifier) {
+    Column(modifier) {
+
+    }
+}
+
+private fun pageColors(page: Int): PageColors {
     return when (page) {
-        0 -> LightBlue500
-        1 -> Cyan500
-        else -> LightGreen500
+        0 -> PageColors(
+            foreground = LightBlue900,
+            background = LightBlue200,
+            backgroundDark = LightBlue500
+        )
+        1 -> PageColors(
+            foreground = Cyan900,
+            background = Cyan500,
+            backgroundDark = Cyan700
+        )
+        else -> PageColors(
+            foreground = LightGreen900,
+            background = LightGreen500,
+            backgroundDark = LightGreen700
+        )
     }
 }
