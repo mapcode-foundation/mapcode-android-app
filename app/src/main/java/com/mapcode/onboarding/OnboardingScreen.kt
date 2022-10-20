@@ -99,16 +99,13 @@ private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: 
             Box(modifier = Modifier.weight(1f)) {
                 HorizontalPager(
                     modifier = Modifier.fillMaxWidth(),
-                    count = 3,
+                    count = 2,
                     userScrollEnabled = true,
                     state = pagerState
                 ) { page ->
                     when (page) {
                         0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
                         1 -> TerritoriesPage(modifier = pageModifier, pageColors = pageColors)
-                        2 -> LocationPermissionPage(
-                            modifier = pageModifier
-                        )
                     }
                 }
 
@@ -421,13 +418,6 @@ private fun TerritoriesPageButtons(modifier: Modifier = Modifier, pageColors: Pa
     }
 }
 
-@Composable
-private fun LocationPermissionPage(modifier: Modifier) {
-    Column(modifier) {
-
-    }
-}
-
 private fun pageColors(page: Int): PageColors {
     return when (page) {
         0 -> PageColors(
@@ -435,15 +425,10 @@ private fun pageColors(page: Int): PageColors {
             background = LightBlue200,
             backgroundDark = LightBlue500
         )
-        1 -> PageColors(
+        else -> PageColors(
             foreground = Cyan900,
             background = Cyan200,
             backgroundDark = Cyan500
-        )
-        else -> PageColors(
-            foreground = LightGreen900,
-            background = LightGreen500,
-            backgroundDark = LightGreen700
         )
     }
 }
