@@ -95,7 +95,7 @@
     <string name="onboarding_welcome_page_learn_more_url">https://www.mapcode.com/about</string>
     <string name="onboarding_skip_button">Skip</string>
     <string name="onboarding_territories_page_title">Territories</string>
-    <string name="onboarding_territories_page_text">Every mapcode consists of a territory and a code. To keep mapcodes short, many places can have the same code and so the territory says in which country and/or state the code is in. This is the same reason why you put more than just your house number and street on a typical address.\n\nInside the app you can tap the territory button below to cycle through all the mapcodes for a location. Have a go!</string>
+    <string name="onboarding_territories_page_text">A mapcode consists of a territory and a code. Every location has multiple codes for each territory that it is in and each code is unique in its territory, for example, San Fransisco has a California, USA, and International code. The international code is unique to the entire world but it is very long and hard to remember. So you are recommended to use the most local mapcode and omit the territory depending on who you are sharing it with. This is the same as normal addresses: you don\'t put the country when you share your home address with a friend that lives in the same town.\n\nInside the app you can tap the territory button below to cycle through all the mapcodes for a location. Have a go!</string>
     <string name="onboarding_territories_click_territory_tooltip">Click me!</string>
     <!--  Map screen  -->
 </resources>
