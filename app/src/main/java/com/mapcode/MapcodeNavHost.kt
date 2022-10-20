@@ -96,8 +96,9 @@ fun MapcodeNavHost(
 
         composable(OnboardingScreenDestination) {
             OnboardingScreen(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                viewModel = appViewModel,
+                navigator = destinationsNavigator
             )
         }
     }

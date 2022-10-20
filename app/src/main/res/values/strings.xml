@@ -85,6 +85,7 @@
     <string name="delete_favourite_dialog_title">Delete location</string>
     <string name="delete_favourite_dialog_text">Are you sure you want to delete %s?</string>
 
+    <string name="onboarding_done_content_description">Finish tutorial</string>
     <string name="onboarding_next_page_content_description">Next page</string>
     <string name="onboarding_previous_page_content_description">Previous page</string>
     <string name="onboarding_welcome_page_title">What is a mapcode?</string>

@@ -36,3 +36,6 @@ suspend fun PagerState.animateScrollToPreviousPage() {
 
     animateScrollToPage(currentPage - 1)
 }
+
+@OptIn(ExperimentalPagerApi::class)
+fun PagerState.isLastPage(): Boolean = this.currentPage == this.pageCount - 1

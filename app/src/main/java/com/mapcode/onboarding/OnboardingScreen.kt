@@ -44,18 +44,39 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.mapcode.AppViewModel
 import com.mapcode.R
+import com.mapcode.destinations.MapScreenDestination
 import com.mapcode.theme.*
 import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
+import com.mapcode.util.isLastPage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalPagerApi::class)
+
 @Destination(start = true)
 @Composable
-fun OnboardingScreen(modifier: Modifier = Modifier) {
+fun OnboardingScreen(
+    modifier: Modifier = Modifier,
+    viewModel: AppViewModel,
+    navigator: DestinationsNavigator
+) {
+    OnboardingScreen(
+        modifier = modifier,
+        onFinishOnboarding = {
+            viewModel.onFinishOnboarding()
+            navigator.navigate(MapScreenDestination.route)
+            navigator.popBackStack()
+        }
+    )
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: () -> Unit) {
     val pagerState = rememberPagerState()
     val pageColors = pageColors(pagerState.currentPage)
 
@@ -96,7 +117,8 @@ fun OnboardingScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                pagerState = pagerState
+                pagerState = pagerState,
+                onDoneClick = onFinishOnboarding
             )
         }
     }
@@ -118,14 +140,15 @@ private fun calculatePageColor(currentPage: Int, pageOffset: Float): Color {
 @Preview(device = Devices.PIXEL_3)
 @Composable
 private fun OnboardingScreenPreview() {
-    OnboardingScreen(modifier = Modifier.fillMaxSize())
+    OnboardingScreen(modifier = Modifier.fillMaxSize(), onFinishOnboarding = {})
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 private fun PageControls(
     modifier: Modifier,
-    pagerState: PagerState
+    pagerState: PagerState,
+    onDoneClick: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -141,20 +164,14 @@ private fun PageControls(
             1.0f
         }
 
-        IconButton(
+        PreviousPageButton(
             modifier = Modifier.alpha(previousPageButtonAlpha),
             onClick = {
                 scope.launch {
                     pagerState.animateScrollToPreviousPage()
                 }
             }
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowBack,
-                contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
-                tint = Color.White
-            )
-        }
+        )
 
         HorizontalPagerIndicator(
             modifier = Modifier.align(Alignment.CenterVertically),
@@ -163,23 +180,48 @@ private fun PageControls(
             activeColor = darkBackgroundColor
         )
 
-        IconButton(onClick = {
-            scope.launch {
-                pagerState.animateScrollToNextPage()
+        if (pagerState.isLastPage()) {
+            DoneButton(onClick = onDoneClick)
+        } else {
+            NextPageButton {
+                scope.launch {
+                    pagerState.animateScrollToNextPage()
+                }
             }
-        }) {
-            val icon = if (pagerState.currentPage == pagerState.pageCount - 1) {
-                Icons.Outlined.Done
-            } else {
-                Icons.Outlined.ArrowForward
-            }
-
-            Icon(
-                imageVector = icon,
-                contentDescription = stringResource(R.string.onboarding_next_page_content_description),
-                tint = Color.White
-            )
         }
+    }
+}
+
+@Composable
+private fun DoneButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    IconButton(modifier = modifier, onClick = onClick) {
+        Icon(
+            imageVector = Icons.Outlined.Done,
+            contentDescription = stringResource(R.string.onboarding_done_content_description),
+            tint = Color.White
+        )
+    }
+}
+
+@Composable
+private fun NextPageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    IconButton(modifier = modifier, onClick = onClick) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowForward,
+            contentDescription = stringResource(R.string.onboarding_next_page_content_description),
+            tint = Color.White
+        )
+    }
+}
+
+@Composable
+private fun PreviousPageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    IconButton(modifier = modifier, onClick = onClick) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowBack,
+            contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
+            tint = Color.White
+        )
     }
 }
 
