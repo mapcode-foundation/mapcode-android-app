@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.R
 import com.mapcode.theme.*
 import com.mapcode.util.animateScrollToNextPage
@@ -55,6 +56,9 @@ import kotlinx.coroutines.launch
 fun OnboardingScreen(modifier: Modifier = Modifier) {
     val pagerState = rememberPagerState()
     val pageColors = pageColors(pagerState.currentPage)
+
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setSystemBarsColor(pageColors.background)
 
     Surface(modifier = modifier, color = pageColors.background) {
         Column(
