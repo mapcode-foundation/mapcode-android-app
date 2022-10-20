@@ -43,7 +43,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.mapcode.AppViewModel
 import com.mapcode.R
 import com.mapcode.destinations.MapScreenDestination
@@ -79,9 +78,6 @@ fun OnboardingScreen(
 private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: () -> Unit) {
     val pagerState = rememberPagerState()
     val pageColors = pageColors(pagerState.currentPage)
-
-    val systemUiController = rememberSystemUiController()
-    systemUiController.setStatusBarColor(Color.Transparent)
 
     val pageColor = calculatePageColor(
         currentPage = pagerState.currentPage,
