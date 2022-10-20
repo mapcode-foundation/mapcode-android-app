@@ -17,33 +17,27 @@
 package com.mapcode.onboarding
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Done
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
 import com.mapcode.AppViewModel
-import com.mapcode.Mapcode
 import com.mapcode.R
 import com.mapcode.destinations.MapScreenDestination
-import com.mapcode.map.MapcodeButtons
-import com.mapcode.map.MapcodeUi
 import com.mapcode.theme.*
-import com.mapcode.util.MapcodeUtils
 import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
 import com.mapcode.util.isLastPage
@@ -142,7 +136,7 @@ private fun Pager(state: PagerState, layoutType: OnboardingScreenLayoutType) {
                         modifier = pageModifier,
                         pageColors = pageColors
                     )
-                    1 -> TerritoriesPage(
+                    1 -> TerritoriesPageVertical(
                         modifier = pageModifier,
                         pageColors = pageColors
                     )
@@ -154,7 +148,7 @@ private fun Pager(state: PagerState, layoutType: OnboardingScreenLayoutType) {
                         modifier = pageModifier,
                         pageColors = pageColors
                     )
-                    1 -> TerritoriesPage(
+                    1 -> TerritoriesPageHorizontal(
                         modifier = pageModifier,
                         pageColors = pageColors
                     )
@@ -267,120 +261,6 @@ private fun PreviousPageButton(modifier: Modifier = Modifier, onClick: () -> Uni
             contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
             tint = Color.White
         )
-    }
-}
-
-@Composable
-private fun TerritoriesPage(modifier: Modifier, pageColors: PageColors) {
-    Column(modifier) {
-        Icon(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .fillMaxWidth()
-                .padding(32.dp)
-                .weight(0.3f),
-            imageVector = Icons.Outlined.PinDrop,
-            contentDescription = null,
-            tint = pageColors.foreground
-        )
-
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.1f),
-            text = stringResource(R.string.onboarding_territories_page_title),
-            style = MaterialTheme.typography.h4,
-            textAlign = TextAlign.Center,
-            color = pageColors.foreground
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(0.4f)
-                .verticalScroll(state = rememberScrollState())
-        ) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.onboarding_territories_page_text),
-                style = MaterialTheme.typography.body1
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        TerritoriesPageButtons(pageColors = pageColors)
-    }
-}
-
-@Preview
-@Composable
-private fun TerritoriesPagePreview() {
-    MapcodeTheme {
-        Surface(color = pageColors(1).background) {
-            TerritoriesPage(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                pageColors = pageColors(1)
-            )
-        }
-    }
-}
-
-@Preview(widthDp = 800, heightDp = 300)
-@Composable
-private fun TerritoriesPageLandscapePreview() {
-    MapcodeTheme {
-        Surface(color = pageColors(1).background) {
-            TerritoriesPage(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                pageColors = pageColors(1)
-            )
-        }
-    }
-}
-
-@Composable
-private fun TerritoriesPageButtons(modifier: Modifier = Modifier, pageColors: PageColors) {
-    val mapcodes: List<Mapcode> = remember { MapcodeUtils.GoogleHqMapcodes() }
-    var mapcodeIndex by rememberSaveable { mutableStateOf(0) }
-
-    val mapcodeUi: MapcodeUi by remember {
-        derivedStateOf {
-            MapcodeUi.fromMapcode(mapcodes[mapcodeIndex], mapcodeIndex, mapcodes.size)
-        }
-    }
-
-    Column(modifier) {
-        Row {
-            Spacer(Modifier.width(8.dp))
-
-            Text(
-                text = stringResource(R.string.onboarding_territories_click_territory_tooltip),
-                color = pageColors.foreground,
-                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold)
-            )
-
-            Icon(
-                imageVector = Icons.Outlined.KeyboardDoubleArrowDown,
-                contentDescription = null,
-                tint = pageColors.foreground
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        MapcodeTheme(darkTheme = false) {
-            MapcodeButtons(
-                state = mapcodeUi,
-                onTerritoryClick = {
-                    mapcodeIndex = (mapcodeIndex + 1) % mapcodes.size
-                },
-                onMapcodeClick = {}
-            )
-        }
     }
 }
 
