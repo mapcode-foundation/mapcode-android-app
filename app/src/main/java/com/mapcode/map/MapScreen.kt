@@ -72,7 +72,7 @@ fun MapScreen(
      * This option makes instrumentation tests much quicker and easier to implement.
      */
     renderGoogleMaps: Boolean = true,
-    layoutType: LayoutType = LayoutType.HorizontalInfoArea
+    layoutType: MapScreenLayoutType = MapScreenLayoutType.HorizontalInfoArea
 ) {
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -115,7 +115,7 @@ fun MapScreen(
             scaffoldState = scaffoldState
         ) { padding ->
             when (layoutType) {
-                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
+                MapScreenLayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
                     Modifier
                         .padding(padding)
                         .fillMaxSize(),
@@ -124,7 +124,7 @@ fun MapScreen(
                     showSnackbar,
                     renderGoogleMaps
                 )
-                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
+                MapScreenLayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
                     Modifier
                         .padding(padding)
                         .fillMaxSize(),
@@ -133,7 +133,7 @@ fun MapScreen(
                     showSnackbar,
                     renderGoogleMaps
                 )
-                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
+                MapScreenLayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
                     Modifier.padding(padding),
                     viewModel,
                     navigator,

@@ -16,7 +16,6 @@
 
 package com.mapcode.onboarding
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,11 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
@@ -63,7 +58,8 @@ import kotlin.math.absoluteValue
 fun OnboardingScreen(
     modifier: Modifier = Modifier,
     viewModel: AppViewModel,
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    layoutType: OnboardingScreenLayoutType = OnboardingScreenLayoutType.Vertical
 ) {
     OnboardingScreen(
         modifier = modifier,
@@ -71,13 +67,18 @@ fun OnboardingScreen(
             viewModel.onFinishOnboarding()
             navigator.navigate(MapScreenDestination.route)
             navigator.popBackStack()
-        }
+        },
+        layoutType = layoutType
     )
 }
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: () -> Unit) {
+private fun OnboardingScreen(
+    modifier: Modifier = Modifier,
+    onFinishOnboarding: () -> Unit,
+    layoutType: OnboardingScreenLayoutType
+) {
     val pagerState = rememberPagerState()
     val pageColors = pageColors(pagerState.currentPage)
 
@@ -92,22 +93,8 @@ private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: 
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            val pageModifier = Modifier
-                .padding(start = 32.dp, end = 32.dp, top = 16.dp)
-                .fillMaxSize()
-
             Box(modifier = Modifier.weight(1f)) {
-                HorizontalPager(
-                    modifier = Modifier.fillMaxWidth(),
-                    count = 2,
-                    userScrollEnabled = true,
-                    state = pagerState
-                ) { page ->
-                    when (page) {
-                        0 -> WelcomePage(modifier = pageModifier, pageColors = pageColors)
-                        1 -> TerritoriesPage(modifier = pageModifier, pageColors = pageColors)
-                    }
-                }
+                Pager(state = pagerState, layoutType = layoutType)
 
                 TextButton(
                     modifier = Modifier
@@ -133,6 +120,49 @@ private fun OnboardingScreen(modifier: Modifier = Modifier, onFinishOnboarding: 
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+private fun Pager(state: PagerState, layoutType: OnboardingScreenLayoutType) {
+    val pageModifier = Modifier
+        .padding(start = 32.dp, end = 32.dp, top = 16.dp)
+        .fillMaxSize()
+
+    val pageColors = pageColors(state.currentPage)
+
+    HorizontalPager(
+        modifier = Modifier.fillMaxWidth(),
+        count = 2,
+        userScrollEnabled = true,
+        state = state
+    ) { page ->
+        when (layoutType) {
+            OnboardingScreenLayoutType.Vertical ->
+                when (page) {
+                    0 -> WelcomePageVertical(
+                        modifier = pageModifier,
+                        pageColors = pageColors
+                    )
+                    1 -> TerritoriesPage(
+                        modifier = pageModifier,
+                        pageColors = pageColors
+                    )
+                }
+
+            OnboardingScreenLayoutType.Horizontal ->
+                when (page) {
+                    0 -> WelcomePageHorizontal(
+                        modifier = pageModifier,
+                        pageColors = pageColors
+                    )
+                    1 -> TerritoriesPage(
+                        modifier = pageModifier,
+                        pageColors = pageColors
+                    )
+                }
+        }
+    }
+}
+
 @Composable
 private fun calculatePageColor(currentPage: Int, pageOffset: Float): Color {
     val currentPageColor = pageColors(currentPage).background
@@ -150,7 +180,11 @@ private fun calculatePageColor(currentPage: Int, pageOffset: Float): Color {
 @Composable
 private fun OnboardingScreenPreview() {
     MapcodeTheme {
-        OnboardingScreen(modifier = Modifier.fillMaxSize(), onFinishOnboarding = {})
+        OnboardingScreen(
+            modifier = Modifier.fillMaxSize(),
+            onFinishOnboarding = {},
+            layoutType = OnboardingScreenLayoutType.Vertical
+        )
     }
 }
 
@@ -237,91 +271,6 @@ private fun PreviousPageButton(modifier: Modifier = Modifier, onClick: () -> Uni
 }
 
 @Composable
-private fun PageButton(modifier: Modifier, pageColors: PageColors, onClick: () -> Unit) {
-    val contentColor = MaterialTheme.colors.contentColorFor(pageColors.backgroundDark)
-
-    val buttonColors = ButtonDefaults.buttonColors(
-        backgroundColor = pageColors.backgroundDark,
-        contentColor = contentColor
-    )
-
-    Button(
-        modifier = modifier,
-        onClick = onClick,
-        colors = buttonColors
-    ) {
-        Text(stringResource(R.string.onboarding_welcome_page_learn_more_button))
-    }
-}
-
-@Composable
-private fun WelcomePage(modifier: Modifier, pageColors: PageColors) {
-    Column(modifier) {
-        Image(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .weight(0.3f),
-            painter = painterResource(R.mipmap.ic_launcher_foreground),
-            contentDescription = null,
-            contentScale = ContentScale.FillHeight
-        )
-
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(0.1f),
-            text = stringResource(R.string.onboarding_welcome_page_title),
-            style = MaterialTheme.typography.h4,
-            textAlign = TextAlign.Center,
-            color = pageColors.foreground
-        )
-
-        Column(
-            modifier = Modifier
-                .weight(0.4f)
-                .verticalScroll(state = rememberScrollState())
-        ) {
-            val text = buildAnnotatedString {
-                pushStyle(
-                    MaterialTheme.typography.subtitle1
-                        .copy(fontWeight = FontWeight.W600, color = pageColors.foreground)
-                        .toSpanStyle()
-                )
-                append(stringResource(R.string.onboarding_welcome_page_text_1))
-                pop()
-
-                append("\n\n")
-
-                val normalTextColor = MaterialTheme.colors.contentColorFor(pageColors.background)
-                val normalTextStyle =
-                    MaterialTheme.typography.body1.copy(color = normalTextColor).toSpanStyle()
-
-                pushStyle(normalTextStyle)
-                append(stringResource(R.string.onboarding_welcome_page_text_2))
-                pop()
-            }
-
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = text,
-                style = MaterialTheme.typography.body1
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        val learnMoreUrl = stringResource(R.string.onboarding_welcome_page_learn_more_url)
-        val uriHandler = LocalUriHandler.current
-
-        PageButton(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            pageColors = pageColors,
-            onClick = { uriHandler.openUri(learnMoreUrl) }
-        )
-    }
-}
-
-@Composable
 private fun TerritoriesPage(modifier: Modifier, pageColors: PageColors) {
     Column(modifier) {
         Icon(
@@ -366,6 +315,21 @@ private fun TerritoriesPage(modifier: Modifier, pageColors: PageColors) {
 @Preview
 @Composable
 private fun TerritoriesPagePreview() {
+    MapcodeTheme {
+        Surface(color = pageColors(1).background) {
+            TerritoriesPage(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                pageColors = pageColors(1)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 800, heightDp = 300)
+@Composable
+private fun TerritoriesPageLandscapePreview() {
     MapcodeTheme {
         Surface(color = pageColors(1).background) {
             TerritoriesPage(

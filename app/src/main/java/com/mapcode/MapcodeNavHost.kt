@@ -34,10 +34,11 @@ import com.mapcode.destinations.FavouritesScreenDestination
 import com.mapcode.destinations.MapScreenDestination
 import com.mapcode.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.FavouritesScreen
-import com.mapcode.map.LayoutType
 import com.mapcode.map.MapScreen
+import com.mapcode.map.MapScreenLayoutType
 import com.mapcode.map.MapViewModel
 import com.mapcode.onboarding.OnboardingScreen
+import com.mapcode.onboarding.OnboardingScreenLayoutType
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.manualcomposablecalls.composable
 import com.ramcosta.composedestinations.scope.resultBackNavigator
@@ -62,18 +63,6 @@ fun MapcodeNavHost(
         systemUiController.setNavigationBarColor(color = Color.Black, darkIcons = false)
     }
 
-    val layoutType: LayoutType = when {
-        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
-            && windowSizeClass.widthSizeClass < WindowWidthSizeClass.Expanded -> LayoutType.VerticalInfoArea
-
-        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
-            && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded -> LayoutType.FloatingInfoArea
-
-        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact -> LayoutType.HorizontalInfoArea
-        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded -> LayoutType.FloatingInfoArea
-        else -> LayoutType.HorizontalInfoArea
-    }
-
     val appViewModel: AppViewModel = hiltViewModel()
     val showOnboarding: Boolean by appViewModel.showOnboarding.collectAsState()
 
@@ -93,7 +82,7 @@ fun MapcodeNavHost(
             MapScreen(
                 Modifier.fillMaxSize(),
                 mapViewModel,
-                layoutType = layoutType,
+                layoutType = determineMapScreenLayout(windowSizeClass),
                 navigator = destinationsNavigator,
                 resultRecipient = resultRecipient()
             )
@@ -111,8 +100,30 @@ fun MapcodeNavHost(
             OnboardingScreen(
                 modifier = Modifier.fillMaxSize(),
                 viewModel = appViewModel,
-                navigator = destinationsNavigator
+                navigator = destinationsNavigator,
+                layoutType = determineOnboardingScreenLayout(windowSizeClass)
             )
         }
+    }
+}
+
+private fun determineOnboardingScreenLayout(windowSizeClass: WindowSizeClass): OnboardingScreenLayoutType {
+    return when {
+        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact -> OnboardingScreenLayoutType.Horizontal
+        else -> OnboardingScreenLayoutType.Vertical
+    }
+}
+
+private fun determineMapScreenLayout(windowSizeClass: WindowSizeClass): MapScreenLayoutType {
+    return when {
+        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
+            && windowSizeClass.widthSizeClass < WindowWidthSizeClass.Expanded -> MapScreenLayoutType.VerticalInfoArea
+
+        windowSizeClass.heightSizeClass == WindowHeightSizeClass.Compact
+            && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded -> MapScreenLayoutType.FloatingInfoArea
+
+        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact -> MapScreenLayoutType.HorizontalInfoArea
+        windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded -> MapScreenLayoutType.FloatingInfoArea
+        else -> MapScreenLayoutType.HorizontalInfoArea
     }
 }

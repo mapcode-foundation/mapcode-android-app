@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.onboarding
 
-enum class LayoutType {
-    VerticalInfoArea, HorizontalInfoArea, FloatingInfoArea
+enum class OnboardingScreenLayoutType {
+    Vertical, Horizontal
 }
