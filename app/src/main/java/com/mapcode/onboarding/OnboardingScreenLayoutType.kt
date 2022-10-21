@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.onboarding
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-
-@Module
-@InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindShowMapcodeUseCase(impl: ShowMapcodeUseCaseImpl): ShowMapcodeUseCase
+enum class OnboardingScreenLayoutType {
+    Vertical, Horizontal
 }

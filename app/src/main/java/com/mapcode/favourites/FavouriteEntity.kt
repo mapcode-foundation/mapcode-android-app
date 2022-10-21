@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.favourites
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import kotlinx.serialization.Serializable
 
-@Module
-@InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindShowMapcodeUseCase(impl: ShowMapcodeUseCaseImpl): ShowMapcodeUseCase
-}
+/**
+ * The data model for saving favourites.
+ */
+@Serializable
+data class FavouriteEntity(
+    val id: String,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double
+)

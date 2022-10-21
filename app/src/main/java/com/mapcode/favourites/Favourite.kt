@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.favourites
 
-enum class MapcodeDestination {
-    Map,
-    About
+import com.mapcode.util.Location
+import java.util.*
+
+data class Favourite(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val location: Location
+) {
+    companion object {
+        fun fromEntity(entity: FavouriteEntity): Favourite {
+            return Favourite(
+                entity.id,
+                entity.name,
+                Location(entity.latitude, entity.longitude)
+            )
+        }
+    }
 }

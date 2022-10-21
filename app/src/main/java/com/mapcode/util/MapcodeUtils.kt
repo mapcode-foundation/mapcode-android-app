@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.util
 
-import com.mapcode.util.DefaultDispatcherProvider
-import com.mapcode.util.DispatcherProvider
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import javax.inject.Singleton
+import com.mapcode.Mapcode
+import com.mapcode.MapcodeCodec
+import com.mapcode.Territory
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideAppCoroutineScope(): CoroutineScope {
-        return MainScope()
+object MapcodeUtils {
+    fun GoogleHqMapcodes(): List<Mapcode> {
+        return MapcodeCodec.encode(37.4220935, -122.0839221).distinctBy { it.territory }
     }
+}
 
-    @Provides
-    @Singleton
-    fun provideDispatchers(): DispatcherProvider {
-        return DefaultDispatcherProvider()
+fun Mapcode.codeWithNoInternationalTerritory(): String {
+    return if (territory == Territory.AAA) {
+        code
+    } else {
+        codeWithTerritory
     }
 }

@@ -29,15 +29,20 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.ktx.api.net.awaitFindAutocompletePredictions
-import com.mapcode.Mapcode
-import com.mapcode.MapcodeCodec
-import com.mapcode.UnknownMapcodeException
-import com.mapcode.UnknownPrecisionFormatException
+import com.mapcode.*
+import com.mapcode.data.Keys
+import com.mapcode.data.PreferenceRepository
+import com.mapcode.favourites.Favourite
+import com.mapcode.favourites.FavouritesDataStore
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
+import com.mapcode.util.ShareAdapter
 import com.mapcode.util.UnknownAddressException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -51,7 +56,10 @@ import kotlin.coroutines.suspendCoroutine
 
 class ShowMapcodeUseCaseImpl @Inject constructor(
     @ApplicationContext private val ctx: Context,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val preferences: PreferenceRepository,
+    private val favouritesDataStore: FavouritesDataStore,
+    private val shareAdapter: ShareAdapter
 ) : ShowMapcodeUseCase {
 
     private val geocoder: Geocoder = Geocoder(ctx)
@@ -108,6 +116,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
             }
 
             val matchingAddress = withContext(Dispatchers.Default) {
+                @Suppress("DEPRECATION")
                 geocoder.getFromLocationName(address, 10)?.firstOrNull()
             }
 
@@ -124,6 +133,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
     override suspend fun reverseGeocode(lat: Double, long: Double): Result<String> {
         try {
             val addressList = withContext(Dispatchers.Default) {
+                @Suppress("DEPRECATION")
                 geocoder.getFromLocation(lat, long, 1) ?: emptyList()
             }
 
@@ -172,7 +182,8 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
     override fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean {
         try {
-            val gmmIntentUri: Uri = Uri.parse("google.navigation:q=${location.latitude},${location.longitude}")
+            val gmmIntentUri: Uri =
+                Uri.parse("google.navigation:q=${location.latitude},${location.longitude}")
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
@@ -184,18 +195,14 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         }
     }
 
-    override fun shareText(text: String, description: String) {
-        val sendIntent: Intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-            putExtra(Intent.EXTRA_TITLE, description)
+    override fun shareMapcode(mapcode: Mapcode) {
+        val text = if (mapcode.territory == Territory.AAA) {
+            mapcode.code
+        } else {
+            mapcode.codeWithTerritory
         }
 
-        val shareIntent = Intent.createChooser(sendIntent, null).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-
-        ctx.startActivity(shareIntent)
+        shareAdapter.share(text = text, description = "Mapcode: $text")
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -229,6 +236,41 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
                 .map { it.getFullText(null) }
                 .map { it.toString() }
         }
+    }
+
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {
+        preferences.set(Keys.lastLocationLatitude, location.latitude)
+        preferences.set(Keys.lastLocationLongitude, location.longitude)
+        preferences.set(Keys.lastLocationZoom, zoom)
+    }
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        val lastLatitude =
+            preferences.get(Keys.lastLocationLatitude).first() ?: return null
+        val lastLongitude =
+            preferences.get(Keys.lastLocationLongitude).first() ?: return null
+        val lastZoom = preferences.get(Keys.lastLocationZoom).first() ?: return null
+
+        return Pair(Location(lastLatitude, lastLongitude), lastZoom)
+    }
+
+    override suspend fun saveFavourite(name: String, location: Location) {
+        favouritesDataStore.create(name, location.latitude, location.longitude)
+    }
+
+    override suspend fun deleteFavourite(location: Location) {
+        val favourite = favouritesDataStore
+            .getAll()
+            .first()
+            .find { it.latitude == location.latitude && it.longitude == location.longitude }
+            ?: return
+
+        favouritesDataStore.delete(favourite.id)
+    }
+
+    override fun getFavouriteLocations(): Flow<List<Favourite>> {
+        return favouritesDataStore.getAll()
+            .map { list -> list.map { Favourite.fromEntity(it) } }
     }
 }
 
@@ -279,10 +321,7 @@ interface ShowMapcodeUseCase {
      */
     fun launchDirectionsToLocation(location: Location, zoom: Float): Boolean
 
-    /**
-     * Open the share sheet to share some text.
-     */
-    fun shareText(text: String, description: String)
+    fun shareMapcode(mapcode: Mapcode)
 
     /**
      * Get a list of addresses within the [northeast] and [southwest] bounds that might correspond to the [query].
@@ -293,4 +332,13 @@ interface ShowMapcodeUseCase {
         southwest: Location,
         northeast: Location
     ): Result<List<String>>
+
+    fun saveLastLocationAndZoom(location: Location, zoom: Float)
+
+    suspend fun getLastLocationAndZoom(): Pair<Location, Float>?
+
+    suspend fun saveFavourite(name: String, location: Location)
+    suspend fun deleteFavourite(location: Location)
+
+    fun getFavouriteLocations(): Flow<List<Favourite>>
 }

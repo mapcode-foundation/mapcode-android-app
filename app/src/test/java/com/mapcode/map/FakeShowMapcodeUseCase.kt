@@ -19,9 +19,13 @@ package com.mapcode.map
 import com.mapcode.FakeLocation
 import com.mapcode.Mapcode
 import com.mapcode.UnknownMapcodeException
+import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.IOException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
@@ -33,14 +37,13 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     var clipboard: String? = null
         private set
 
-    var sharedText: String? = null
-        private set
-
     var hasInternetConnection: Boolean = true
     var currentLocation: Location? = null
 
     val knownLocations: MutableList<FakeLocation> = mutableListOf()
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
+
+    val favourites: MutableStateFlow<List<Favourite>> = MutableStateFlow(emptyList())
 
     override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
         return knownLocations
@@ -100,8 +103,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         return true
     }
 
-    override fun shareText(text: String, description: String) {
-        sharedText = text
+    override fun shareMapcode(mapcode: Mapcode) {
     }
 
     override suspend fun getMatchingAddresses(
@@ -111,5 +113,32 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
         northeast: Location
     ): Result<List<String>> {
         return success((matchingAddresses[query] ?: emptyList()))
+    }
+
+    override fun saveLastLocationAndZoom(location: Location, zoom: Float) {}
+
+    override suspend fun getLastLocationAndZoom(): Pair<Location, Float>? {
+        return null
+    }
+
+    override suspend fun saveFavourite(name: String, location: Location) {
+        favourites.update { list ->
+            list.plus(
+                Favourite(
+                    name = name,
+                    location = location
+                )
+            )
+        }
+    }
+
+    override suspend fun deleteFavourite(location: Location) {
+        favourites.update { list ->
+            list.toMutableList().also { it.removeAll { it.location == location } }
+        }
+    }
+
+    override fun getFavouriteLocations(): Flow<List<Favourite>> {
+        return favourites
     }
 }

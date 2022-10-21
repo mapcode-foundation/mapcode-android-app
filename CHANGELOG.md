@@ -1,12 +1,24 @@
+## [1.2.0](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.0)
+
+#### 2022-10-21
+
+- [#23](https://github.com/mapcode-foundation/mapcode-android-app/issues/23) Save locations as
+  favourites and view them on the map.
+- [#35](https://github.com/mapcode-foundation/mapcode-android-app/issues/35) Show a brief tutorial
+  when the app is opened for the first time that explains what mapcodes are.
+
 ## [1.1.1](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.1.1)
 
 #### 2022-08-21
 
-- [#47](https://github.com/mapcode-foundation/mapcode-android-app/issues/47) Improve address autocompletion results by
+- [#47](https://github.com/mapcode-foundation/mapcode-android-app/issues/47) Improve address
+  autocompletion results by
   using Google Places API.
-- [#48](https://github.com/mapcode-foundation/mapcode-android-app/issues/48) Allow comma decimal in latitude and
+- [#48](https://github.com/mapcode-foundation/mapcode-android-app/issues/48) Allow comma decimal in
+  latitude and
   longitude.
-- [#46](https://github.com/mapcode-foundation/mapcode-android-app/issues/46) Latitude and longitude text are invisible
+- [#46](https://github.com/mapcode-foundation/mapcode-android-app/issues/46) Latitude and longitude
+  text are invisible
   in dark mode.
 - Button to clear latitude and longitude text is now a copy button.
 

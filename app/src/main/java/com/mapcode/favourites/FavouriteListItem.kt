@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.favourites
 
-enum class LayoutType {
-    VerticalInfoArea, HorizontalInfoArea, FloatingInfoArea
-}
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+data class FavouriteListItem(
+    val id: String,
+    val name: String,
+    val mapcode: String
+) : Parcelable

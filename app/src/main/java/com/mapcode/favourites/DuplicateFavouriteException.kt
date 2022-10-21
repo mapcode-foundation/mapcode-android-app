@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.favourites
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-
-@Module
-@InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindShowMapcodeUseCase(impl: ShowMapcodeUseCaseImpl): ShowMapcodeUseCase
-}
+class DuplicateFavouriteException :
+    Exception("You can not have duplicate favourites for the same location!")

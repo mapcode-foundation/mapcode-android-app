@@ -14,31 +14,16 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.util
 
-import com.mapcode.util.DefaultDispatcherProvider
-import com.mapcode.util.DispatcherProvider
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideAppCoroutineScope(): CoroutineScope {
-        return MainScope()
-    }
-
-    @Provides
-    @Singleton
-    fun provideDispatchers(): DispatcherProvider {
-        return DefaultDispatcherProvider()
-    }
+abstract class UtilsModule {
+    @Binds
+    abstract fun bindShareAdapter(impl: ShareAdapterImpl): ShareAdapter
 }

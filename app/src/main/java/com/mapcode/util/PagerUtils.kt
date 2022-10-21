@@ -14,31 +14,28 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.util
 
-import com.mapcode.util.DefaultDispatcherProvider
-import com.mapcode.util.DispatcherProvider
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import javax.inject.Singleton
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.PagerState
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideAppCoroutineScope(): CoroutineScope {
-        return MainScope()
+@OptIn(ExperimentalPagerApi::class)
+suspend fun PagerState.animateScrollToNextPage() {
+    if (currentPage == pageCount - 1) {
+        return
     }
 
-    @Provides
-    @Singleton
-    fun provideDispatchers(): DispatcherProvider {
-        return DefaultDispatcherProvider()
-    }
+    animateScrollToPage(currentPage + 1)
 }
+
+@OptIn(ExperimentalPagerApi::class)
+suspend fun PagerState.animateScrollToPreviousPage() {
+    if (currentPage == 0) {
+        return
+    }
+
+    animateScrollToPage(currentPage - 1)
+}
+
+@OptIn(ExperimentalPagerApi::class)
+fun PagerState.isLastPage(): Boolean = this.currentPage == this.pageCount - 1

@@ -16,29 +16,20 @@
 
 package com.mapcode
 
-import com.mapcode.util.DefaultDispatcherProvider
 import com.mapcode.util.DispatcherProvider
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
 
-@Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
+/**
+ * Created by sds100 on 01/05/2021.
+ */
 
-    @Provides
-    @Singleton
-    fun provideAppCoroutineScope(): CoroutineScope {
-        return MainScope()
-    }
-
-    @Provides
-    @Singleton
-    fun provideDispatchers(): DispatcherProvider {
-        return DefaultDispatcherProvider()
-    }
+@OptIn(ExperimentalCoroutinesApi::class)
+class TestDispatcherProvider(
+    testDispatcher: TestDispatcher
+) : DispatcherProvider {
+    override val main = testDispatcher
+    override val default = testDispatcher
+    override val io = testDispatcher
+    override val unconfined = testDispatcher
 }

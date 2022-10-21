@@ -14,31 +14,21 @@
  * limitations under the License.
  */
 
-package com.mapcode
+package com.mapcode.favourites
 
-import com.mapcode.util.DefaultDispatcherProvider
-import com.mapcode.util.DispatcherProvider
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
-
-    @Provides
+abstract class FavouritesModule {
     @Singleton
-    fun provideAppCoroutineScope(): CoroutineScope {
-        return MainScope()
-    }
+    @Binds
+    abstract fun bindDataStore(impl: FavouritesDataStoreImpl): FavouritesDataStore
 
-    @Provides
-    @Singleton
-    fun provideDispatchers(): DispatcherProvider {
-        return DefaultDispatcherProvider()
-    }
+    @Binds
+    abstract fun bindViewFavouritesUseCase(impl: ViewFavouritesUseCaseImpl): ViewFavouritesUseCase
 }

@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.mapcode.map
+package com.mapcode.onboarding
 
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
+import androidx.compose.ui.graphics.Color
 
-@Module
-@InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindShowMapcodeUseCase(impl: ShowMapcodeUseCaseImpl): ShowMapcodeUseCase
-}
+data class PageColors(
+    val foreground: Color,
+    val background: Color,
+    val backgroundDark: Color,
+)

@@ -32,14 +32,15 @@
     <string name="copy_location_content_description">Copy location</string>
     <string name="longitude_text_field_label">Longitude (X)</string>
     <string name="satellite_mode_button_content_description">Toggle satellite mode</string>
-    <string name="open_external_maps_app_content_description">View location in maps app</string>
     <string name="zoom_in_button_content_description">Zoom in</string>
     <string name="zoom_out_button_content_description">Zoom out</string>
     <string name="my_location_button_content_description">Go to my location</string>
     <string name="cant_find_my_location_snackbar">Can\'t find location. Is your GPS turned on?</string>
     <string name="no_map_app_installed_error">You have no map app installed to open this in.</string>
-    <string name="share_mapcode_content_description">Share mapcode</string>
-    <string name="about_content_description">About this app</string>
+    <string name="share_mapcode_menu_item">Share mapcode</string>
+    <string name="about_menu_item">About this app</string>
+    <string name="more_content_description">More</string>
+    <string name="directions_menu_item">Directions</string>
     <string name="about_dialog_title">About Mapcode %s</string>
     <string name="close_dialog_button">Close</string>
     <string name="website_button">Website</string>
@@ -61,5 +62,40 @@
     <string name="website_url" translatable="false">https://mapcode.com</string>
     <string name="source_code_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app</string>
     <string name="changelog_url" translatable="false">https://github.com/mapcode-foundation/mapcode-android-app/blob/main/CHANGELOG.md</string>
+    <string name="add_favourite_button_content_description">Save location</string>
+    <string name="delete_favourite_button_content_description">Delete saved location</string>
+    <string name="view_favourites_button_content_description">View saved locations</string>
+    <string name="rename_favourite_content_description">Rename location</string>
+    <string name="delete_favourite_content_description">Delete location</string>
+    <string name="share_favourite_content_description">Share location</string>
+    <string name="favourites_navigate_back">Go back</string>
+    <string name="favourites_screen_caption">Tap a location to go to it on the map.</string>
+    <string name="add_favourite_dialog_title">Save location</string>
+    <string name="add_favourite_dialog_cancel_button">Cancel</string>
+    <string name="add_favourite_dialog_submit_button">Save</string>
+    <string name="error_favourite_name_empty">Name must not be empty!</string>
+    <string name="add_favourite_dialog_text_field_label">Name</string>
+    <string name="add_favourite_dialog_message">Save this location so you can find it quickly. After you have chosen a name tap  \'view saved locations\' to interact with it. It will also appear on the map as a red marker.</string>
+    <string name="add_favourite_dialog_mapcode">Mapcode: %s</string>
+    <string name="add_favourite_dialog_clear_name_button">Clear name</string>
+    <string name="no_favourites_snackbar">Save a location first!</string>
+    <string name="rename_favourite_dialog_title">Rename location</string>
+    <string name="delete_favourite_dialog_confirm_button">Yes</string>
+    <string name="delete_favourite_dialog_dismiss_button">Cancel</string>
+    <string name="delete_favourite_dialog_title">Delete location</string>
+    <string name="delete_favourite_dialog_text">Are you sure you want to delete %s?</string>
+
+    <string name="onboarding_done_content_description">Finish tutorial</string>
+    <string name="onboarding_next_page_content_description">Next page</string>
+    <string name="onboarding_previous_page_content_description">Previous page</string>
+    <string name="onboarding_welcome_page_title">What is a mapcode?</string>
+    <string name="onboarding_welcome_page_text_1">Mapcodes are short, precise and easy to recognise codes that can be used to pinpoint any location on Earth, much like a normal address.</string>
+    <string name="onboarding_welcome_page_text_2">They are especially useful in areas where no addresses exist, or they are hard to find or incomplete.\n\nYou can use this app to find the Mapcode for any location on Earth and to convert between mapcodes, addresses and coordinates.\n\nUnlike other geographic location systems, mapcodes are backed by a non-commercial foundation, with a mission to keep mapcodes free and open-source for anyone to use! Tap \'learn more\' below to read more about the Mapcode Foundation\'s mission.</string>
+    <string name="onboarding_welcome_page_learn_more_button">Learn more</string>
+    <string name="onboarding_welcome_page_learn_more_url">https://www.mapcode.com/about</string>
+    <string name="onboarding_skip_button">Skip</string>
+    <string name="onboarding_territories_page_title">Territories</string>
+    <string name="onboarding_territories_page_text">A mapcode consists of a territory and a code. Every location has multiple codes for each territory that it is in and each code is unique in its territory, for example, San Fransisco has a California, USA, and International code. The international code is unique to the entire world but it is very long and hard to remember. So you are recommended to use the most local mapcode and omit the territory depending on who you are sharing it with. This is the same as normal addresses: you don\'t put the country when you share your home address with a friend that lives in the same town.\n\nInside the app you can tap the territory button below to cycle through all the mapcodes for a location. Have a go!</string>
+    <string name="onboarding_territories_click_territory_tooltip">Click me!</string>
     <!--  Map screen  -->
 </resources>

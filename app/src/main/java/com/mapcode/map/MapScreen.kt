@@ -24,16 +24,14 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -50,25 +48,36 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
+import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.theme.Yellow300
+import com.mapcode.util.Location
 import com.mapcode.util.ScrollableDialog
+import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.result.ResultRecipient
 import kotlinx.coroutines.launch
 
+@Destination
 @Composable
 fun MapScreen(
+    modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
+    resultRecipient: ResultRecipient<FavouritesScreenDestination, Location>,
     /**
      * This option makes instrumentation tests much quicker and easier to implement.
      */
     renderGoogleMaps: Boolean = true,
-    layoutType: LayoutType = LayoutType.HorizontalInfoArea
+    layoutType: MapScreenLayoutType = MapScreenLayoutType.HorizontalInfoArea
 ) {
+    val scope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val cantFindLocationMessage = stringResource(R.string.cant_find_my_location_snackbar)
     val cantFindMapsAppMessage = stringResource(R.string.no_map_app_installed_error)
-    val scope = rememberCoroutineScope()
 
     val showSnackbar: (String) -> Unit = { message ->
         scope.launch {
@@ -101,31 +110,48 @@ fun MapScreen(
     }
 
     Surface {
-        Scaffold(modifier = Modifier.navigationBarsPadding(), scaffoldState = scaffoldState) { padding ->
+        Scaffold(
+            modifier = modifier,
+            scaffoldState = scaffoldState
+        ) { padding ->
             when (layoutType) {
-                LayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
+                MapScreenLayoutType.VerticalInfoArea -> VerticalInfoAreaLayout(
                     Modifier
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
-                LayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
+                MapScreenLayoutType.HorizontalInfoArea -> HorizontalInfoAreaLayout(
                     Modifier
                         .padding(padding)
                         .fillMaxSize(),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
-                LayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
+                MapScreenLayoutType.FloatingInfoArea -> FloatingInfoAreaLayout(
                     Modifier.padding(padding),
                     viewModel,
+                    navigator,
                     showSnackbar,
                     renderGoogleMaps
                 )
             }
+        }
+    }
+
+    resultRecipient.onNavResult { result ->
+        if (result is NavResult.Value) {
+            val location = result.value
+            val update = CameraUpdateFactory.newLatLngZoom(
+                LatLng(location.latitude, location.longitude),
+                17f
+            )
+            viewModel.cameraPositionState.move(update)
         }
     }
 }
@@ -134,18 +160,25 @@ fun MapScreen(
 private fun VerticalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
     Row(modifier, horizontalArrangement = Arrangement.End) {
         Box(Modifier.weight(1f)) {
-            MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps = renderGoogleMaps)
+            MapWithCrossHairs(
+                Modifier.fillMaxSize(),
+                viewModel,
+                renderGoogleMaps = renderGoogleMaps
+            )
 
             MapControls(
-                Modifier
+                modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
             )
         }
 
@@ -168,6 +201,7 @@ private fun VerticalInfoAreaLayout(
 private fun HorizontalInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -176,20 +210,23 @@ private fun HorizontalInfoAreaLayout(
             MapWithCrossHairs(Modifier.fillMaxSize(), viewModel, renderGoogleMaps)
 
             MapControls(
-                Modifier
+                modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp),
-                viewModel
+
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
             )
         }
 
         InfoArea(
-            Modifier
+            modifier = Modifier
                 .wrapContentHeight()
                 .padding(8.dp),
-            viewModel,
-            showSnackbar,
-            isVerticalLayout = false
+            viewModel = viewModel,
+            showSnackbar = showSnackbar,
+            isVerticalLayout = false,
         )
     }
 }
@@ -198,6 +235,7 @@ private fun HorizontalInfoAreaLayout(
 private fun FloatingInfoAreaLayout(
     modifier: Modifier = Modifier,
     viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
     showSnackbar: (String) -> Unit,
     renderGoogleMaps: Boolean
 ) {
@@ -209,15 +247,25 @@ private fun FloatingInfoAreaLayout(
                 .align(Alignment.BottomEnd)
                 .padding(8.dp)
         ) {
+            MapControls(
+                modifier = Modifier.align(Alignment.Bottom),
+                viewModel = viewModel,
+                navigator = navigator,
+                showSnackbar = showSnackbar
+            )
 
-            MapControls(Modifier.align(Alignment.Bottom), viewModel)
             Spacer(Modifier.width(8.dp))
 
             Card(
                 Modifier.width(400.dp),
                 elevation = 4.dp
             ) {
-                InfoArea(Modifier.padding(8.dp), viewModel, showSnackbar, isVerticalLayout = false)
+                InfoArea(
+                    modifier = Modifier.padding(8.dp),
+                    viewModel = viewModel,
+                    showSnackbar = showSnackbar,
+                    isVerticalLayout = false,
+                )
             }
         }
     }
@@ -231,7 +279,8 @@ private fun AboutDialog(onDismiss: () -> Unit = {}) {
 //    val changelogUrl = stringResource(R.string.changelog_url)
 
     ScrollableDialog(
-        onDismiss = onDismiss, title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
+        onDismiss = onDismiss,
+        title = stringResource(R.string.about_dialog_title, BuildConfig.VERSION_NAME),
         buttonText = stringResource(R.string.close_dialog_button)
     ) {
         Column {
@@ -254,7 +303,7 @@ private fun AboutDialog(onDismiss: () -> Unit = {}) {
                     )
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_outline_directions_24),
+                        imageVector = Icons.Outlined.Directions,
                         contentDescription = ""
                     )
                 },
@@ -335,14 +384,19 @@ private fun DialogContentButton(icon: Painter, text: String, onClick: () -> Unit
 
 @Composable
 private fun greyButtonColors(): ButtonColors {
-    return ButtonDefaults.buttonColors(backgroundColor = Color.LightGray, contentColor = Color.DarkGray)
+    return ButtonDefaults.buttonColors(
+        backgroundColor = Color.LightGray,
+        contentColor = Color.DarkGray
+    )
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MapControls(
     modifier: Modifier,
-    viewModel: MapViewModel
+    viewModel: MapViewModel,
+    navigator: DestinationsNavigator,
+    showSnackbar: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val isSatelliteModeEnabled by remember { derivedStateOf { viewModel.mapProperties.mapType == MapType.HYBRID } }
@@ -352,6 +406,8 @@ private fun MapControls(
     if (showAboutDialog) {
         AboutDialog(onDismiss = { showAboutDialog = false })
     }
+
+    var showMoreDropdown by rememberSaveable { mutableStateOf(false) }
 
     val locationPermissionsState = rememberMultiplePermissionsState(
         listOf(
@@ -371,37 +427,67 @@ private fun MapControls(
 
     viewModel.setMyLocationEnabled(isLocationPermissionGranted)
 
-    MapControls(
-        modifier = modifier,
-        onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
-        isSatelliteModeEnabled = isSatelliteModeEnabled,
-        onZoomInClick = {
-            scope.launch {
-                viewModel.cameraPositionState.animate(
-                    CameraUpdateFactory.zoomIn(),
-                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
-                )
-            }
-        },
-        onZoomOutClick = {
-            scope.launch {
-                viewModel.cameraPositionState.animate(
-                    CameraUpdateFactory.zoomOut(),
-                    MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
-                )
-            }
-        },
-        onMyLocationClick = {
-            if (isLocationPermissionGranted) {
-                viewModel.goToMyLocation()
-            } else {
-                locationPermissionsState.launchMultiplePermissionRequest()
-            }
-        },
-        onDirectionsClick = viewModel::onDirectionsClick,
-        onShareMapcodeClick = viewModel::shareMapcode,
-        onAboutClick = { showAboutDialog = true }
-    )
+    val uiState by viewModel.uiState.collectAsState()
+    val noFavouritesMessage = stringResource(R.string.no_favourites_snackbar)
+
+    Column(modifier = modifier) {
+        MapControls(
+            onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
+            isSatelliteModeEnabled = isSatelliteModeEnabled,
+            onZoomInClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomIn(),
+                        MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onZoomOutClick = {
+                scope.launch {
+                    viewModel.cameraPositionState.animate(
+                        CameraUpdateFactory.zoomOut(),
+                        MapViewModel.ANIMATE_CAMERA_UPDATE_DURATION_MS
+                    )
+                }
+            },
+            onMyLocationClick = {
+                if (isLocationPermissionGranted) {
+                    viewModel.goToMyLocation()
+                } else {
+                    locationPermissionsState.launchMultiplePermissionRequest()
+                }
+            },
+            onSavedLocationsClick = {
+                if (uiState.favouriteLocations.isEmpty()) {
+                    showSnackbar(noFavouritesMessage)
+                } else {
+                    navigator.navigate(FavouritesScreenDestination)
+                }
+            },
+            onMoreClick = { showMoreDropdown = true }
+        )
+
+        Box {
+            MoreDropdownMenu(
+                expanded = showMoreDropdown,
+                onAboutClick = {
+                    showAboutDialog = true
+                    showMoreDropdown = false
+                },
+                onShareMapcodeClick = {
+                    viewModel.shareMapcode()
+                    showMoreDropdown = false
+                },
+                onDirectionsClick = {
+                    viewModel.onDirectionsClick()
+                    showMoreDropdown = false
+                },
+                onDismiss = {
+                    showMoreDropdown = false
+                }
+            )
+        }
+    }
 }
 
 @Composable
@@ -412,9 +498,8 @@ private fun MapControls(
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
-    onDirectionsClick: () -> Unit = {},
-    onShareMapcodeClick: () -> Unit = {},
-    onAboutClick: () -> Unit = {}
+    onSavedLocationsClick: () -> Unit = {},
+    onMoreClick: () -> Unit = {}
 ) {
     val satelliteButtonColors: ButtonColors = if (isSatelliteModeEnabled) {
         ButtonDefaults.buttonColors(backgroundColor = Yellow300, contentColor = Color.Black)
@@ -422,10 +507,10 @@ private fun MapControls(
         ButtonDefaults.buttonColors(backgroundColor = Green600, contentColor = Color.White)
     }
 
-    val satelliteButtonIcon: Painter = if (isSatelliteModeEnabled) {
-        painterResource(R.drawable.map_outline)
+    val satelliteButtonIcon: ImageVector = if (isSatelliteModeEnabled) {
+        Icons.Outlined.Map
     } else {
-        painterResource(R.drawable.satellite)
+        Icons.Outlined.Satellite
     }
 
     Row(modifier) {
@@ -433,44 +518,34 @@ private fun MapControls(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Bottom),
-            onClick = onAboutClick,
+            onClick = onMoreClick,
             contentPadding = PaddingValues(8.dp),
             colors = greyButtonColors()
         ) {
             Icon(
-                imageVector = Icons.Outlined.Info,
-                contentDescription = stringResource(R.string.about_content_description)
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = stringResource(R.string.more_content_description)
             )
         }
+
         Spacer(Modifier.width(8.dp))
+
         Button(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Bottom),
-            onClick = onShareMapcodeClick,
+            onClick = onSavedLocationsClick,
             contentPadding = PaddingValues(8.dp),
             colors = greyButtonColors()
         ) {
             Icon(
-                imageVector = Icons.Outlined.Share,
-                contentDescription = stringResource(R.string.share_mapcode_content_description)
+                imageVector = Icons.Outlined.Bookmarks,
+                contentDescription = stringResource(R.string.view_favourites_button_content_description)
             )
         }
+
         Spacer(Modifier.width(8.dp))
-        Button(
-            modifier = Modifier
-                .size(48.dp)
-                .align(Alignment.Bottom),
-            onClick = onDirectionsClick,
-            contentPadding = PaddingValues(8.dp),
-            colors = greyButtonColors()
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_outline_directions_24),
-                contentDescription = stringResource(R.string.open_external_maps_app_content_description)
-            )
-        }
-        Spacer(Modifier.width(8.dp))
+
         Button(
             modifier = Modifier
                 .size(48.dp)
@@ -480,7 +555,7 @@ private fun MapControls(
             colors = satelliteButtonColors
         ) {
             Icon(
-                painter = satelliteButtonIcon,
+                imageVector = satelliteButtonIcon,
                 contentDescription = stringResource(R.string.satellite_mode_button_content_description)
             )
         }
@@ -506,6 +581,34 @@ private fun MapControlsPreview() {
             isSatelliteModeEnabled = isSatelliteModeEnabled,
             onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
         )
+    }
+}
+
+@Composable
+private fun MoreDropdownMenu(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    onAboutClick: () -> Unit,
+    onShareMapcodeClick: () -> Unit,
+    onDirectionsClick: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    DropdownMenu(
+        modifier = modifier,
+        expanded = expanded,
+        onDismissRequest = onDismiss
+    ) {
+        DropdownMenuItem(onClick = onAboutClick) {
+            Text(text = stringResource(R.string.about_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onShareMapcodeClick) {
+            Text(text = stringResource(R.string.share_mapcode_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onDirectionsClick) {
+            Text(text = stringResource(R.string.directions_menu_item))
+        }
     }
 }
 
@@ -548,15 +651,16 @@ private fun MapWithCrossHairs(
     viewModel: MapViewModel,
     renderGoogleMaps: Boolean = true
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val contentPadding = WindowInsets.statusBars.asPaddingValues()
 
     Box(modifier) {
         if (renderGoogleMaps) {
             Map(
                 properties = viewModel.mapProperties,
-                onCameraMoved = viewModel::onCameraMoved,
                 cameraPositionState = viewModel.cameraPositionState,
-                contentPadding = contentPadding
+                contentPadding = contentPadding,
+                favouriteLocations = uiState.favouriteLocations
             )
         }
 
@@ -578,23 +682,14 @@ private fun MapWithCrossHairs(
 private fun Map(
     modifier: Modifier = Modifier,
     properties: MapProperties,
-    onCameraMoved: (Double, Double, Float) -> Unit,
     cameraPositionState: CameraPositionState,
+    favouriteLocations: List<Favourite>,
     contentPadding: PaddingValues
 ) {
-    LaunchedEffect(cameraPositionState.isMoving) {
-        if (!cameraPositionState.isMoving) {
-            onCameraMoved(
-                cameraPositionState.position.target.latitude,
-                cameraPositionState.position.target.longitude,
-                cameraPositionState.position.zoom
-            )
-        }
-    }
-
     val scope = rememberCoroutineScope()
 
-    val uiSettings = remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
+    val uiSettings =
+        remember { MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false) }
 
     GoogleMap(
         modifier = modifier,
@@ -627,7 +722,19 @@ private fun Map(
             }
         },
         contentPadding = contentPadding
-    )
+    ) {
+        favouriteLocations.forEach { favourite ->
+            Marker(
+                state = MarkerState(
+                    position = LatLng(
+                        favourite.location.latitude,
+                        favourite.location.longitude
+                    )
+                ),
+                title = favourite.name
+            )
+        }
+    }
 }
 
 /**
