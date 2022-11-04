@@ -191,7 +191,7 @@ private fun PageControls(
 ) {
     val scope = rememberCoroutineScope()
 
-    val darkBackgroundColor = pageColors(pagerState.currentPage).backgroundDark
+    val pageColors = pageColors(pagerState.currentPage)
 
     Row(
         modifier = modifier,
@@ -205,6 +205,7 @@ private fun PageControls(
 
         PreviousPageButton(
             modifier = Modifier.alpha(previousPageButtonAlpha),
+            color = pageColors.foreground,
             onClick = {
                 scope.launch {
                     pagerState.animateScrollToPreviousPage()
@@ -215,14 +216,14 @@ private fun PageControls(
         HorizontalPagerIndicator(
             modifier = Modifier.align(Alignment.CenterVertically),
             pagerState = pagerState,
-            inactiveColor = Color.White,
-            activeColor = darkBackgroundColor
+            inactiveColor = pageColors.foreground,
+            activeColor = pageColors.backgroundDark
         )
 
         if (pagerState.isLastPage()) {
-            DoneButton(onClick = onDoneClick)
+            DoneButton(color = pageColors.foreground, onClick = onDoneClick)
         } else {
-            NextPageButton {
+            NextPageButton(color = pageColors.foreground) {
                 scope.launch {
                     pagerState.animateScrollToNextPage()
                 }
@@ -232,34 +233,34 @@ private fun PageControls(
 }
 
 @Composable
-private fun DoneButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun DoneButton(modifier: Modifier = Modifier, color: Color, onClick: () -> Unit) {
     IconButton(modifier = modifier, onClick = onClick) {
         Icon(
             imageVector = Icons.Outlined.Done,
             contentDescription = stringResource(R.string.onboarding_done_content_description),
-            tint = Color.White
+            tint = color
         )
     }
 }
 
 @Composable
-private fun NextPageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun NextPageButton(modifier: Modifier = Modifier, color: Color, onClick: () -> Unit) {
     IconButton(modifier = modifier, onClick = onClick) {
         Icon(
             imageVector = Icons.Outlined.ArrowForward,
             contentDescription = stringResource(R.string.onboarding_next_page_content_description),
-            tint = Color.White
+            tint = color
         )
     }
 }
 
 @Composable
-private fun PreviousPageButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun PreviousPageButton(modifier: Modifier = Modifier, color: Color, onClick: () -> Unit) {
     IconButton(modifier = modifier, onClick = onClick) {
         Icon(
             imageVector = Icons.Outlined.ArrowBack,
             contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
-            tint = Color.White
+            tint = color
         )
     }
 }
@@ -268,12 +269,12 @@ private fun pageColors(page: Int): PageColors {
     return when (page) {
         0 -> PageColors(
             foreground = LightBlue900,
-            background = LightBlue200,
+            background = LightBlue100,
             backgroundDark = LightBlue500
         )
         else -> PageColors(
             foreground = Cyan900,
-            background = Cyan200,
+            background = Cyan100,
             backgroundDark = Cyan500
         )
     }
