@@ -268,12 +268,12 @@ private fun pageColors(page: Int): PageColors {
     return when (page) {
         0 -> PageColors(
             foreground = LightBlue900,
-            background = LightBlue200,
+            background = LightBlue100,
             backgroundDark = LightBlue500
         )
         else -> PageColors(
             foreground = Cyan900,
-            background = Cyan200,
+            background = Cyan100,
             backgroundDark = Cyan500
         )
     }
