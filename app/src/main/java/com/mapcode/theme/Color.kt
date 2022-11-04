@@ -31,7 +31,6 @@ val Cyan500 = Color(0xFF00BCD4)
 val Cyan900 = Color(0xFF006064)
 val Green600 = Color(0xFF43A047)
 val Yellow300 = Color(0xFFFFF176)
-val Yellow500 = Color(0xFFFFEB3B)
 val Red500 = Color(0xFFF44336)
 val Red300 = Color(0xFFE57373)
 
@@ -42,15 +41,6 @@ object MapcodeColor {
             Red500
         } else {
             Red300
-        }
-    }
-
-    @Composable
-    fun addFavouritesButton(): Color {
-        if (MaterialTheme.colors.isLight) {
-            return Yellow500
-        } else {
-            return Yellow300
         }
     }
 }
