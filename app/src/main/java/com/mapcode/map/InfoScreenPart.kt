@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.FastForward
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -46,7 +45,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapcode.R
-import com.mapcode.favourites.CreateFavouriteDialog
 import com.mapcode.theme.MapcodeTheme
 import com.mapcode.util.ErrorText
 
@@ -77,41 +75,6 @@ fun InfoArea(
         }
     }
 
-    var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
-    var favouriteName: String by rememberSaveable { mutableStateOf("") }
-
-    if (showFavouriteNameDialog) {
-        val mapcode: String by remember {
-            derivedStateOf {
-                buildString {
-                    if (uiState.mapcodeUi.territoryShortName != null) {
-                        append(uiState.mapcodeUi.territoryShortName)
-                        append(" ")
-                    }
-
-                    append(uiState.mapcodeUi.code)
-                }
-            }
-        }
-
-        CreateFavouriteDialog(
-            name = favouriteName,
-            mapcode = mapcode,
-            onNameChange = { favouriteName = it },
-            onDismiss = { showFavouriteNameDialog = false },
-            onSubmitClick = {
-                viewModel.onSaveFavouriteClick(favouriteName)
-                showFavouriteNameDialog = false
-            })
-    }
-
-    val onAddFavouriteClick = remember {
-        {
-            favouriteName = uiState.addressUi.address
-            showFavouriteNameDialog = true
-        }
-    }
-
     InfoArea(
         modifier,
         uiState,
@@ -125,9 +88,7 @@ fun InfoArea(
         onChangeLongitude = viewModel::onLongitudeTextChanged,
         onSubmitLongitude = viewModel::onSubmitLongitude,
         onCopyLongitude = onLocationClick,
-        isVerticalLayout = isVerticalLayout,
-        onAddFavouriteClick = onAddFavouriteClick,
-        onDeleteFavouriteClick = viewModel::onDeleteFavouriteClick
+        isVerticalLayout = isVerticalLayout
     )
 }
 
@@ -145,8 +106,6 @@ private fun InfoArea(
     onCopyLongitude: () -> Unit = {},
     onTerritoryClick: () -> Unit = {},
     onMapcodeClick: () -> Unit = {},
-    onAddFavouriteClick: () -> Unit = {},
-    onDeleteFavouriteClick: () -> Unit = {},
     isVerticalLayout: Boolean
 ) {
     if (isVerticalLayout) {
@@ -162,9 +121,7 @@ private fun InfoArea(
             onSubmitLongitude,
             onCopyLongitude,
             onTerritoryClick,
-            onMapcodeClick,
-            onAddFavouriteClick,
-            onDeleteFavouriteClick,
+            onMapcodeClick
         )
     } else {
         HorizontalInfoArea(
@@ -179,9 +136,7 @@ private fun InfoArea(
             onSubmitLongitude,
             onCopyLongitude,
             onTerritoryClick,
-            onMapcodeClick,
-            onAddFavouriteClick,
-            onDeleteFavouriteClick
+            onMapcodeClick
         )
     }
 }
@@ -247,9 +202,7 @@ private fun VerticalInfoArea(
     onSubmitLongitude: () -> Unit,
     onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
-    onMapcodeClick: () -> Unit,
-    onAddFavouriteClick: () -> Unit,
-    onDeleteFavouriteClick: () -> Unit
+    onMapcodeClick: () -> Unit
 ) {
     Column(modifier) {
         AddressArea(
@@ -259,10 +212,7 @@ private fun VerticalInfoArea(
             onChange = onAddressChange,
             onSubmit = onSubmitAddress,
             helper = state.addressUi.helper,
-            error = state.addressUi.error,
-            isFavouriteLocation = state.isFavouriteLocation,
-            onAddFavouriteClick = onAddFavouriteClick,
-            onDeleteFavouriteClick = onDeleteFavouriteClick
+            error = state.addressUi.error
         )
         Spacer(Modifier.height(8.dp))
         TerritoryBox(
@@ -317,9 +267,7 @@ private fun HorizontalInfoArea(
     onSubmitLongitude: () -> Unit,
     onCopyLongitude: () -> Unit,
     onTerritoryClick: () -> Unit,
-    onMapcodeClick: () -> Unit,
-    onAddFavouriteClick: () -> Unit,
-    onDeleteFavouriteClick: () -> Unit,
+    onMapcodeClick: () -> Unit
 ) {
     Column(modifier) {
         AddressArea(
@@ -329,10 +277,7 @@ private fun HorizontalInfoArea(
             onChange = onAddressChange,
             onSubmit = onSubmitAddress,
             helper = state.addressUi.helper,
-            error = state.addressUi.error,
-            onAddFavouriteClick = onAddFavouriteClick,
-            onDeleteFavouriteClick = onDeleteFavouriteClick,
-            isFavouriteLocation = state.isFavouriteLocation
+            error = state.addressUi.error
         )
 
         MapcodeButtons(
