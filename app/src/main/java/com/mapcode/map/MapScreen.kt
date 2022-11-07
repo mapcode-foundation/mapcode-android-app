@@ -667,10 +667,6 @@ private fun MoreDropdownMenu(
             Text(text = stringResource(R.string.directions_menu_item))
         }
 
-        DropdownMenuItem(onClick = onDirectionsClick) {
-            Text(text = stringResource(R.string.directions_menu_item))
-        }
-
         DropdownMenuItem(onClick = onViewOnboardingClick) {
             Text(text = stringResource(R.string.view_onboarding_menu_item))
         }
