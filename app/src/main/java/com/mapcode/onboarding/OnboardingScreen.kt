@@ -59,8 +59,8 @@ fun OnboardingScreen(
         modifier = modifier,
         onFinishOnboarding = {
             viewModel.onFinishOnboarding()
-            navigator.navigate(MapScreenDestination.route)
             navigator.popBackStack()
+            navigator.navigate(MapScreenDestination.route)
         },
         layoutType = layoutType
     )
