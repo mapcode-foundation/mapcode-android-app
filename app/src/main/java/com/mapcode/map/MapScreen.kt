@@ -49,6 +49,7 @@ import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
 import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.CreateFavouriteDialog
 import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
@@ -523,6 +524,9 @@ private fun MapControls(
                 },
                 onDismiss = {
                     showMoreDropdown = false
+                },
+                onViewOnboardingClick = {
+                    navigator.navigate(OnboardingScreenDestination.route)
                 }
             )
         }
@@ -643,6 +647,7 @@ private fun MoreDropdownMenu(
     onAboutClick: () -> Unit,
     onShareMapcodeClick: () -> Unit,
     onDirectionsClick: () -> Unit,
+    onViewOnboardingClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     DropdownMenu(
@@ -660,6 +665,14 @@ private fun MoreDropdownMenu(
 
         DropdownMenuItem(onClick = onDirectionsClick) {
             Text(text = stringResource(R.string.directions_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onDirectionsClick) {
+            Text(text = stringResource(R.string.directions_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onViewOnboardingClick) {
+            Text(text = stringResource(R.string.view_onboarding_menu_item))
         }
     }
 }
