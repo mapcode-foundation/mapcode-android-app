@@ -1,3 +1,14 @@
+## [1.2.1](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.1)
+
+#### 2022-11-11
+
+- [#51](https://github.com/mapcode-foundation/mapcode-android-app/issues/51) Put the buttons to save
+  and view locations next to each other so that they are easier to find.
+- [#50](https://github.com/mapcode-foundation/mapcode-android-app/issues/50) Add a button to go to
+  see the tutorial again.
+- [#49](https://github.com/mapcode-foundation/mapcode-android-app/issues/49) Make the backgrounds of
+  the tutorial lighter so the text is easier to read.
+
 ## [1.2.0](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.0)
 
 #### 2022-10-21
@@ -12,14 +23,11 @@
 #### 2022-08-21
 
 - [#47](https://github.com/mapcode-foundation/mapcode-android-app/issues/47) Improve address
-  autocompletion results by
-  using Google Places API.
+  autocompletion results by using Google Places API.
 - [#48](https://github.com/mapcode-foundation/mapcode-android-app/issues/48) Allow comma decimal in
-  latitude and
-  longitude.
+  latitude and longitude.
 - [#46](https://github.com/mapcode-foundation/mapcode-android-app/issues/46) Latitude and longitude
-  text are invisible
-  in dark mode.
+  text are invisible in dark mode.
 - Button to clear latitude and longitude text is now a copy button.
 
 #### 2022-08-09
