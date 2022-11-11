@@ -41,6 +41,7 @@
     <string name="about_menu_item">About this app</string>
     <string name="more_content_description">More</string>
     <string name="directions_menu_item">Directions</string>
+    <string name="view_onboarding_menu_item">Tutorial</string>
     <string name="about_dialog_title">About Mapcode %s</string>
     <string name="close_dialog_button">Close</string>
     <string name="website_button">Website</string>

@@ -32,6 +32,7 @@ import assertk.assertions.prop
 import com.mapcode.Mapcode
 import com.mapcode.Territory
 import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -783,6 +784,14 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("View saved locations").performClick()
         composeTestRule.onNodeWithText("Save a location first!").assertIsDisplayed()
+    }
+
+    @Test
+    fun navigate_to_onboarding_screen_when_click_view_tutorial() {
+        setMapScreenAsContent()
+        composeTestRule.onNodeWithContentDescription("More").performClick()
+        composeTestRule.onNodeWithText("Tutorial").performClick()
+        verify(mockDestinationsNavigator).navigate(OnboardingScreenDestination.route)
     }
 
     private fun setMapScreenAsContent() {

@@ -49,6 +49,8 @@ import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
 import com.mapcode.destinations.FavouritesScreenDestination
+import com.mapcode.destinations.OnboardingScreenDestination
+import com.mapcode.favourites.CreateFavouriteDialog
 import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
 import com.mapcode.theme.MapcodeTheme
@@ -430,10 +432,46 @@ private fun MapControls(
     val uiState by viewModel.uiState.collectAsState()
     val noFavouritesMessage = stringResource(R.string.no_favourites_snackbar)
 
+    var showFavouriteNameDialog: Boolean by rememberSaveable { mutableStateOf(false) }
+    var favouriteName: String by rememberSaveable { mutableStateOf("") }
+
+    if (showFavouriteNameDialog) {
+        val mapcode: String by remember {
+            derivedStateOf {
+                buildString {
+                    if (uiState.mapcodeUi.territoryShortName != null) {
+                        append(uiState.mapcodeUi.territoryShortName)
+                        append(" ")
+                    }
+
+                    append(uiState.mapcodeUi.code)
+                }
+            }
+        }
+
+        CreateFavouriteDialog(
+            name = favouriteName,
+            mapcode = mapcode,
+            onNameChange = { favouriteName = it },
+            onDismiss = { showFavouriteNameDialog = false },
+            onSubmitClick = {
+                viewModel.onSaveFavouriteClick(favouriteName)
+                showFavouriteNameDialog = false
+            })
+    }
+
+    val onAddFavouriteClick = remember {
+        {
+            favouriteName = uiState.addressUi.address
+            showFavouriteNameDialog = true
+        }
+    }
+
     Column(modifier = modifier) {
         MapControls(
             onSatelliteButtonClick = viewModel::onSatelliteButtonClick,
             isSatelliteModeEnabled = isSatelliteModeEnabled,
+            isFavouriteLocation = uiState.isFavouriteLocation,
             onZoomInClick = {
                 scope.launch {
                     viewModel.cameraPositionState.animate(
@@ -464,7 +502,9 @@ private fun MapControls(
                     navigator.navigate(FavouritesScreenDestination)
                 }
             },
-            onMoreClick = { showMoreDropdown = true }
+            onMoreClick = { showMoreDropdown = true },
+            onAddFavouriteClick = onAddFavouriteClick,
+            onDeleteFavouriteClick = viewModel::onDeleteFavouriteClick
         )
 
         Box {
@@ -484,6 +524,9 @@ private fun MapControls(
                 },
                 onDismiss = {
                     showMoreDropdown = false
+                },
+                onViewOnboardingClick = {
+                    navigator.navigate(OnboardingScreenDestination.route)
                 }
             )
         }
@@ -495,9 +538,12 @@ private fun MapControls(
     modifier: Modifier = Modifier,
     onSatelliteButtonClick: () -> Unit = {},
     isSatelliteModeEnabled: Boolean,
+    isFavouriteLocation: Boolean,
     onZoomInClick: () -> Unit = {},
     onZoomOutClick: () -> Unit = {},
     onMyLocationClick: () -> Unit = {},
+    onAddFavouriteClick: () -> Unit = {},
+    onDeleteFavouriteClick: () -> Unit = {},
     onSavedLocationsClick: () -> Unit = {},
     onMoreClick: () -> Unit = {}
 ) {
@@ -543,7 +589,16 @@ private fun MapControls(
                 contentDescription = stringResource(R.string.view_favourites_button_content_description)
             )
         }
+        Spacer(Modifier.width(8.dp))
 
+        FavouriteButton(
+            modifier = Modifier
+                .size(48.dp)
+                .align(Alignment.Bottom),
+            isFavouriteLocation = isFavouriteLocation,
+            addFavourite = onAddFavouriteClick,
+            deleteFavourite = onDeleteFavouriteClick
+        )
         Spacer(Modifier.width(8.dp))
 
         Button(
@@ -578,6 +633,7 @@ private fun MapControlsPreview() {
     var isSatelliteModeEnabled by remember { mutableStateOf(false) }
     MapcodeTheme {
         MapControls(
+            isFavouriteLocation = true,
             isSatelliteModeEnabled = isSatelliteModeEnabled,
             onSatelliteButtonClick = { isSatelliteModeEnabled = !isSatelliteModeEnabled }
         )
@@ -591,6 +647,7 @@ private fun MoreDropdownMenu(
     onAboutClick: () -> Unit,
     onShareMapcodeClick: () -> Unit,
     onDirectionsClick: () -> Unit,
+    onViewOnboardingClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     DropdownMenu(
@@ -608,6 +665,10 @@ private fun MoreDropdownMenu(
 
         DropdownMenuItem(onClick = onDirectionsClick) {
             Text(text = stringResource(R.string.directions_menu_item))
+        }
+
+        DropdownMenuItem(onClick = onViewOnboardingClick) {
+            Text(text = stringResource(R.string.view_onboarding_menu_item))
         }
     }
 }
@@ -752,4 +813,38 @@ private fun MyLocationButton(modifier: Modifier = Modifier, onClick: () -> Unit 
             contentDescription = stringResource(R.string.my_location_button_content_description)
         )
     }
+}
+
+@Composable
+private fun FavouriteButton(
+    modifier: Modifier = Modifier,
+    isFavouriteLocation: Boolean,
+    deleteFavourite: () -> Unit,
+    addFavourite: () -> Unit
+) {
+    Button(
+        modifier = modifier,
+        colors = greyButtonColors(),
+        contentPadding = PaddingValues(8.dp),
+        onClick = {
+            if (isFavouriteLocation) {
+                deleteFavourite()
+            } else {
+                addFavourite()
+            }
+        }
+    ) {
+        if (isFavouriteLocation) {
+            Icon(
+                imageVector = Icons.Outlined.Bookmark,
+                contentDescription = stringResource(R.string.delete_favourite_button_content_description),
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Outlined.BookmarkAdd,
+                contentDescription = stringResource(R.string.add_favourite_button_content_description),
+            )
+        }
+    }
+
 }
