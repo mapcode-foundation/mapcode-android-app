@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.*
 import com.mapcode.AppViewModel
 import com.mapcode.R
-import com.mapcode.destinations.MapScreenDestination
 import com.mapcode.theme.*
 import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
@@ -60,7 +59,6 @@ fun OnboardingScreen(
         onFinishOnboarding = {
             viewModel.onFinishOnboarding()
             navigator.popBackStack()
-            navigator.navigate(MapScreenDestination.route)
         },
         layoutType = layoutType
     )
