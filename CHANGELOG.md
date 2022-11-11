@@ -1,3 +1,9 @@
+## [1.2.2](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.2)
+
+#### 2022-11-11
+
+- Fix crash when leaving the tutorial.
+
 ## [1.2.1](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.1)
 
 #### 2022-11-11
