@@ -11,15 +11,15 @@ plugins {
 
 android {
     namespace 'com.mapcode'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.mapcode"
         minSdk 21
         //noinspection OldTargetApi wait for sources to be released before upgrading
-        targetSdk 33
+        targetSdk 34
         versionCode 7
-        versionName "1.2.2"
+        versionName "1.2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

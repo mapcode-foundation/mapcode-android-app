@@ -2,7 +2,7 @@
 
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 
-**Copyright (C) 2014-2022 Stichting Mapcode Foundation (http://www.mapcode.com)**
+**Copyright (C) 2014-2024 Stichting Mapcode Foundation (http://www.mapcode.com)**
 
 This is Mapcode Finder, the official Android application for mapcodes. Have fun using it!
 

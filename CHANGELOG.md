@@ -1,3 +1,7 @@
+## [1.2.3](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.3)
+
+ - Updated target SDK level
+
 ## [1.2.2](https://github.com/mapcode-foundation/mapcode-android-app/releases/tag/v1.2.2)
 
 #### 2022-11-11
