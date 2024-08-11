@@ -49,7 +49,7 @@
     <string name="source_code_button">Source code</string>
     <string name="invalid_latlng_error">Must be a number!</string>
 
-    <string name="copyright_welcome">Copyright © 2022, Mapcode Foundation\n\nWelcome to the official Mapcode app from the Mapcode Foundation!</string>
+    <string name="copyright_welcome">Copyright © 2024, Mapcode Foundation\n\nWelcome to the official Mapcode app from the Mapcode Foundation!</string>
     <string name="how_to_use_header">How to use the app</string>
     <string name="how_to_use_address">Enter an address or coordinate to get a mapcode, or move the map around.\n\nEnter a mapcode into the address field to show its location on the map.</string>
     <string name="how_to_use_territory">Tap the territory to cycle through the mapcode territories.</string>
