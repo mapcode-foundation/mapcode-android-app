@@ -67,4 +67,16 @@ class MapcodeSorterTest {
 
         assertThat(result).containsExactly(short, long)
     }
+
+    @Test
+    fun `subdivision territory hint matched correctly with dash format`() {
+        val usCa = Mapcode("AB.CD", Territory.US_CA) // California — toString() returns "US-CA"
+        val intl = Mapcode("ABCDE.FG", Territory.AAA)
+
+        // The API returns territory strings with dashes (e.g. "US-CA"), matching Territory.toString()
+        val hint = usCa.territory.toString()
+        val result = sortMapcodesByHint(listOf(intl, usCa), listOf(hint))
+
+        assertThat(result).containsExactly(usCa, intl)
+    }
 }

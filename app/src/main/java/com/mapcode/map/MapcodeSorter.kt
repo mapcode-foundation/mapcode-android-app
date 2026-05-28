@@ -6,7 +6,7 @@ fun sortMapcodesByHint(mapcodes: List<Mapcode>, hints: List<String>): List<Mapco
     val hintIndex = hints.withIndex().associate { (i, alphaCode) -> alphaCode to i }
     return mapcodes.sortedWith(
         compareBy(
-            { hintIndex[it.territory.name] ?: Int.MAX_VALUE },
+            { hintIndex[it.territory.toString()] ?: Int.MAX_VALUE },
             { it.code.length }
         )
     )

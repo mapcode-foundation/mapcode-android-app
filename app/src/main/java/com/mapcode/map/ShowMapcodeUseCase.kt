@@ -118,7 +118,7 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
         val territory = if (this.territory == null) {
             Territory.AAA
         } else {
-            Territory.values().firstOrNull { it.name == this.territory }
+            Territory.values().firstOrNull { it.toString() == this.territory }
                 ?: run {
                     Timber.w("Unknown territory from API: ${this.territory}")
                     null
