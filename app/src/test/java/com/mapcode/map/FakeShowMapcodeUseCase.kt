@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.yield
 import java.io.IOException
 import kotlin.Result.Companion.failure
 import kotlin.Result.Companion.success
@@ -57,6 +58,7 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
 
         val server = serverMapcodes[Pair(lat, long)] ?: return@flow
         val hints = territoryHints[Pair(lat, long)] ?: emptyList()
+        yield()  // allow coroutine to be suspended between local and server emissions
         emit(sortMapcodesByHint(server.distinctBy { it.territory }, hints))
     }
 
