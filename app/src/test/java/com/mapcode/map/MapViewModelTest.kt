@@ -1154,14 +1154,17 @@ internal class MapViewModelTest {
         useCase.knownLocations.add(
             FakeLocation(1.0, 1.0, emptyList(), listOf(mapcode))
         )
-        // Server returns NLD first (hint=[NLD]) — same as local[0], suppression applies
+        // Server returns 2 mapcodes; NLD is sorted first by hint — same as local display
         useCase.serverMapcodes[Pair(1.0, 1.0)] = listOf(mapcode, extra)
         useCase.territoryHints[Pair(1.0, 1.0)] = listOf("NLD")
 
         viewModel.onCameraMoved(1.0, 1.0, 0f)
-        advanceUntilIdle()
+        runCurrent() // process first (local) emission: 1 mapcode
+        assertThat(viewModel.uiState.value.mapcodeUi.count).isEqualTo(1)
 
-        // Suppression: local list was kept; only 1 mapcode visible (local), not 2 (server)
+        advanceUntilIdle() // process second (server) emission: server has 2, but suppression keeps local list
+
+        // count remains 1 — if suppression wasn't working, server's 2-mapcode list would have been applied
         assertThat(viewModel.uiState.value.mapcodeUi.count).isEqualTo(1)
         assertThat(viewModel.uiState.value.mapcodeUi.code).isEqualTo("AB.CD")
     }
@@ -1171,17 +1174,30 @@ internal class MapViewModelTest {
         val nld = Mapcode("AB.CD", Territory.NLD)
         val bel = Mapcode("XY.ZW", Territory.BEL)
 
+        // First position: only local mapcodes (NLD + BEL), no server entry — both emissions are just local
         useCase.knownLocations.add(
-            FakeLocation(1.0, 1.0, emptyList(), listOf(nld))
+            FakeLocation(1.0, 1.0, emptyList(), listOf(nld, bel))
         )
-        // Server returns both; hint puts BEL first
-        useCase.serverMapcodes[Pair(1.0, 1.0)] = listOf(nld, bel)
-        useCase.territoryHints[Pair(1.0, 1.0)] = listOf("BEL")
+        // Second position: local + server with BEL sorted first by hint
+        useCase.knownLocations.add(
+            FakeLocation(2.0, 2.0, emptyList(), listOf(nld, bel))
+        )
+        useCase.serverMapcodes[Pair(2.0, 2.0)] = listOf(nld, bel)
+        useCase.territoryHints[Pair(2.0, 2.0)] = listOf("BEL")
 
+        // Move to first position; both flow emissions are identical (no server), index stays at NLD
         viewModel.onCameraMoved(1.0, 1.0, 0f)
         advanceUntilIdle()
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("NLD")
 
-        // index reset to 0 after server arrives; BEL is at index 0 per hint
+        // User navigates to index 1 (BEL); runCurrent() lets the combine propagate the index change
+        viewModel.onTerritoryClick()
+        runCurrent()
+        assertThat(viewModel.uiState.value.mapcodeUi.number).isEqualTo(2)
+
+        // Move to second position; server arrives with BEL first — index resets to 0
+        viewModel.onCameraMoved(2.0, 2.0, 0f)
+        advanceUntilIdle()
         assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("BEL")
         assertThat(viewModel.uiState.value.mapcodeUi.number).isEqualTo(1)
     }
