@@ -42,7 +42,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -54,9 +57,10 @@ import kotlin.Result.Companion.success
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+private val json = Json { ignoreUnknownKeys = true }
+
 class ShowMapcodeUseCaseImpl @Inject constructor(
     @ApplicationContext private val ctx: Context,
-    private val coroutineScope: CoroutineScope,
     private val preferences: PreferenceRepository,
     private val favouritesDataStore: FavouritesDataStore,
     private val shareAdapter: ShareAdapter
@@ -75,29 +79,52 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
     private val placesClient: PlacesClient by lazy { Places.createClient(ctx) }
 
-    override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
-        coroutineScope.launch(Dispatchers.IO) {
-            try {
-                val url = HttpUrl.Builder()
-                    .scheme("https")
-                    .host("api.mapcode.com")
-                    .addPathSegment("mapcode")
-                    .addPathSegment("codes")
-                    .addPathSegment("$lat,$long")
-                    .addQueryParameter("client", "android")
-                    .build()
+    override fun getMapcodes(lat: Double, long: Double): Flow<List<Mapcode>> = flow {
+        emit(MapcodeCodec.encode(lat, long).distinctBy { it.territory })
 
-                val request: Request = Request.Builder()
-                    .url(url)
-                    .build()
+        try {
+            val url = HttpUrl.Builder()
+                .scheme("https")
+                .host("api.mapcode.com")
+                .addPathSegment("mapcode")
+                .addPathSegment("codes")
+                .addPathSegment("$lat,$long")
+                .addQueryParameter("client", "android")
+                .build()
 
-                okHttpClient.newCall(request).execute()
-            } catch (_: Exception) {
-                Timber.e("Failed to call mapcode API.")
-            }
+            val responseBody = withContext(Dispatchers.IO) {
+                okHttpClient.newCall(Request.Builder().url(url).build())
+                    .execute()
+                    .use { it.body?.string() }
+            } ?: return@flow
+
+            val apiResponse = json.decodeFromString<ApiMapcodeResponse>(responseBody)
+            val serverMapcodes = apiResponse.mapcodes
+                .mapNotNull { it.toLibraryMapcode() }
+                .distinctBy { it.territory }
+
+            if (serverMapcodes.isEmpty()) return@flow
+
+            val hints = apiResponse.territories?.map { it.alphaCode } ?: emptyList()
+            emit(sortMapcodesByHint(serverMapcodes, hints))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to call mapcode API.")
         }
+    }
 
-        return MapcodeCodec.encode(lat, long)
+    private fun ApiMapcode.toLibraryMapcode(): Mapcode? {
+        val territory = if (this.territory == null) {
+            Territory.AAA
+        } else {
+            Territory.values().firstOrNull { it.toString() == this.territory }
+                ?: run {
+                    Timber.w("Unknown territory from API: ${this.territory}")
+                    null
+                }
+        }
+        return territory?.let { Mapcode(this.mapcode, it) }
     }
 
     override fun copyToClipboard(text: String) {
@@ -281,7 +308,7 @@ interface ShowMapcodeUseCase {
     /**
      * Get mapcode for a position on the map.
      */
-    fun getMapcodes(lat: Double, long: Double): List<Mapcode>
+    fun getMapcodes(lat: Double, long: Double): Flow<List<Mapcode>>
 
     /**
      * Convert a mapcode into a latitude and longitude.

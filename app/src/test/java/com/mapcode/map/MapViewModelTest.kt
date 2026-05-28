@@ -87,7 +87,7 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `copy mapcode and territory to clipboard when mapcode is clicked`() {
+    fun `copy mapcode and territory to clipboard when mapcode is clicked`() = runTest {
         useCase.knownLocations.add(
             FakeLocation(
                 1.0,
@@ -98,6 +98,7 @@ internal class MapViewModelTest {
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 0f)
+        runCurrent()
         viewModel.copyMapcode()
 
         assertThat(useCase.clipboard).isEqualTo("NLD 1AB.XY")
@@ -1108,5 +1109,112 @@ internal class MapViewModelTest {
         runCurrent()
 
         assertThat(useCase.favourites.value).isEmpty()
+    }
+
+    @Test
+    fun `server mapcodes replace local mapcodes when API responds`() = runTest {
+        val localMapcode = Mapcode("AB.CD", Territory.NLD)
+        val serverMapcode = Mapcode("XY.ZW", Territory.BEL)
+
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, emptyList(), listOf(localMapcode))
+        )
+        useCase.serverMapcodes[Pair(1.0, 1.0)] = listOf(serverMapcode)
+
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.mapcodeUi.code).isEqualTo("XY.ZW")
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("BEL")
+    }
+
+    @Test
+    fun `mapcodes sorted by territory hint when server responds`() = runTest {
+        val nld = Mapcode("AB.CD", Territory.NLD)
+        val bel = Mapcode("XY.ZW", Territory.BEL)
+
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, emptyList(), listOf(nld))
+        )
+        useCase.serverMapcodes[Pair(1.0, 1.0)] = listOf(nld, bel)
+        useCase.territoryHints[Pair(1.0, 1.0)] = listOf("BEL")
+
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("BEL")
+        assertThat(viewModel.uiState.value.mapcodeUi.count).isEqualTo(2)
+    }
+
+    @Test
+    fun `display not updated when server first mapcode matches current display`() = runTest {
+        val mapcode = Mapcode("AB.CD", Territory.NLD)
+        val extra = Mapcode("XY.ZW", Territory.BEL)
+
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, emptyList(), listOf(mapcode))
+        )
+        // Server returns 2 mapcodes; NLD is sorted first by hint — same as local display
+        useCase.serverMapcodes[Pair(1.0, 1.0)] = listOf(mapcode, extra)
+        useCase.territoryHints[Pair(1.0, 1.0)] = listOf("NLD")
+
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        runCurrent() // process first (local) emission: 1 mapcode
+        assertThat(viewModel.uiState.value.mapcodeUi.count).isEqualTo(1)
+
+        advanceUntilIdle() // process second (server) emission: server has 2, but suppression keeps local list
+
+        // count remains 1 — if suppression wasn't working, server's 2-mapcode list would have been applied
+        assertThat(viewModel.uiState.value.mapcodeUi.count).isEqualTo(1)
+        assertThat(viewModel.uiState.value.mapcodeUi.code).isEqualTo("AB.CD")
+    }
+
+    @Test
+    fun `index resets to 0 on server arrival showing hint-sorted first mapcode`() = runTest {
+        val nld = Mapcode("AB.CD", Territory.NLD)
+        val bel = Mapcode("XY.ZW", Territory.BEL)
+
+        // First position: only local mapcodes (NLD + BEL), no server entry — both emissions are just local
+        useCase.knownLocations.add(
+            FakeLocation(1.0, 1.0, emptyList(), listOf(nld, bel))
+        )
+        // Second position: local + server with BEL sorted first by hint
+        useCase.knownLocations.add(
+            FakeLocation(2.0, 2.0, emptyList(), listOf(nld, bel))
+        )
+        useCase.serverMapcodes[Pair(2.0, 2.0)] = listOf(nld, bel)
+        useCase.territoryHints[Pair(2.0, 2.0)] = listOf("BEL")
+
+        // Move to first position; both flow emissions are identical (no server), index stays at NLD
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("NLD")
+
+        // User navigates to index 1 (BEL); runCurrent() lets the combine propagate the index change
+        viewModel.onTerritoryClick()
+        runCurrent()
+        assertThat(viewModel.uiState.value.mapcodeUi.number).isEqualTo(2)
+
+        // Move to second position; server arrives with BEL first — index resets to 0
+        viewModel.onCameraMoved(2.0, 2.0, 0f)
+        advanceUntilIdle()
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("BEL")
+        assertThat(viewModel.uiState.value.mapcodeUi.number).isEqualTo(1)
+    }
+
+    @Test
+    fun `latest camera position shown when camera moves before server responds`() = runTest {
+        val mapcode1 = Mapcode("AB.CD", Territory.NLD)
+        val mapcode2 = Mapcode("XY.ZW", Territory.BEL)
+
+        useCase.knownLocations.add(FakeLocation(1.0, 1.0, emptyList(), listOf(mapcode1)))
+        useCase.knownLocations.add(FakeLocation(2.0, 2.0, emptyList(), listOf(mapcode2)))
+
+        viewModel.onCameraMoved(1.0, 1.0, 0f)
+        viewModel.onCameraMoved(2.0, 2.0, 0f)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.mapcodeUi.code).isEqualTo("XY.ZW")
+        assertThat(viewModel.uiState.value.mapcodeUi.territoryShortName).isEqualTo("BEL")
     }
 }
