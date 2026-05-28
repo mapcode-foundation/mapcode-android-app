@@ -99,6 +99,7 @@ class MapViewModel @Inject constructor(
 
     private var clearUnknownAddressErrorJob: Job? = null
     private var getMatchingAddressesJob: Job? = null
+    private var updateMapcodesJob: Job? = null
 
     var isGoogleMapsSdkLoaded: Boolean = false
     var cameraPositionState: CameraPositionState by mutableStateOf(getInitialCameraPositionState())
@@ -535,14 +536,22 @@ class MapViewModel @Inject constructor(
     }
 
     private fun updateMapcodes(lat: Double, long: Double) {
-        //remove duplicate mapcodes for a territory because only the highest priority one should be shown.
-        val newMapcodes = useCase.getMapcodes(lat, long).distinctBy { it.territory }
-        mapcodes.value = newMapcodes
+        updateMapcodesJob?.cancel()
+        updateMapcodesJob = viewModelScope.launch {
+            useCase.getMapcodes(lat, long).collect { newMapcodes ->
+                val currentMapcode = mapcodes.value.getOrNull(mapcodeIndex.value)
+                val newFirst = newMapcodes.getOrNull(0)
 
-        if (newMapcodes.isEmpty()) {
-            mapcodeIndex.value = -1
-        } else {
-            mapcodeIndex.value = 0
+                if (newFirst != null &&
+                    currentMapcode != null &&
+                    newFirst.code == currentMapcode.code &&
+                    newFirst.territory == currentMapcode.territory) {
+                    return@collect
+                }
+
+                mapcodes.value = newMapcodes
+                mapcodeIndex.value = if (newMapcodes.isEmpty()) -1 else 0
+            }
         }
     }
 

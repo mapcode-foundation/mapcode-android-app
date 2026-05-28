@@ -87,7 +87,7 @@ internal class MapViewModelTest {
     }
 
     @Test
-    fun `copy mapcode and territory to clipboard when mapcode is clicked`() {
+    fun `copy mapcode and territory to clipboard when mapcode is clicked`() = runTest {
         useCase.knownLocations.add(
             FakeLocation(
                 1.0,
@@ -98,6 +98,7 @@ internal class MapViewModelTest {
         )
 
         viewModel.onCameraMoved(1.0, 1.0, 0f)
+        runCurrent()
         viewModel.copyMapcode()
 
         assertThat(useCase.clipboard).isEqualTo("NLD 1AB.XY")
