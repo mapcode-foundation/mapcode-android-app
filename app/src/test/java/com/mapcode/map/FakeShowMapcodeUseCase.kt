@@ -25,6 +25,7 @@ import com.mapcode.util.NoAddressException
 import com.mapcode.util.UnknownAddressException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import java.io.IOException
 import kotlin.Result.Companion.failure
@@ -44,11 +45,19 @@ class FakeShowMapcodeUseCase : ShowMapcodeUseCase {
     val matchingAddresses: MutableMap<String, List<String>> = mutableMapOf()
 
     val favourites: MutableStateFlow<List<Favourite>> = MutableStateFlow(emptyList())
+    val serverMapcodes: MutableMap<Pair<Double, Double>, List<Mapcode>> = mutableMapOf()
+    val territoryHints: MutableMap<Pair<Double, Double>, List<String>> = mutableMapOf()
 
-    override fun getMapcodes(lat: Double, long: Double): List<Mapcode> {
-        return knownLocations
+    override fun getMapcodes(lat: Double, long: Double): Flow<List<Mapcode>> = flow {
+        val localMapcodes = knownLocations
             .find { it.latitude == lat && it.longitude == long }
-            ?.mapcodes ?: emptyList()
+            ?.mapcodes?.distinctBy { it.territory } ?: emptyList()
+
+        emit(localMapcodes)
+
+        val server = serverMapcodes[Pair(lat, long)] ?: return@flow
+        val hints = territoryHints[Pair(lat, long)] ?: emptyList()
+        emit(sortMapcodesByHint(server.distinctBy { it.territory }, hints))
     }
 
     override fun decodeMapcode(mapcode: String): Result<Location> {
