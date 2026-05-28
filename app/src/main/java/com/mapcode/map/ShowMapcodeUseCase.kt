@@ -107,6 +107,8 @@ class ShowMapcodeUseCaseImpl @Inject constructor(
 
             val hints = apiResponse.territories?.map { it.alphaCode } ?: emptyList()
             emit(sortMapcodesByHint(serverMapcodes, hints))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to call mapcode API.")
         }
