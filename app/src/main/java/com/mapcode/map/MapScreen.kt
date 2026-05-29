@@ -48,8 +48,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.mapcode.BuildConfig
 import com.mapcode.R
-import com.mapcode.destinations.FavouritesScreenDestination
-import com.mapcode.destinations.OnboardingScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.FavouritesScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.CreateFavouriteDialog
 import com.mapcode.favourites.Favourite
 import com.mapcode.theme.Green600
@@ -58,12 +58,13 @@ import com.mapcode.theme.Yellow300
 import com.mapcode.util.Location
 import com.mapcode.util.ScrollableDialog
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
 import kotlinx.coroutines.launch
 
-@Destination
+@Destination<RootGraph>
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
@@ -499,7 +500,7 @@ private fun MapControls(
                 if (uiState.favouriteLocations.isEmpty()) {
                     showSnackbar(noFavouritesMessage)
                 } else {
-                    navigator.navigate(FavouritesScreenDestination)
+                    navigator.navigate(FavouritesScreenDestination())
                 }
             },
             onMoreClick = { showMoreDropdown = true },
@@ -526,7 +527,7 @@ private fun MapControls(
                     showMoreDropdown = false
                 },
                 onViewOnboardingClick = {
-                    navigator.navigate(OnboardingScreenDestination.route)
+                    navigator.navigate(OnboardingScreenDestination())
                 }
             )
         }

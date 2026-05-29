@@ -31,8 +31,8 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import com.mapcode.Mapcode
 import com.mapcode.Territory
-import com.mapcode.destinations.FavouritesScreenDestination
-import com.mapcode.destinations.OnboardingScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.FavouritesScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.Favourite
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -773,7 +773,7 @@ class MapScreenTest {
 
         composeTestRule.onNodeWithContentDescription("View saved locations").performClick()
 
-        verify(mockDestinationsNavigator).navigate(FavouritesScreenDestination)
+        verify(mockDestinationsNavigator).navigate(FavouritesScreenDestination())
     }
 
     @Test
@@ -791,7 +791,7 @@ class MapScreenTest {
         setMapScreenAsContent()
         composeTestRule.onNodeWithContentDescription("More").performClick()
         composeTestRule.onNodeWithText("Tutorial").performClick()
-        verify(mockDestinationsNavigator).navigate(OnboardingScreenDestination.route)
+        verify(mockDestinationsNavigator).navigate(OnboardingScreenDestination())
     }
 
     private fun setMapScreenAsContent() {

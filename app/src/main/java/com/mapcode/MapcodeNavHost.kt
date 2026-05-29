@@ -27,12 +27,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.mapcode.destinations.FavouritesScreenDestination
-import com.mapcode.destinations.MapScreenDestination
-import com.mapcode.destinations.OnboardingScreenDestination
 import com.mapcode.favourites.FavouritesScreen
 import com.mapcode.map.MapScreen
 import com.mapcode.map.MapScreenLayoutType
@@ -40,6 +39,11 @@ import com.mapcode.map.MapViewModel
 import com.mapcode.onboarding.OnboardingScreen
 import com.mapcode.onboarding.OnboardingScreenLayoutType
 import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.generated.destinations.FavouritesScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.MapScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.OnboardingScreenDestination
+import com.ramcosta.composedestinations.generated.navtype.locationNavType
 import com.ramcosta.composedestinations.manualcomposablecalls.composable
 import com.ramcosta.composedestinations.scope.resultBackNavigator
 import com.ramcosta.composedestinations.scope.resultRecipient
@@ -51,32 +55,36 @@ fun MapcodeNavHost(
     mapViewModel: MapViewModel,
     windowSizeClass: WindowSizeClass
 ) {
-    val systemUiController = rememberSystemUiController()
+    val view = LocalView.current
+    val window = (view.context as android.app.Activity).window
     val useDarkIcons = MaterialTheme.colors.isLight
 
     SideEffect {
-        systemUiController.setStatusBarColor(
-            color = Color.Transparent,
-            darkIcons = useDarkIcons
-        )
+        val insetsController = WindowCompat.getInsetsController(window, view)
+        // accompanist darkIcons = true corresponds to light-appearance system bars (dark icons).
+        insetsController.isAppearanceLightStatusBars = useDarkIcons
+        insetsController.isAppearanceLightNavigationBars = false
 
-        systemUiController.setNavigationBarColor(color = Color.Black, darkIcons = false)
+        @Suppress("DEPRECATION")
+        window.statusBarColor = Color.Transparent.toArgb()
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = Color.Black.toArgb()
     }
 
     val appViewModel: AppViewModel = hiltViewModel()
     val showOnboarding: Boolean by appViewModel.showOnboarding.collectAsState()
 
     val startDestination = if (showOnboarding) {
-        OnboardingScreenDestination
+        OnboardingScreenDestination()
     } else {
-        MapScreenDestination
+        MapScreenDestination()
     }
 
     DestinationsNavHost(
         navController = navController,
         navGraph = NavGraphs.root,
         modifier = modifier,
-        startRoute = startDestination
+        start = startDestination
     ) {
         composable(MapScreenDestination) {
             MapScreen(
@@ -84,7 +92,7 @@ fun MapcodeNavHost(
                 mapViewModel,
                 layoutType = determineMapScreenLayout(windowSizeClass),
                 navigator = destinationsNavigator,
-                resultRecipient = resultRecipient()
+                resultRecipient = resultRecipient(locationNavType)
             )
         }
 
@@ -92,7 +100,7 @@ fun MapcodeNavHost(
             FavouritesScreen(
                 modifier = Modifier.fillMaxSize(),
                 viewModel = hiltViewModel(),
-                resultBackNavigator = resultBackNavigator()
+                resultBackNavigator = resultBackNavigator(locationNavType)
             )
         }
 

@@ -47,12 +47,13 @@ import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
 import com.mapcode.util.isLastPage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 
-@Destination(start = true)
+@Destination<RootGraph>(start = true)
 @Composable
 fun OnboardingScreen(
     modifier: Modifier = Modifier,
