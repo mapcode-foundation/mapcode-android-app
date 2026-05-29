@@ -16,7 +16,13 @@
 
 package com.mapcode.onboarding
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -27,13 +33,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.*
 import com.mapcode.AppViewModel
 import com.mapcode.R
 import com.mapcode.theme.*
@@ -41,12 +47,13 @@ import com.mapcode.util.animateScrollToNextPage
 import com.mapcode.util.animateScrollToPreviousPage
 import com.mapcode.util.isLastPage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 
-@Destination(start = true)
+@Destination<RootGraph>(start = true)
 @Composable
 fun OnboardingScreen(
     modifier: Modifier = Modifier,
@@ -64,19 +71,21 @@ fun OnboardingScreen(
     )
 }
 
-@OptIn(ExperimentalPagerApi::class)
+private const val ONBOARDING_PAGE_COUNT = 2
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun OnboardingScreen(
     modifier: Modifier = Modifier,
     onFinishOnboarding: () -> Unit,
     layoutType: OnboardingScreenLayoutType
 ) {
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(pageCount = { ONBOARDING_PAGE_COUNT })
     val pageColors = pageColors(pagerState.currentPage)
 
     val pageColor = calculatePageColor(
         currentPage = pagerState.currentPage,
-        pageOffset = pagerState.currentPageOffset
+        pageOffset = pagerState.currentPageOffsetFraction
     )
 
     Surface(modifier = modifier, color = pageColor) {
@@ -112,7 +121,7 @@ private fun OnboardingScreen(
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Pager(state: PagerState, layoutType: OnboardingScreenLayoutType) {
     val pageModifier = Modifier
@@ -123,7 +132,6 @@ private fun Pager(state: PagerState, layoutType: OnboardingScreenLayoutType) {
 
     HorizontalPager(
         modifier = Modifier.fillMaxWidth(),
-        count = 2,
         userScrollEnabled = true,
         state = state
     ) { page ->
@@ -180,7 +188,7 @@ private fun OnboardingScreenPreview() {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PageControls(
     modifier: Modifier,
@@ -211,11 +219,12 @@ private fun PageControls(
             }
         )
 
-        HorizontalPagerIndicator(
+        PageIndicator(
             modifier = Modifier.align(Alignment.CenterVertically),
-            pagerState = pagerState,
-            inactiveColor = pageColors.foreground,
-            activeColor = pageColors.backgroundDark
+            pageCount = ONBOARDING_PAGE_COUNT,
+            currentPage = pagerState.currentPage,
+            activeColor = pageColors.backgroundDark,
+            inactiveColor = pageColors.foreground
         )
 
         if (pagerState.isLastPage()) {
@@ -260,6 +269,31 @@ private fun PreviousPageButton(modifier: Modifier = Modifier, color: Color, onCl
             contentDescription = stringResource(R.string.onboarding_previous_page_content_description),
             tint = color
         )
+    }
+}
+
+@Composable
+private fun PageIndicator(
+    pageCount: Int,
+    currentPage: Int,
+    activeColor: Color,
+    inactiveColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(pageCount) { index ->
+            val color = if (index == currentPage) activeColor else inactiveColor
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+        }
     }
 }
 

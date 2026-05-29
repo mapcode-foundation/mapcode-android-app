@@ -37,9 +37,10 @@ import com.mapcode.R
 import com.mapcode.theme.MapcodeColor
 import com.mapcode.util.Location
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 
-@Destination
+@Destination<RootGraph>
 @Composable
 fun FavouritesScreen(
     modifier: Modifier = Modifier,

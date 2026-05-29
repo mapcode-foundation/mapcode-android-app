@@ -16,10 +16,10 @@
 
 package com.mapcode.util
 
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.PagerState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.PagerState
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 suspend fun PagerState.animateScrollToNextPage() {
     if (currentPage == pageCount - 1) {
         return
@@ -28,7 +28,7 @@ suspend fun PagerState.animateScrollToNextPage() {
     animateScrollToPage(currentPage + 1)
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 suspend fun PagerState.animateScrollToPreviousPage() {
     if (currentPage == 0) {
         return
@@ -37,5 +37,5 @@ suspend fun PagerState.animateScrollToPreviousPage() {
     animateScrollToPage(currentPage - 1)
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 fun PagerState.isLastPage(): Boolean = this.currentPage == this.pageCount - 1

@@ -162,3 +162,5 @@ fabric.properties
 .gitnexus
 AGENTS.md
 CLAUDE.md
+# Kotlin 2.x build cache
+.kotlin/
