@@ -44,7 +44,7 @@ dependencies allow, and keep every step revertible to the current state.
 | material (com.google.android.material) | 1.11.0 | latest stable |
 | maps-compose / places / places-ktx | 2.11.4 / 3.5.0 / 3.1.1 | latest stable |
 | play-services-maps / -location | 18.2.0 / 21.3.0 | latest stable |
-| okhttp | 4.12.0 | latest stable (4.12.0 or 5.x — decide at stage 7) |
+| okhttp | 4.12.0 | 4.12.0 (stay on 4.x; latest 4.x — locked) |
 | kotlinx-serialization-json | 1.6.3 | latest stable |
 | datastore-preferences | 1.0.0 | latest stable |
 | mapcode | 2.4.19 | 2.4.19 (already latest) |
@@ -79,8 +79,9 @@ dependencies allow, and keep every step revertible to the current state.
   `composeOptions.kotlinCompilerExtensionVersion`.
 - Bump `org.jetbrains.kotlin.android` and `plugin.serialization` to 2.3.21.
 - Bump KSP to the matching 2.3.x.
-- Decide Hilt processor: keep `kapt`, or migrate Hilt to KSP (preferred for K2).
-  Default: migrate Hilt `kapt` → `ksp` (drop `kotlin-kapt` if no other kapt users).
+- Migrate Hilt processor `kapt` → `ksp` (locked decision). Drop the `kotlin-kapt`
+  plugin if Hilt is the only kapt user. Fallback only if KSP codegen fails: revert
+  Hilt to `kapt` (still K2-compatible).
 - Acceptance: `assembleDebug` + `testDebugUnitTest` green.
 
 **Stage 4 — Compose BOM + AndroidX libs + compose-destinations 2.x**
@@ -103,8 +104,8 @@ dependencies allow, and keep every step revertible to the current state.
   `lintVitalRelease` reviewed.
 
 **Stage 6 — Remaining libraries to latest**
-- okhttp (decide 4.12.0 vs 5.x), maps-compose, places, places-ktx,
-  play-services-*, kotlinx-serialization-json, datastore, all test libs.
+- okhttp stays 4.12.0 (latest 4.x; 5.x out of scope), maps-compose, places,
+  places-ktx, play-services-*, kotlinx-serialization-json, datastore, all test libs.
 - Acceptance: full `assembleDebug assembleRelease testDebugUnitTest` green.
 
 **Stage 7 — Final verification**
