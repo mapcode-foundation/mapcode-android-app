@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    id 'org.jetbrains.kotlin.plugin.compose'
     id 'dagger.hilt.android.plugin'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'com.google.devtools.ksp'
@@ -40,11 +40,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
         freeCompilerArgs += [
                 "-opt-in=kotlin.RequiresOptIn"
         ]
@@ -52,9 +52,6 @@ android {
     buildFeatures {
         compose true
         buildConfig true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.5.14'
     }
     packagingOptions {
         resources {
@@ -78,10 +75,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
     implementation 'com.google.android.libraries.places:places:3.5.0'
     implementation 'com.google.maps.android:places-ktx:3.1.1'
-    implementation "com.google.dagger:hilt-android:2.48"
+    implementation "com.google.dagger:hilt-android:2.58"
     implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
-    kapt "com.google.dagger:hilt-compiler:2.48"
+    ksp "com.google.dagger:hilt-compiler:2.58"
     implementation "com.google.android.material:material:1.11.0"
 
     //android
