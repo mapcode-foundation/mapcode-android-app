@@ -10,7 +10,11 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-29-latest-dependency-upgrade-design.md`
 
-> **Ordering note (refines spec):** `compileSdk`/`targetSdk` 37 is moved to Stage 3 (before the AndroidX library bumps in Stage 5), because lifecycle 2.10 / activity 1.13 / core-ktx 1.18 / material 1.14 require compileSdk ≥ 36.
+> **Ordering note (refines spec):** `compileSdk`/`targetSdk` 37 is moved before the AndroidX library bumps, because lifecycle 2.10 / activity 1.13 / core-ktx 1.18 / material 1.14 require compileSdk ≥ 36.
+
+> **RUNTIME CORRECTION (2026-05-29, discovered during Stage 2 execution):** AGP 9.2.1 requires Gradle ≥ 9.1, and Kotlin Gradle Plugin 1.9.24's kapt is incompatible with Gradle 9 (`NoSuchMethodError` in `Kapt3GradleSubplugin`). AGP 9 also pins/forces Kotlin 2.x (KGP BOM 2.2.10; downgrade floor 2.0.0). **Therefore the Kotlin 2.x + Compose-compiler-plugin migration MUST land before AGP 9.** Corrected stage order: **Stage 1** AGP 8.13.2+Gradle 8.14.5 (done) → **Stage 2** Kotlin 2.3.21 + Compose plugin + KSP2 + Hilt→KSP (on AGP 8.13.2/Gradle 8.14.5) → **Stage 3** AGP 9.2.1 + Gradle 9.5.1 → **Stage 4** compileSdk/targetSdk 37 → **Stage 5** Compose BOM + AndroidX latest + migrations → **Stage 6** remaining libs → **Stage 7** verify. (The "Stage N" headings below predate this swap; follow the corrected order: the old "Stage 4: Kotlin" runs as Stage 2, the old "Stage 2: AGP 9" runs as Stage 3.)
+>
+> AGP 9 specifics flagged for the AGP-9 stage: keep the `org.jetbrains.kotlin.android` plugin by setting `android.builtInKotlin=false` and `android.newDsl=false` in `gradle.properties` (the latter keeps the legacy `applicationVariants.all {}` KSP-srcDir block working); `kotlin-kapt` must be gone by then (Hilt already on KSP from Stage 2).
 
 > **Version resolution:** Pinned versions below are the latest stable at planning time (2026-05-29). For trailing libraries marked "resolve", confirm the latest stable at execution with:
 > `curl -s <metadata-url> | grep -oE '<release>[^<]+'` and prefer stable over `-alpha/-beta/-rc`.
